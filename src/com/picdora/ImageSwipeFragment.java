@@ -1,7 +1,9 @@
 package com.picdora;
 
 import net.frakbot.imageviewex.ImageViewNext;
-import net.frakbot.imageviewex.ImageViewEx.FillDirection;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -9,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 public class ImageSwipeFragment extends Fragment {
+	private ImageViewNext mImage; 
 
 
     @Override
@@ -17,13 +20,27 @@ public class ImageSwipeFragment extends Fragment {
         // Inflate the layout for this fragment
         View view =  inflater.inflate(R.layout.swipable_image, container, false);
         
+        
+        
         // set url
         String url = getArguments().getString("url");
         
-        ImageViewNext image = (ImageViewNext) view.findViewById(R.id.image);
-    	image.setUrl(url);
-    	//image.setFillDirection(FillDirection.HORIZONTAL);
+        mImage = (ImageViewNext) view.findViewById(R.id.image);
+        mImage.setUrl(url);
     	
     	return view;
+    }
+    
+    @Override
+    public void onDestroyView(){
+    	super.onDestroyView();
+    	if(mImage != null){
+    		Drawable drawable = mImage.getDrawable();
+    		if (drawable instanceof BitmapDrawable) {
+    		    BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
+    		    Bitmap bitmap = bitmapDrawable.getBitmap();
+    		    bitmap.recycle();
+    		}
+    	}
     }
 }

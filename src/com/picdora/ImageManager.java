@@ -7,7 +7,7 @@ public class ImageManager {
 	}
 	
 	public String getImage(int index){
-		return "http://i.imgur.com/MwGBhOA.jpg";
+		return "http://i.imgur.com/iBIOcXk.jpg";
 	}
 
 }

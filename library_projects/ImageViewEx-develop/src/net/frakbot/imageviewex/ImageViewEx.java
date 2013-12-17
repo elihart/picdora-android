@@ -78,6 +78,10 @@ public class ImageViewEx extends ImageView {
 
     protected Drawable mEmptyDrawable = new ColorDrawable(0x00000000);
     protected FillDirection mFillDirection = FillDirection.NONE;
+    
+    // added by Eli
+    private static int mScreenHeight = 1280;
+    private static int mScreenWidth = 720;
 
     ///////////////////////////////////////////////////////////
     ///                  CONSTRUCTORS                       ///
@@ -244,8 +248,10 @@ public class ImageViewEx extends ImageView {
 
             // Sets the image as a regular Drawable
             setTag(null);
+            
+            
 
-            final Drawable d = Converters.byteArrayToDrawable(src, mOptions, getContext());
+            final Drawable d = Converters.byteArrayToDrawable(src, mOptions, getContext(), mScreenWidth, mScreenHeight);
 
             // We need to run this on the UI thread
             stopLoading();
@@ -434,6 +440,17 @@ public class ImageViewEx extends ImageView {
      */
     public static void setCanAlwaysAnimate(boolean mCanAlwaysAnimate) {
         ImageViewEx.mCanAlwaysAnimate = mCanAlwaysAnimate;
+    }
+    
+    /**
+     * Set the target screen size so that images can be scaled down.
+     * Added by eli
+     * @param width
+     * @param height
+     */
+    public static void setScreenSize(int width, int height){
+    	mScreenWidth = width;
+    	mScreenHeight = height;
     }
 
     /**

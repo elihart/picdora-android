@@ -31,15 +31,57 @@ public abstract class Converters {
      *
      * @return The initialized BitmapDrawable.
      */
-    public static BitmapDrawable byteArrayToDrawable(byte[] image, Options opts, Context context) {
+	public static BitmapDrawable byteArrayToDrawable(byte[] image, Options opts, Context context, int dstWidth, int dstHeight) {
         if (opts == null) {
             Log.v(TAG, "opts is null, initializing without scaling");
             opts = new Options();
             opts.inScaled = false;
         }
-        Bitmap bmp = BitmapFactory.decodeByteArray(image, 0, image.length, opts);
+        System.gc();
+        
+        
+        
+        Options options = new Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeByteArray(image, 0, image.length, options);
+        options.inJustDecodeBounds = false;
+        options.inSampleSize = calculateSampleSize(options.outWidth, options.outHeight, dstWidth, dstHeight);
+        Bitmap bitmap = BitmapFactory.decodeByteArray(image, 0, image.length, options);
+        
+        
+        //Bitmap bmp = BitmapFactory.decodeByteArray(image, 0, image.length, opts);
         // bmp.setDensity(DisplayMetrics.DENSITY_HIGH);
-        return new BitmapDrawable(context.getResources(), bmp);
+        return new BitmapDrawable(context.getResources(), bitmap);
+    }
+    
+	/**
+	 * Determine what scale size should be used to fit the src dimensions into the destination
+	 * @param srcWidth
+	 * @param srcHeight
+	 * @param dstWidth
+	 * @param dstHeight
+	 * @return
+	 */
+    private static int calculateSampleSize(int srcWidth, int srcHeight, int dstWidth, int dstHeight) {
+    	final float srcAspect = (float)srcWidth / (float)srcHeight;
+        final float dstAspect = (float)dstWidth / (float)dstHeight;
+
+        if (srcAspect > dstAspect) {
+        	if(srcWidth < dstWidth){
+        		return 1;
+        	} else {
+        		return (int) Math.ceil((float)srcWidth / dstWidth);
+        	}
+        	
+            
+        } else {
+        	if(srcHeight < dstHeight){
+        		return 1;
+        	}
+        	 else {
+         		return (int) Math.ceil((float)srcHeight / dstHeight);
+         	}
+        }
     }
 
     /**
