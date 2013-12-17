@@ -1,6 +1,9 @@
 package com.picdora;
 
 import net.frakbot.imageviewex.ImageViewEx;
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -32,6 +35,24 @@ public class MainActivity extends FragmentActivity {
 		mPager = (ViewPager) findViewById(R.id.pager);
 		mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
 		mPager.setAdapter(mPagerAdapter);
+		
+		this.deleteDatabase("picdora");
+		
+		PicdoraDatabaseHelper dbHelper = new PicdoraDatabaseHelper(this);
+
+		SQLiteDatabase db = dbHelper.getReadableDatabase();
+		
+//		ContentValues values = new ContentValues();
+//		values.put("ImgurId", "asdf");
+//		db.insert("images", null, values);
+		
+		Cursor cursor = db.query("images",
+		        null, null, null, null, null, null);
+		
+		int count = cursor.getCount();
+		cursor.moveToLast();
+		String imgurId = cursor.getString(1);
+		Util.log("Rows : " + count + " last: " + imgurId);
 
 		// Give the screen size so images are scaled to save memory
 		DisplayMetrics displaymetrics = new DisplayMetrics();
