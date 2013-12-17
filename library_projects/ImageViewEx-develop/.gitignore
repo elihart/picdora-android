@@ -1,0 +1,8 @@
+/bin
+/gen
+/out
+/src/com/github/ignition
+/test/bin
+/test/gen
+/.idea
+/local.properties
