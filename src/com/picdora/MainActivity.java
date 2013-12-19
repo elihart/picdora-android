@@ -38,21 +38,21 @@ public class MainActivity extends FragmentActivity {
 		
 		this.deleteDatabase("picdora");
 		
-		PicdoraDatabaseHelper dbHelper = new PicdoraDatabaseHelper(this);
-
-		SQLiteDatabase db = dbHelper.getReadableDatabase();
+//		PicdoraDatabaseHelper dbHelper = new PicdoraDatabaseHelper(this);
+//
+//		SQLiteDatabase db = dbHelper.getReadableDatabase();
 		
 //		ContentValues values = new ContentValues();
 //		values.put("ImgurId", "asdf");
 //		db.insert("images", null, values);
 		
-		Cursor cursor = db.query("images",
-		        null, null, null, null, null, null);
-		
-		int count = cursor.getCount();
-		cursor.moveToLast();
-		String imgurId = cursor.getString(1);
-		Util.log("Rows : " + count + " last: " + imgurId);
+//		Cursor cursor = db.query("images",
+//		        null, null, null, null, null, null);
+//		
+//		int count = cursor.getCount();
+//		cursor.moveToLast();
+//		String imgurId = cursor.getString(1);
+//		Util.log("Rows : " + count + " last: " + imgurId);
 
 		// Give the screen size so images are scaled to save memory
 		DisplayMetrics displaymetrics = new DisplayMetrics();
@@ -81,9 +81,12 @@ public class MainActivity extends FragmentActivity {
 		@Override
 		public Fragment getItem(int position) {
 			ImageSwipeFragment frag = new ImageSwipeFragment();
+			
+			Image image = mImageManager.getImage(position);
+			image.markView();
 
 			Bundle args = new Bundle();
-			args.putString("url", mImageManager.getImage(position));
+			args.putString("url", image.getUrl());
 			frag.setArguments(args);
 
 			return frag;

@@ -19,15 +19,12 @@ public class ImageSwipeFragment extends Fragment {
         Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view =  inflater.inflate(R.layout.swipable_image, container, false);
-        
+        mImage = (ImageViewNext) view.findViewById(R.id.image);
         
         
         // set url
-        String imageJson = getArguments().getString("imageJson");
-        
-        Image image = Util.fromJson(imageJson);
-        
-        mImage = (ImageViewNext) view.findViewById(R.id.image);
+        String url = getArguments().getString("url");   
+        Util.log(url);
         mImage.setUrl(url);
     	
     	return view;
@@ -41,7 +38,9 @@ public class ImageSwipeFragment extends Fragment {
     		if (drawable instanceof BitmapDrawable) {
     		    BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
     		    Bitmap bitmap = bitmapDrawable.getBitmap();
-    		    bitmap.recycle();
+    		    if(bitmap != null){
+    		    	bitmap.recycle();
+    		    }
     		}
     	}
     }
