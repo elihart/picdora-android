@@ -23,7 +23,9 @@ public class ImageSwipeFragment extends Fragment {
         
         
         // set url
-        String url = getArguments().getString("url");
+        String imageJson = getArguments().getString("imageJson");
+        
+        Image image = Util.fromJson(imageJson);
         
         mImage = (ImageViewNext) view.findViewById(R.id.image);
         mImage.setUrl(url);
