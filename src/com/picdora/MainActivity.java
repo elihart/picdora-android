@@ -28,10 +28,6 @@ public class MainActivity extends FragmentActivity {
 	 */
 	private PagerAdapter mPagerAdapter;
 
-	// screen size
-	private int mScreenHeight;
-	private int mScreenWidth;
-
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -42,31 +38,6 @@ public class MainActivity extends FragmentActivity {
 		mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
 		mPager.setAdapter(mPagerAdapter);
 
-		this.deleteDatabase("picdora");
-
-		// PicdoraDatabaseHelper dbHelper = new PicdoraDatabaseHelper(this);
-		//
-		// SQLiteDatabase db = dbHelper.getReadableDatabase();
-
-		// ContentValues values = new ContentValues();
-		// values.put("ImgurId", "asdf");
-		// db.insert("images", null, values);
-
-		// Cursor cursor = db.query("images",
-		// null, null, null, null, null, null);
-		//
-		// int count = cursor.getCount();
-		// cursor.moveToLast();
-		// String imgurId = cursor.getString(1);
-		// Util.log("Rows : " + count + " last: " + imgurId);
-
-		// Give the screen size so images are scaled to save memory
-		DisplayMetrics displaymetrics = new DisplayMetrics();
-		getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
-		mScreenHeight = displaymetrics.heightPixels;
-		mScreenWidth = displaymetrics.widthPixels;
-
-		ImageViewEx.setScreenSize(mScreenWidth, mScreenHeight);
 	}
 
 	@Override
@@ -93,8 +64,6 @@ public class MainActivity extends FragmentActivity {
 
 			Bundle args = new Bundle();
 			args.putString("imageJson", Util.toJson(image));
-			args.putInt("screenHeight", mScreenHeight);
-			args.putInt("screenWidth", mScreenWidth);
 			frag.setArguments(args);
 
 			return frag;

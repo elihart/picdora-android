@@ -63,7 +63,9 @@ public class ImageViewEx extends ImageView {
 
     private int mMaxHeight, mMaxWidth;
 
-    private float mGifAspectRatio;
+    // aspect ratio of the image. Added by eli
+    private float mAspectRatio;
+    
     private Movie mGif;
     private double mGifStartTime;
     private int mFrameDuration = 67;
@@ -79,10 +81,6 @@ public class ImageViewEx extends ImageView {
 
     protected Drawable mEmptyDrawable = new ColorDrawable(0x00000000);
     protected FillDirection mFillDirection = FillDirection.NONE;
-    
-    // added by Eli
-    private static int mScreenHeight = 1280;
-    private static int mScreenWidth = 720;
 
     ///////////////////////////////////////////////////////////
     ///                  CONSTRUCTORS                       ///
@@ -230,6 +228,8 @@ public class ImageViewEx extends ImageView {
             }
             return;
         }
+        
+        mAspectRatio = getAspectRatio(src);
 
         Movie gif = null;
 
@@ -252,13 +252,12 @@ public class ImageViewEx extends ImageView {
             
             
 
-            final Drawable d = Converters.byteArrayToDrawable(src, mOptions, getContext(), mScreenWidth, mScreenHeight);
+            final Drawable d = Converters.byteArrayToDrawable(src, mOptions, getContext());
 
             // We need to run this on the UI thread
             stopLoading();
             mSetDrawableRunnable.setDrawable(d);
             mHandler.post(mSetDrawableRunnable);
-            mGifAspectRatio = -1;
         }
         else {
             // Disables the HW acceleration when viewing a GIF on Android 3+
@@ -270,8 +269,19 @@ public class ImageViewEx extends ImageView {
             stopLoading();
             mSetGifRunnable.setGif(gif);
             mHandler.post(mSetGifRunnable);
-            mGifAspectRatio = (float) gif.width() / gif.height();
         }
+    }
+    
+    private float getAspectRatio(byte[] src){
+    	BitmapFactory.Options options = new BitmapFactory.Options();
+    	options.inJustDecodeBounds = true;
+
+    	//Returns null, sizes are in the options variable
+    	BitmapFactory.decodeByteArray(src, 0, src.length, options);
+    	int width = options.outWidth;
+    	int height = options.outHeight;
+    	
+    	return (float) width / height;
     }
 
     /** {@inheritDoc} */
@@ -443,17 +453,6 @@ public class ImageViewEx extends ImageView {
      */
     public static void setCanAlwaysAnimate(boolean mCanAlwaysAnimate) {
         ImageViewEx.mCanAlwaysAnimate = mCanAlwaysAnimate;
-    }
-    
-    /**
-     * Set the target screen size so that images can be scaled down.
-     * Added by eli
-     * @param width
-     * @param height
-     */
-    public static void setScreenSize(int width, int height){
-    	mScreenWidth = width;
-    	mScreenHeight = height;
     }
 
     /**
@@ -692,11 +691,8 @@ public class ImageViewEx extends ImageView {
         return mIsFixedSize;
     }
     
-    /**
-     * If a gif is loaded get the aspect ratio of the gif. Otherwise return -1
-     */
-    public float getGifAspectRatio(){
-    	return mGifAspectRatio;
+    public float getAspectRatio(){
+    	return mAspectRatio;
     }
 
     /**

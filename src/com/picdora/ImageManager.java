@@ -36,7 +36,8 @@ public class ImageManager {
 	 * @param count
 	 */
 	private void loadImageBatchFromDb(int count, ArrayList<Image> images) {
-		String query = "SELECT * FROM Images WHERE gif=1";
+		String query = "SELECT * FROM Images ORDER BY viewCount ASC LIMIT "
+				+ Integer.toString(count);
 
 		CursorList<Image> list = Query.many(Image.class, query, null).get();
 		images.addAll(list.asList());

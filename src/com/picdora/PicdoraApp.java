@@ -42,14 +42,15 @@ public class PicdoraApp extends Application {
 
 	private void initImageLoader() {
 		DisplayImageOptions options = new DisplayImageOptions.Builder()
-				.cacheInMemory(true).cacheOnDisc(true).build();
+				.cacheOnDisc(true).imageScaleType(ImageScaleType.EXACTLY)
+				.build();
 
 		// Create global configuration and initialize ImageLoader with this
 		// configuration
 		ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(
 				getApplicationContext()).defaultDisplayImageOptions(options)
 				.build();
-		
+
 		ImageLoader.getInstance().init(config);
 	}
 
@@ -63,7 +64,7 @@ public class PicdoraApp extends Application {
 		sprinkles.addMigration(initialMigration);
 
 		// get some images
-		ImageManager.getImagesFromServer(100);
+		// ImageManager.getImagesFromServer(100);
 	}
 
 }

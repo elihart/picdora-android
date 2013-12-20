@@ -1,12 +1,18 @@
 package com.picdora;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+
 import uk.co.senab.photoview.PhotoViewAttacher;
 
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.assist.FailReason.FailType;
 import com.nostra13.universalimageloader.core.assist.ImageLoadingListener;
+import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.assist.ImageSize;
+import com.nostra13.universalimageloader.core.process.BitmapProcessor;
 
 import net.frakbot.imageviewex.ImageViewEx.FillDirection;
 import net.frakbot.imageviewex.ImageViewNext;
@@ -14,13 +20,17 @@ import net.frakbot.imageviewex.ImageViewNext.CacheLevel;
 import net.frakbot.imageviewex.ImageViewNext.ImageLoadCompletionListener;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
+import android.graphics.Movie;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
@@ -47,9 +57,14 @@ public class ImageSwipeFragment extends Fragment {
 		String imageJson = getArguments().getString("imageJson");
 		Image image = Util.fromJson(imageJson, Image.class);
 
+		// Give the screen size so images are scaled to save memory
+		DisplayMetrics displaymetrics = new DisplayMetrics();
+		getActivity().getWindowManager().getDefaultDisplay()
+				.getMetrics(displaymetrics);
+
 		// get max size for display
-		int screenHeight = getArguments().getInt("screenHeight");
-		int screenWidth = getArguments().getInt("screenWidth");
+		int screenHeight = displaymetrics.heightPixels;
+		int screenWidth = displaymetrics.widthPixels;
 		final float screenAspectRatio = (float) screenWidth / screenHeight;
 
 		mGifView.setMaxHeight(screenHeight);
@@ -60,16 +75,18 @@ public class ImageSwipeFragment extends Fragment {
 
 		// set url and load image
 		final String url = image.getUrl();
+		setIsLoading(true);
 
 		if (image.isGif()) {
 			mGifView.setVisibility(View.VISIBLE);
 			mImageView.setVisibility(View.GONE);
+			setIsLoading(true);
 
 			mGifView.setLoadCallbacks(new ImageLoadCompletionListener() {
 
 				@Override
 				public void onLoadStarted(ImageViewNext v, CacheLevel level) {
-					setIsLoading(true);
+
 				}
 
 				@Override
@@ -82,28 +99,6 @@ public class ImageSwipeFragment extends Fragment {
 				@Override
 				public void onLoadCompleted(ImageViewNext v, CacheLevel level) {
 					setIsLoading(false);
-
-					float imageAspectRatio = v.getGifAspectRatio();
-					if (imageAspectRatio > screenAspectRatio) {
-						RelativeLayout.LayoutParams layout = new RelativeLayout.LayoutParams(
-								RelativeLayout.LayoutParams.MATCH_PARENT,
-								RelativeLayout.LayoutParams.WRAP_CONTENT);
-
-						// Add your rules
-						layout.addRule(RelativeLayout.CENTER_IN_PARENT);
-						v.setLayoutParams(layout);
-						v.setFillDirection(FillDirection.HORIZONTAL);
-					} else {
-						RelativeLayout.LayoutParams layout = new RelativeLayout.LayoutParams(
-								RelativeLayout.LayoutParams.WRAP_CONTENT,
-								RelativeLayout.LayoutParams.MATCH_PARENT);
-
-						// Add your rules
-						layout.addRule(RelativeLayout.CENTER_IN_PARENT);
-						v.setLayoutParams(layout);
-						
-						v.setFillDirection(FillDirection.VERTICAL);
-					}
 				}
 			});
 
@@ -123,13 +118,14 @@ public class ImageSwipeFragment extends Fragment {
 
 						@Override
 						public void onLoadingStarted(String arg0, View arg1) {
-							setIsLoading(true);
+
 						}
 
 						@Override
 						public void onLoadingFailed(String arg0, View arg1,
 								FailReason reason) {
 							setIsLoading(false);
+							mImageView.setImageResource(R.drawable.ic_launcher);
 							switch (reason.getType()) {
 							case DECODING_ERROR:
 								break;
@@ -154,11 +150,8 @@ public class ImageSwipeFragment extends Fragment {
 							mImageView.setImageBitmap(bm);
 
 							// attacher Photoviewer for zooming
-							// if (mAttacher == null) {
-							// mAttacher = new PhotoViewAttacher(mImageView);
-							// } else {
-							// mAttacher.update();
-							// }
+							mAttacher = new PhotoViewAttacher(mImageView);
+
 						}
 
 						@Override
@@ -174,9 +167,11 @@ public class ImageSwipeFragment extends Fragment {
 
 	private void setIsLoading(boolean loading) {
 		if (loading) {
+			Util.log("Showing loading");
 			mImagesContainer.setVisibility(View.INVISIBLE);
 			mProgress.setVisibility(View.VISIBLE);
 		} else {
+			Util.log("Hiding loading");
 			mImagesContainer.setVisibility(View.VISIBLE);
 			mProgress.setVisibility(View.INVISIBLE);
 		}
