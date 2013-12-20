@@ -36,8 +36,7 @@ public class ImageManager {
 	 * @param count
 	 */
 	private void loadImageBatchFromDb(int count, ArrayList<Image> images) {
-		String query = "SELECT * FROM Images ORDER BY viewCount ASC LIMIT "
-				+ Integer.toString(count);
+		String query = "SELECT * FROM Images WHERE gif=1";
 
 		CursorList<Image> list = Query.many(Image.class, query, null).get();
 		images.addAll(list.asList());
@@ -51,10 +50,6 @@ public class ImageManager {
 		params.put("count", Integer.toString(count));
 		client.get("http://192.241.185.45:3000/images/random", params,
 				new JsonHttpResponseHandler() {
-					@Override
-					public void onStart() {
-						Util.log("starting");
-					}
 
 					@Override
 					public void onSuccess(org.json.JSONArray response) {
@@ -66,11 +61,6 @@ public class ImageManager {
 							org.apache.http.Header[] headers,
 							java.lang.String responseBody, java.lang.Throwable e) {
 						Util.log("Get images failed");
-					}
-
-					@Override
-					public void onFinish() {
-						Util.log("Finished");
 					}
 				});
 	}

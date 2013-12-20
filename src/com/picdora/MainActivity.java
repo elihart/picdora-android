@@ -13,6 +13,8 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.DisplayMetrics;
 import android.view.Menu;
+import android.view.Window;
+import android.view.WindowManager;
 
 public class MainActivity extends FragmentActivity {
 	/**
@@ -26,6 +28,10 @@ public class MainActivity extends FragmentActivity {
 	 */
 	private PagerAdapter mPagerAdapter;
 
+	// screen size
+	private int mScreenHeight;
+	private int mScreenWidth;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -35,32 +41,32 @@ public class MainActivity extends FragmentActivity {
 		mPager = (ViewPager) findViewById(R.id.pager);
 		mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
 		mPager.setAdapter(mPagerAdapter);
-		
+
 		this.deleteDatabase("picdora");
-		
-//		PicdoraDatabaseHelper dbHelper = new PicdoraDatabaseHelper(this);
-//
-//		SQLiteDatabase db = dbHelper.getReadableDatabase();
-		
-//		ContentValues values = new ContentValues();
-//		values.put("ImgurId", "asdf");
-//		db.insert("images", null, values);
-		
-//		Cursor cursor = db.query("images",
-//		        null, null, null, null, null, null);
-//		
-//		int count = cursor.getCount();
-//		cursor.moveToLast();
-//		String imgurId = cursor.getString(1);
-//		Util.log("Rows : " + count + " last: " + imgurId);
+
+		// PicdoraDatabaseHelper dbHelper = new PicdoraDatabaseHelper(this);
+		//
+		// SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+		// ContentValues values = new ContentValues();
+		// values.put("ImgurId", "asdf");
+		// db.insert("images", null, values);
+
+		// Cursor cursor = db.query("images",
+		// null, null, null, null, null, null);
+		//
+		// int count = cursor.getCount();
+		// cursor.moveToLast();
+		// String imgurId = cursor.getString(1);
+		// Util.log("Rows : " + count + " last: " + imgurId);
 
 		// Give the screen size so images are scaled to save memory
 		DisplayMetrics displaymetrics = new DisplayMetrics();
 		getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
-		int height = displaymetrics.heightPixels;
-		int width = displaymetrics.widthPixels;
+		mScreenHeight = displaymetrics.heightPixels;
+		mScreenWidth = displaymetrics.widthPixels;
 
-		ImageViewEx.setScreenSize(width, height);
+		ImageViewEx.setScreenSize(mScreenWidth, mScreenHeight);
 	}
 
 	@Override
@@ -81,12 +87,14 @@ public class MainActivity extends FragmentActivity {
 		@Override
 		public Fragment getItem(int position) {
 			ImageSwipeFragment frag = new ImageSwipeFragment();
-			
+
 			Image image = mImageManager.getImage(position);
 			image.markView();
 
 			Bundle args = new Bundle();
-			args.putString("url", image.getUrl());
+			args.putString("imageJson", Util.toJson(image));
+			args.putInt("screenHeight", mScreenHeight);
+			args.putInt("screenWidth", mScreenWidth);
 			frag.setArguments(args);
 
 			return frag;

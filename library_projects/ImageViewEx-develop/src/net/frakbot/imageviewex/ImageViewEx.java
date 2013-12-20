@@ -1,5 +1,8 @@
 package net.frakbot.imageviewex;
 
+import java.io.InputStream;
+import java.lang.reflect.Method;
+
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
@@ -21,9 +24,6 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
-
-import java.io.InputStream;
-import java.lang.reflect.Method;
 
 /**
  * Extension of the ImageView that handles any kind of image already supported
@@ -63,6 +63,7 @@ public class ImageViewEx extends ImageView {
 
     private int mMaxHeight, mMaxWidth;
 
+    private float mGifAspectRatio;
     private Movie mGif;
     private double mGifStartTime;
     private int mFrameDuration = 67;
@@ -257,6 +258,7 @@ public class ImageViewEx extends ImageView {
             stopLoading();
             mSetDrawableRunnable.setDrawable(d);
             mHandler.post(mSetDrawableRunnable);
+            mGifAspectRatio = -1;
         }
         else {
             // Disables the HW acceleration when viewing a GIF on Android 3+
@@ -268,6 +270,7 @@ public class ImageViewEx extends ImageView {
             stopLoading();
             mSetGifRunnable.setGif(gif);
             mHandler.post(mSetGifRunnable);
+            mGifAspectRatio = (float) gif.width() / gif.height();
         }
     }
 
@@ -687,6 +690,13 @@ public class ImageViewEx extends ImageView {
      */
     public boolean getIsFixedSize() {
         return mIsFixedSize;
+    }
+    
+    /**
+     * If a gif is loaded get the aspect ratio of the gif. Otherwise return -1
+     */
+    public float getGifAspectRatio(){
+    	return mGifAspectRatio;
     }
 
     /**
