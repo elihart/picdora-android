@@ -1,9 +1,5 @@
 package com.picdora;
 
-import net.frakbot.imageviewex.ImageViewEx;
-import android.content.ContentValues;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -11,10 +7,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.util.DisplayMetrics;
 import android.view.Menu;
-import android.view.Window;
-import android.view.WindowManager;
 
 public class MainActivity extends FragmentActivity {
 	/**
@@ -57,7 +50,7 @@ public class MainActivity extends FragmentActivity {
 
 		@Override
 		public Fragment getItem(int position) {
-			ImageSwipeFragment frag = new ImageSwipeFragment();
+			ImageSwipeFragment frag = new ImageSwipeFragment_();
 
 			Image image = mImageManager.getImage(position);
 			image.markView();

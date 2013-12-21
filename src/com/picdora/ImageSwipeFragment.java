@@ -13,45 +13,206 @@ import android.graphics.Bitmap;
 import android.graphics.Movie;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.DisplayMetrics;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 
+import com.googlecode.androidannotations.annotations.AfterViews;
+import com.googlecode.androidannotations.annotations.EFragment;
+import com.googlecode.androidannotations.annotations.ViewById;
 import com.nostra13.universalimageloader.cache.disc.DiscCacheAware;
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.DiscCacheUtil;
 import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.assist.ImageLoadingListener;
+import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.assist.ImageSize;
 
+@EFragment(R.layout.swipable_image)
 public class ImageSwipeFragment extends Fragment {
-	private ImageViewNext mGifView;
-	private ImageView mImageView;
+	@ViewById(R.id.gif)
+	ImageViewNext mGifView;
+	@ViewById(R.id.image)
+	ImageView mImageView;
+	@ViewById(R.id.progress)
+	ProgressBar mProgress;
+
 	private PhotoViewAttacher mAttacher;
-	private ProgressBar mProgress;
-	private RelativeLayout mImagesContainer;
 
-	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container,
-			Bundle savedInstanceState) {
-		//Util.log("Creating fragment at " + new Date());
-		// Inflate the layout for this fragment
-		View view = inflater.inflate(R.layout.swipable_image, container, false);
-		mImagesContainer = (RelativeLayout) view.findViewById(R.id.images_container);
-		mGifView = (ImageViewNext) mImagesContainer.findViewById(R.id.gif);
-		mImageView = (ImageView) mImagesContainer.findViewById(R.id.image);
-		mProgress = (ProgressBar) view.findViewById(R.id.progress);
-
+	@AfterViews
+	void addImage() {
 		// get image to display
-		String imageJson = getArguments().getString("imageJson");
-		final Image image = Util.fromJson(imageJson, Image.class);
 
+		String imageJson = getArguments().getString("imageJson");
+		Image image = Util.fromJson(imageJson, Image.class);
+		// Date start = new Date();
+		// Date end = new Date();
+		// Util.log("Create image " + (end.getTime() - start.getTime()));
+
+		setScreenSize();
+
+		// reset and hide the views until an image is loaded
+		cleanupImages();
+		mGifView.setVisibility(View.GONE);
+		mImageView.setVisibility(View.GONE);
+		mProgress.setVisibility(View.VISIBLE);
+
+		// use a different loader if the image is an animated gif
+		if (image.isGif()) {
+			loadGif(image);
+		} else {
+			loadImage(image, null);
+		}
+	}
+
+	private void loadGif(Image image) {
+		mGifView.setLoadCallbacks(new ImageLoadCompletionListener() {
+
+			@Override
+			public void onLoadStarted(ImageViewNext v, CacheLevel level) {
+
+			}
+
+			@Override
+			public void onLoadError(ImageViewNext v, CacheLevel level) {
+				// don't care about the cache misses, but if the network misses
+				// then we have a problem
+				switch (level) {
+				case DISK:
+					break;
+				case MEMORY:
+					break;
+				case NETWORK:
+					Util.log("Error getting gif from network");
+					// TODO: Handle this
+					break;
+				default:
+					break;
+				}
+			}
+
+			@Override
+			public void onLoadCompleted(ImageViewNext v, CacheLevel level) {
+				mProgress.setVisibility(View.GONE);
+				mGifView.setVisibility(View.VISIBLE);
+			}
+		});
+
+		mGifView.setUrl(image.getUrl());
+	}
+
+	private void loadImage(final Image image, final DisplayImageOptions options) {
+
+		ImageLoadingListener listener = new ImageLoadingListener() {
+
+			@Override
+			public void onLoadingStarted(String arg0, View arg1) {
+
+			}
+
+			@Override
+			public void onLoadingFailed(String arg0, View arg1,
+					FailReason reason) {
+				mImageView.setImageResource(R.drawable.ic_launcher);
+				switch (reason.getType()) {
+				case DECODING_ERROR:
+					break;
+				case IO_ERROR:
+					break;
+				case NETWORK_DENIED:
+					break;
+				case OUT_OF_MEMORY:
+					// Do something about the memory error. If options were
+					// already passed in tell the handler not to try again with
+					// new options
+					if (options != null) {
+						handleOutOfMemory(image, false);
+					} else {
+						handleOutOfMemory(image, true);
+					}
+					break;
+				case UNKNOWN:
+					break;
+				default:
+					break;
+				}
+			}
+
+			@Override
+			public void onLoadingComplete(String imageUri, View view, Bitmap bm) {
+				Util.log("Image loaded");
+				// check if this image is actually a gif.
+				DiscCacheAware cache = ImageLoader.getInstance().getDiscCache();
+				File file = DiscCacheUtil.findInCache(image.getUrl(), cache);
+
+				try {
+					Movie gif = Movie.decodeFile(file.getAbsolutePath());
+					if (gif != null) {
+						// TODO: Handle gif
+					}
+				} catch (Exception e) {
+
+				}
+
+				// add image to view
+				mImageView.setImageBitmap(bm);
+				mProgress.setVisibility(View.GONE);
+				mImageView.setVisibility(View.VISIBLE);
+
+				// attacher Photoviewer for zooming
+				mAttacher = new PhotoViewAttacher(mImageView);
+
+			}
+
+			@Override
+			public void onLoadingCancelled(String arg0, View arg1) {
+
+			}
+		};
+
+		// If specific display options were specified then use them. otherwise
+		// use the defaults
+		String url = image.getUrl();
+		if (options == null) {
+			ImageLoader.getInstance().loadImage(url, listener);
+		} else {
+			ImageLoader.getInstance().loadImage(url, options, listener);
+		}
+	}
+
+	/**
+	 * Called when the image loader hits an out of memory error. If try again is
+	 * true we'll attempt to load the image again with lower settings. Otherwise
+	 * we'll give up and show an error
+	 * 
+	 * @param image
+	 * @param tryAgain
+	 */
+	private void handleOutOfMemory(Image image, boolean tryAgain) {
+		Util.log("Handling out of memory");
+
+		if (tryAgain) {
+			// retry with lower bitmap display
+			DisplayImageOptions options = new DisplayImageOptions.Builder()
+					.cacheOnDisc(true).imageScaleType(ImageScaleType.EXACTLY)
+					.bitmapConfig(Bitmap.Config.RGB_565).build();
+
+			loadImage(image, options);
+		} else {
+			// TODO: Display error or something.
+		}
+
+	}
+
+	/**
+	 * Set the max size of the image views to be the screen size. This will
+	 * allow us to save memory by scaling the images to fit the screen
+	 */
+	private void setScreenSize() {
 		// Give the screen size so images are scaled to save memory
 		DisplayMetrics displaymetrics = new DisplayMetrics();
 		getActivity().getWindowManager().getDefaultDisplay()
@@ -60,156 +221,30 @@ public class ImageSwipeFragment extends Fragment {
 		// get max size for display
 		int screenHeight = displaymetrics.heightPixels;
 		int screenWidth = displaymetrics.widthPixels;
-		final float screenAspectRatio = (float) screenWidth / screenHeight;
 
 		mGifView.setMaxHeight(screenHeight);
 		mGifView.setMaxWidth(screenWidth);
 
 		mImageView.setMaxHeight(screenHeight);
 		mImageView.setMaxWidth(screenWidth);
-
-		// set url and load image
-		final String url = image.getUrl();
-		//setIsLoading(true);
-		
-		
-
-		if (image.isGif()) {
-			mGifView.setVisibility(View.VISIBLE);
-			mImageView.setVisibility(View.GONE);
-			//setIsLoading(true);
-
-			mGifView.setLoadCallbacks(new ImageLoadCompletionListener() {
-
-				@Override
-				public void onLoadStarted(ImageViewNext v, CacheLevel level) {
-
-				}
-
-				@Override
-				public void onLoadError(ImageViewNext v, CacheLevel level) {
-					//setIsLoading(false);
-					Util.log("Error loading gif " + url);
-
-				}
-
-				@Override
-				public void onLoadCompleted(ImageViewNext v, CacheLevel level) {
-					//setIsLoading(false);
-				}
-			});
-
-			mGifView.setUrl(url);
-
-			mImageView.setImageBitmap(null);
-		} else {
-			mGifView.setVisibility(View.GONE);
-			mImageView.setVisibility(View.VISIBLE);
-
-			mGifView.setImageBitmap(null);
-
-			ImageSize size = new ImageSize(screenWidth, screenHeight);
-
-			ImageLoader.getInstance().loadImage(url, size,
-					new ImageLoadingListener() {
-
-						@Override
-						public void onLoadingStarted(String arg0, View arg1) {
-
-						}
-
-						@Override
-						public void onLoadingFailed(String arg0, View arg1,
-								FailReason reason) {
-							//setIsLoading(false);
-							mImageView.setImageResource(R.drawable.ic_launcher);
-							switch (reason.getType()) {
-							case DECODING_ERROR:
-								break;
-							case IO_ERROR:
-								break;
-							case NETWORK_DENIED:
-								break;
-							case OUT_OF_MEMORY:
-								Util.log("Out of memory on " + url);
-								break;
-							case UNKNOWN:
-								break;
-							default:
-								break;
-							}
-						}
-
-						@Override
-						public void onLoadingComplete(String imageUri,
-								View view, Bitmap bm) {
-							//Util.log("Setting image at " + new Date());
-							//setIsLoading(false);
-							mImageView.setImageBitmap(bm);
-							
-							Date start = new Date();
-							DiscCacheAware cache = ImageLoader.getInstance().getDiscCache();
-							File file = DiscCacheUtil.findInCache(url, cache);
-
-							Movie gif = Movie.decodeFile(file.getAbsolutePath());
-							if(gif != null){
-								// TODO: Handle gif
-							}
-							
-							Date end = new Date();
-							
-							long gifTime = end.getTime() - start.getTime();
-							//Util.log("Checking gif took " + gifTime);
-
-							// attacher Photoviewer for zooming
-							mAttacher = new PhotoViewAttacher(mImageView);
-
-						}
-
-						@Override
-						public void onLoadingCancelled(String arg0, View arg1) {
-							//setIsLoading(false);
-
-						}
-					});
-		}
-
-		return view;
-	}
-	
-	private byte[] readFile(File file) throws IOException {
-        // Open file
-        RandomAccessFile f = new RandomAccessFile(file, "r");
-        try {
-            // Get and check length
-            long longlength = f.length();
-            int length = (int) longlength;
-            if (length != longlength)
-                throw new IOException("File size >= 2 GB");
-            // Read file and return data
-            byte[] data = new byte[length];
-            f.readFully(data);
-            return data;
-        } finally {
-            f.close();
-        }
-    }
-
-	private void setIsLoading(boolean loading) {
-		if (loading) {
-			Util.log("Showing loading");
-			mImagesContainer.setVisibility(View.INVISIBLE);
-			mProgress.setVisibility(View.VISIBLE);
-		} else {
-			Util.log("Hiding loading");
-			mImagesContainer.setVisibility(View.VISIBLE);
-			mProgress.setVisibility(View.INVISIBLE);
-		}
 	}
 
 	@Override
 	public void onDestroyView() {
 		super.onDestroyView();
+
+		cleanupImages();
+	}
+
+	/**
+	 * Cleanup memory being used for images. Recycle any bitmaps in use, remove
+	 * references, and cleanup the image attacher
+	 */
+	private void cleanupImages() {
+		if (mAttacher != null) {
+			mAttacher.cleanup();
+		}
+
 		if (mGifView != null) {
 			Drawable drawable = mGifView.getDrawable();
 			if (drawable instanceof BitmapDrawable) {

@@ -1,7 +1,5 @@
 package com.picdora;
 
-import java.util.Date;
-
 import se.emilsjolander.sprinkles.Migration;
 import se.emilsjolander.sprinkles.Sprinkles;
 import android.app.Application;
@@ -10,14 +8,15 @@ import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
+import android.graphics.Bitmap;
 
 public class PicdoraApp extends Application {
 
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		
-		//Util.log("Creating app at " + new Date());
+
+		// Util.log("Creating app at " + new Date());
 
 		runMigrations();
 

@@ -1,12 +1,12 @@
 package com.picdora;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 
 import se.emilsjolander.sprinkles.CursorList;
-import se.emilsjolander.sprinkles.ManyQuery;
 import se.emilsjolander.sprinkles.Query;
 
 import com.loopj.android.http.AsyncHttpClient;
@@ -22,7 +22,7 @@ public class ImageManager {
 
 	public Image getImage(int index) {
 		if (index >= mImages.size()) {
-			loadImageBatchFromDb(index - mImages.size() + 1, mImages);
+			loadImageBatchFromDb(index - mImages.size() + 1 + 10, mImages);
 		}
 
 		return mImages.get(index);
