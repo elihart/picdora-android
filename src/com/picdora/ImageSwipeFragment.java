@@ -1,26 +1,15 @@
 package com.picdora;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.util.Date;
 
-import uk.co.senab.photoview.PhotoViewAttacher;
-
-import com.nostra13.universalimageloader.core.DisplayImageOptions;
-import com.nostra13.universalimageloader.core.ImageLoader;
-import com.nostra13.universalimageloader.core.assist.FailReason;
-import com.nostra13.universalimageloader.core.assist.FailReason.FailType;
-import com.nostra13.universalimageloader.core.assist.ImageLoadingListener;
-import com.nostra13.universalimageloader.core.assist.ImageScaleType;
-import com.nostra13.universalimageloader.core.assist.ImageSize;
-import com.nostra13.universalimageloader.core.process.BitmapProcessor;
-
-import net.frakbot.imageviewex.ImageViewEx.FillDirection;
 import net.frakbot.imageviewex.ImageViewNext;
 import net.frakbot.imageviewex.ImageViewNext.CacheLevel;
 import net.frakbot.imageviewex.ImageViewNext.ImageLoadCompletionListener;
-import android.content.res.Configuration;
+import uk.co.senab.photoview.PhotoViewAttacher;
 import android.graphics.Bitmap;
-import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Movie;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -30,10 +19,16 @@ import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewGroup.LayoutParams;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+
+import com.nostra13.universalimageloader.cache.disc.DiscCacheAware;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.assist.DiscCacheUtil;
+import com.nostra13.universalimageloader.core.assist.FailReason;
+import com.nostra13.universalimageloader.core.assist.ImageLoadingListener;
+import com.nostra13.universalimageloader.core.assist.ImageSize;
 
 public class ImageSwipeFragment extends Fragment {
 	private ImageViewNext mGifView;
@@ -45,17 +40,17 @@ public class ImageSwipeFragment extends Fragment {
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
+		//Util.log("Creating fragment at " + new Date());
 		// Inflate the layout for this fragment
 		View view = inflater.inflate(R.layout.swipable_image, container, false);
-		mGifView = (ImageViewNext) view.findViewById(R.id.gif);
-		mImageView = (ImageView) view.findViewById(R.id.image);
+		mImagesContainer = (RelativeLayout) view.findViewById(R.id.images_container);
+		mGifView = (ImageViewNext) mImagesContainer.findViewById(R.id.gif);
+		mImageView = (ImageView) mImagesContainer.findViewById(R.id.image);
 		mProgress = (ProgressBar) view.findViewById(R.id.progress);
-		mImagesContainer = (RelativeLayout) view
-				.findViewById(R.id.images_container);
 
 		// get image to display
 		String imageJson = getArguments().getString("imageJson");
-		Image image = Util.fromJson(imageJson, Image.class);
+		final Image image = Util.fromJson(imageJson, Image.class);
 
 		// Give the screen size so images are scaled to save memory
 		DisplayMetrics displaymetrics = new DisplayMetrics();
@@ -75,12 +70,14 @@ public class ImageSwipeFragment extends Fragment {
 
 		// set url and load image
 		final String url = image.getUrl();
-		setIsLoading(true);
+		//setIsLoading(true);
+		
+		
 
 		if (image.isGif()) {
 			mGifView.setVisibility(View.VISIBLE);
 			mImageView.setVisibility(View.GONE);
-			setIsLoading(true);
+			//setIsLoading(true);
 
 			mGifView.setLoadCallbacks(new ImageLoadCompletionListener() {
 
@@ -91,14 +88,14 @@ public class ImageSwipeFragment extends Fragment {
 
 				@Override
 				public void onLoadError(ImageViewNext v, CacheLevel level) {
-					setIsLoading(false);
+					//setIsLoading(false);
 					Util.log("Error loading gif " + url);
 
 				}
 
 				@Override
 				public void onLoadCompleted(ImageViewNext v, CacheLevel level) {
-					setIsLoading(false);
+					//setIsLoading(false);
 				}
 			});
 
@@ -124,7 +121,7 @@ public class ImageSwipeFragment extends Fragment {
 						@Override
 						public void onLoadingFailed(String arg0, View arg1,
 								FailReason reason) {
-							setIsLoading(false);
+							//setIsLoading(false);
 							mImageView.setImageResource(R.drawable.ic_launcher);
 							switch (reason.getType()) {
 							case DECODING_ERROR:
@@ -146,8 +143,23 @@ public class ImageSwipeFragment extends Fragment {
 						@Override
 						public void onLoadingComplete(String imageUri,
 								View view, Bitmap bm) {
-							setIsLoading(false);
+							//Util.log("Setting image at " + new Date());
+							//setIsLoading(false);
 							mImageView.setImageBitmap(bm);
+							
+							Date start = new Date();
+							DiscCacheAware cache = ImageLoader.getInstance().getDiscCache();
+							File file = DiscCacheUtil.findInCache(url, cache);
+
+							Movie gif = Movie.decodeFile(file.getAbsolutePath());
+							if(gif != null){
+								// TODO: Handle gif
+							}
+							
+							Date end = new Date();
+							
+							long gifTime = end.getTime() - start.getTime();
+							//Util.log("Checking gif took " + gifTime);
 
 							// attacher Photoviewer for zooming
 							mAttacher = new PhotoViewAttacher(mImageView);
@@ -156,7 +168,7 @@ public class ImageSwipeFragment extends Fragment {
 
 						@Override
 						public void onLoadingCancelled(String arg0, View arg1) {
-							setIsLoading(false);
+							//setIsLoading(false);
 
 						}
 					});
@@ -164,6 +176,24 @@ public class ImageSwipeFragment extends Fragment {
 
 		return view;
 	}
+	
+	private byte[] readFile(File file) throws IOException {
+        // Open file
+        RandomAccessFile f = new RandomAccessFile(file, "r");
+        try {
+            // Get and check length
+            long longlength = f.length();
+            int length = (int) longlength;
+            if (length != longlength)
+                throw new IOException("File size >= 2 GB");
+            // Read file and return data
+            byte[] data = new byte[length];
+            f.readFully(data);
+            return data;
+        } finally {
+            f.close();
+        }
+    }
 
 	private void setIsLoading(boolean loading) {
 		if (loading) {

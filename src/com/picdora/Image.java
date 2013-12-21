@@ -231,6 +231,11 @@ public class Image extends Model {
 		mReported = reported;
 		save();
 	}
+	
+	public void setGif(boolean gif) {
+		mGif = true;
+		save();
+	}
 
 	public void markView() {
 		mViewCount++;
@@ -248,4 +253,6 @@ public class Image extends Model {
 	public String getUrl() {
 			return "http://imgur.com/" + mImgurId + ".jpg";		
 	}
+
+	
 }

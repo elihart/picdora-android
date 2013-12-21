@@ -1,33 +1,23 @@
 package com.picdora;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.util.Date;
 
 import se.emilsjolander.sprinkles.Migration;
 import se.emilsjolander.sprinkles.Sprinkles;
 import android.app.Application;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory.Options;
 
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
-import com.nostra13.universalimageloader.core.assist.LoadedFrom;
-import com.nostra13.universalimageloader.core.decode.ImageDecoder;
-import com.nostra13.universalimageloader.core.decode.ImageDecodingInfo;
-import com.nostra13.universalimageloader.core.display.BitmapDisplayer;
-import com.nostra13.universalimageloader.core.download.ImageDownloader;
-import com.nostra13.universalimageloader.core.imageaware.ImageAware;
-import com.nostra13.universalimageloader.core.process.BitmapProcessor;
-
-import net.frakbot.imageviewex.ImageViewNext;
 
 public class PicdoraApp extends Application {
 
 	@Override
 	public void onCreate() {
 		super.onCreate();
+		
+		//Util.log("Creating app at " + new Date());
 
 		runMigrations();
 
