@@ -12,6 +12,7 @@ import se.emilsjolander.sprinkles.Query;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
+import com.picdora.models.Image;
 
 public class ImageManager {
 	private ArrayList<Image> mImages;
@@ -36,9 +37,9 @@ public class ImageManager {
 	 * @param count
 	 */
 	private void loadImageBatchFromDb(int count, ArrayList<Image> images) {
-		String query = "SELECT * FROM Images ORDER BY viewCount ASC LIMIT "
+		String query = "SELECT * FROM Images ORDER BY viewCount ASC, redditScore DESC LIMIT "
 				+ Integer.toString(count);
-		//String query = "SELECT * FROM Images WHERE gif=0";
+//		String query = "SELECT * FROM Images WHERE nsfw=0 AND gif=1 ORDER BY redditScore DESC";
 
 		CursorList<Image> list = Query.many(Image.class, query, null).get();
 		images.addAll(list.asList());

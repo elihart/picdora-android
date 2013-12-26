@@ -1,4 +1,4 @@
-package com.picdora;
+package com.picdora.models;
 
 import java.util.Date;
 

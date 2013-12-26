@@ -9,10 +9,10 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
 import com.picdora.R.layout;
 import net.frakbot.imageviewex.ImageViewNext;
+import uk.co.senab.photoview.PhotoView;
 
 public final class ImageSwipeFragment_
     extends ImageSwipeFragment
@@ -30,8 +30,8 @@ public final class ImageSwipeFragment_
     }
 
     private void afterSetContentView_() {
+        mPhotoView = ((PhotoView) findViewById(com.picdora.R.id.image));
         mGifView = ((ImageViewNext) findViewById(com.picdora.R.id.gif));
-        mImageView = ((ImageView) findViewById(com.picdora.R.id.image));
         mProgress = ((ProgressBar) findViewById(com.picdora.R.id.progress));
         addImage();
     }

@@ -1,5 +1,12 @@
 package com.picdora;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.picdora.models.Category;
+import com.picdora.models.Channel;
+import com.picdora.models.Image;
+
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -9,7 +16,7 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.Menu;
 
-public class MainActivity extends FragmentActivity {
+public class ChannelViewActivity extends FragmentActivity {
 	/**
 	 * The pager widget, which handles animation and allows swiping horizontally
 	 * to access previous and next wizard steps.
@@ -21,10 +28,28 @@ public class MainActivity extends FragmentActivity {
 	 */
 	private PagerAdapter mPagerAdapter;
 
+	private ChannelPlayer mChannelPlayer;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+
+		// add some categories
+		List<Category> categories = new ArrayList<Category>();
+		categories.add(new Category(1, "test1", false, false));
+		categories.add(new Category(2, "test2", false, false));
+		categories.add(new Category(3, "test3", true, false));
+		categories.add(new Category(4, "test4", true, true));
+
+		for (Category cat : categories) {
+			cat.save();
+		}
+
+		Channel channel = new Channel(1, "testChannel", categories);
+		channel.save();
+		
+		mChannelPlayer = new ChannelPlayer(channel);
 
 		// Instantiate a ViewPager and a PagerAdapter.
 		mPager = (ViewPager) findViewById(R.id.pager);
@@ -41,18 +66,16 @@ public class MainActivity extends FragmentActivity {
 	}
 
 	private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
-		private ImageManager mImageManager;
 
 		public ScreenSlidePagerAdapter(FragmentManager fm) {
 			super(fm);
-			mImageManager = new ImageManager();
 		}
 
 		@Override
 		public Fragment getItem(int position) {
 			ImageSwipeFragment frag = new ImageSwipeFragment_();
 
-			Image image = mImageManager.getImage(position);
+			Image image = mChannelPlayer.getImage(position);
 			image.markView();
 
 			Bundle args = new Bundle();

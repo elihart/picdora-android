@@ -1,14 +1,12 @@
 package com.picdora;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.util.Date;
+
+import uk.co.senab.photoview.PhotoView;
 
 import net.frakbot.imageviewex.ImageViewNext;
 import net.frakbot.imageviewex.ImageViewNext.CacheLevel;
 import net.frakbot.imageviewex.ImageViewNext.ImageLoadCompletionListener;
-import uk.co.senab.photoview.PhotoViewAttacher;
 import android.graphics.Bitmap;
 import android.graphics.Movie;
 import android.graphics.drawable.BitmapDrawable;
@@ -25,23 +23,20 @@ import com.googlecode.androidannotations.annotations.ViewById;
 import com.nostra13.universalimageloader.cache.disc.DiscCacheAware;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
-import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.DiscCacheUtil;
 import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.assist.ImageLoadingListener;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
-import com.nostra13.universalimageloader.core.assist.ImageSize;
+import com.picdora.models.Image;
 
 @EFragment(R.layout.swipable_image)
 public class ImageSwipeFragment extends Fragment {
 	@ViewById(R.id.gif)
 	ImageViewNext mGifView;
 	@ViewById(R.id.image)
-	ImageView mImageView;
+	PhotoView mPhotoView;
 	@ViewById(R.id.progress)
 	ProgressBar mProgress;
-
-	private PhotoViewAttacher mAttacher;
 
 	@AfterViews
 	void addImage() {
@@ -49,6 +44,7 @@ public class ImageSwipeFragment extends Fragment {
 
 		String imageJson = getArguments().getString("imageJson");
 		Image image = Util.fromJson(imageJson, Image.class);
+
 		// Date start = new Date();
 		// Date end = new Date();
 		// Util.log("Create image " + (end.getTime() - start.getTime()));
@@ -58,7 +54,7 @@ public class ImageSwipeFragment extends Fragment {
 		// reset and hide the views until an image is loaded
 		cleanupImages();
 		mGifView.setVisibility(View.GONE);
-		mImageView.setVisibility(View.GONE);
+		mPhotoView.setVisibility(View.GONE);
 		mProgress.setVisibility(View.VISIBLE);
 
 		// use a different loader if the image is an animated gif
@@ -69,7 +65,7 @@ public class ImageSwipeFragment extends Fragment {
 		}
 	}
 
-	private void loadGif(Image image) {
+	private void loadGif(final Image image) {
 		mGifView.setLoadCallbacks(new ImageLoadCompletionListener() {
 
 			@Override
@@ -117,7 +113,7 @@ public class ImageSwipeFragment extends Fragment {
 			@Override
 			public void onLoadingFailed(String arg0, View arg1,
 					FailReason reason) {
-				mImageView.setImageResource(R.drawable.ic_launcher);
+				mPhotoView.setImageResource(R.drawable.ic_launcher);
 				switch (reason.getType()) {
 				case DECODING_ERROR:
 					break;
@@ -144,27 +140,37 @@ public class ImageSwipeFragment extends Fragment {
 
 			@Override
 			public void onLoadingComplete(String imageUri, View view, Bitmap bm) {
-				Util.log("Image loaded");
+
 				// check if this image is actually a gif.
 				DiscCacheAware cache = ImageLoader.getInstance().getDiscCache();
 				File file = DiscCacheUtil.findInCache(image.getUrl(), cache);
+				
+				// check for image deletion
+				// http://imgur.com/l7sMPQe.jpg
+				int deletedImgHash = 1101349688;
+				if(deletedImgHash == bm.hashCode()){
+					Util.log("deleted image found! " + imageUri);
+				}
+				Util.log(imageUri + " : " + bm.hashCode());
 
 				try {
 					Movie gif = Movie.decodeFile(file.getAbsolutePath());
 					if (gif != null) {
-						// TODO: Handle gif
+						image.setGif(true);
+						loadGif(image);
+						return;
 					}
 				} catch (Exception e) {
 
 				}
 
 				// add image to view
-				mImageView.setImageBitmap(bm);
+				mPhotoView.setImageBitmap(bm);
 				mProgress.setVisibility(View.GONE);
-				mImageView.setVisibility(View.VISIBLE);
+				mPhotoView.setVisibility(View.VISIBLE);
 
 				// attacher Photoviewer for zooming
-				mAttacher = new PhotoViewAttacher(mImageView);
+				//mAttacher = new PhotoViewAttacher(mImageView);
 
 			}
 
@@ -225,8 +231,8 @@ public class ImageSwipeFragment extends Fragment {
 		mGifView.setMaxHeight(screenHeight);
 		mGifView.setMaxWidth(screenWidth);
 
-		mImageView.setMaxHeight(screenHeight);
-		mImageView.setMaxWidth(screenWidth);
+		mPhotoView.setMaxHeight(screenHeight);
+		mPhotoView.setMaxWidth(screenWidth);
 	}
 
 	@Override
@@ -241,9 +247,6 @@ public class ImageSwipeFragment extends Fragment {
 	 * references, and cleanup the image attacher
 	 */
 	private void cleanupImages() {
-		if (mAttacher != null) {
-			mAttacher.cleanup();
-		}
 
 		if (mGifView != null) {
 			Drawable drawable = mGifView.getDrawable();
@@ -256,8 +259,8 @@ public class ImageSwipeFragment extends Fragment {
 			}
 		}
 
-		if (mImageView != null) {
-			Drawable drawable = mImageView.getDrawable();
+		if (mPhotoView != null) {
+			Drawable drawable = mPhotoView.getDrawable();
 			if (drawable instanceof BitmapDrawable) {
 				BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
 				Bitmap bitmap = bitmapDrawable.getBitmap();
