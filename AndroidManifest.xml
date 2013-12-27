@@ -38,10 +38,6 @@
             android:name="com.picdora.ChannelSelectionActivity"
             android:label="@string/title_activity_channel_selection" >
         </activity>
-        <activity
-            android:name="com.picdora.PicdoraActivity"
-            android:label="@string/title_activity_picdora" >
-        </activity>
     </application>
 
 </manifest>

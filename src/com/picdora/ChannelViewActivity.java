@@ -3,22 +3,20 @@ package com.picdora;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.picdora.models.Category;
-import com.picdora.models.Channel;
-import com.picdora.models.Image;
-import com.picdora.models.Channel.GifSetting;
-import com.picdora.ui.SlidingMenuHelper;
-
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.Menu;
-import android.view.Window;
-import android.view.WindowManager;
+
+import com.picdora.*;
+import com.picdora.models.Category;
+import com.picdora.models.Channel;
+import com.picdora.models.Channel.GifSetting;
+import com.picdora.models.Image;
+import com.picdora.ui.SlidingMenuHelper;
 
 public class ChannelViewActivity extends PicdoraActivity {
 	/**
@@ -73,7 +71,7 @@ public class ChannelViewActivity extends PicdoraActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.main, menu);
+		getMenuInflater().inflate(R.menu.channel_view, menu);
 		return true;
 	}
 
