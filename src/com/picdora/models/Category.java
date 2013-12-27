@@ -1,5 +1,8 @@
 package com.picdora.models;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import se.emilsjolander.sprinkles.Model;
 import se.emilsjolander.sprinkles.annotations.Column;
 import se.emilsjolander.sprinkles.annotations.PrimaryKey;
@@ -31,6 +34,38 @@ public class Category extends Model {
 	
 	public Category(){
 		
+	}
+
+	public Category(JSONObject jsonObject) {
+		mId = -1;
+		try {
+			mId = jsonObject.getInt("id");
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		mName = "BadName";
+		try {
+			mName = jsonObject.getString("name");
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		try {
+			mNsfw = jsonObject.getBoolean("nsfw");
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		try {
+			mPorn = jsonObject.getBoolean("porn");
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public int getId() {

@@ -6,6 +6,7 @@ import java.util.List;
 import com.picdora.models.Category;
 import com.picdora.models.Channel;
 import com.picdora.models.Image;
+import com.picdora.models.Channel.GifSetting;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -37,16 +38,9 @@ public class ChannelViewActivity extends FragmentActivity {
 
 		// add some categories
 		List<Category> categories = new ArrayList<Category>();
-		categories.add(new Category(1, "test1", false, false));
-		categories.add(new Category(2, "test2", false, false));
-		categories.add(new Category(3, "test3", true, false));
-		categories.add(new Category(4, "test4", true, true));
+		categories.add(CategoryHelper.getCategoryById(1));
 
-		for (Category cat : categories) {
-			cat.save();
-		}
-
-		Channel channel = new Channel(1, "testChannel", categories);
+		Channel channel = new Channel(1, "testChannel", categories, GifSetting.ONLY);
 		channel.save();
 		
 		mChannelPlayer = new ChannelPlayer(channel);

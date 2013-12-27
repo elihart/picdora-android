@@ -31,8 +31,8 @@ public final class ImageSwipeFragment_
 
     private void afterSetContentView_() {
         mPhotoView = ((PhotoView) findViewById(com.picdora.R.id.image));
-        mGifView = ((ImageViewNext) findViewById(com.picdora.R.id.gif));
         mProgress = ((ProgressBar) findViewById(com.picdora.R.id.progress));
+        mGifView = ((ImageViewNext) findViewById(com.picdora.R.id.gif));
         addImage();
     }
 

@@ -52,7 +52,7 @@ public class PicdoraApp extends Application {
 
 	// Run db migrations with sprinkles
 	private void runMigrations() {
-		//Util.log("Delete : " + deleteDatabase("sprinkles.db"));
+		Util.log("Delete : " + deleteDatabase("sprinkles.db"));
 		Sprinkles sprinkles = Sprinkles.getInstance(getApplicationContext());
 
 		// create models
@@ -62,21 +62,10 @@ public class PicdoraApp extends Application {
 		addModelsMigration.createTable(Channel.class);
 		sprinkles.addMigration(addModelsMigration);
 		
-//		Migration categoriesMigration = new Migration();		
-//		categoriesMigration.createTable(Image.class);
-//		sprinkles.addMigration(categoriesMigration);
-//		
-//		Migration channelsMigration = new Migration();		
-//		channelsMigration.createTable(Image.class);
-//		sprinkles.addMigration(channelsMigration);
-
-
-		// get some images
-		 ImageManager.getImagesFromServer(100);
 		
+		//ImageManager.getCategoriesFromServer();
 		
-		
-		
+		//ImageManager.getImagesFromServer(10, 1);
 	}
 
 }

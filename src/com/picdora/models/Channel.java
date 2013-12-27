@@ -42,6 +42,8 @@ public class Channel extends Model {
 		mName = name;
 		mCategories = categories;
 		mGifSetting = gifSetting.ordinal();
+		
+		// TODO: Set nsfw based on categories
 	}
 
 	public Channel() {
