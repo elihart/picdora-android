@@ -4,5 +4,11 @@
     <string name="app_name">Picdora</string>
     <string name="action_settings">Settings</string>
     <string name="hello_world">Hello world!</string>
+    <string name="title_activity_channel_creation">ChannelCreationActivity</string>
+    <string name="title_activity_channel_selection">ChannelSelectionActivity</string>
+    <string name="title_activity_picdora">PicdoraActivity</string>
+    
+    <string name="drawer_close">Close Drawer</string>
+    <string name="drawer_open">Open drawer</string>
 
 </resources>

@@ -7,7 +7,7 @@ import se.emilsjolander.sprinkles.Query;
 public class CategoryHelper {
 	
 	public static Category getCategoryById(int categoryId){
-		return Query.one(Category.class, "SELECT * FROM Categories WHERE id=" + categoryId, null).get();		
+		return Query.one(Category.class, "SELECT * FROM Categories WHERE id=?", categoryId).get();		
 	}
 
 }

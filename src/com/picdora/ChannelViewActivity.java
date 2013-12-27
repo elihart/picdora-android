@@ -17,7 +17,7 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.Menu;
 
-public class ChannelViewActivity extends FragmentActivity {
+public class ChannelViewActivity extends PicdoraActivity {
 	/**
 	 * The pager widget, which handles animation and allows swiping horizontally
 	 * to access previous and next wizard steps.
@@ -35,12 +35,18 @@ public class ChannelViewActivity extends FragmentActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		
+
+		
+		//ImageManager.getCategoriesFromServer();
+		
+//		ImageManager.getImagesFromServer(50, 1);
 
 		// add some categories
 		List<Category> categories = new ArrayList<Category>();
 		categories.add(CategoryHelper.getCategoryById(1));
 
-		Channel channel = new Channel(1, "testChannel", categories, GifSetting.ONLY);
+		Channel channel = new Channel(1, "testChannel", categories, GifSetting.ALLOWED);
 		channel.save();
 		
 		mChannelPlayer = new ChannelPlayer(channel);

@@ -1,8 +1,5 @@
 package com.picdora;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import se.emilsjolander.sprinkles.Migration;
 import se.emilsjolander.sprinkles.Sprinkles;
 import android.app.Application;
@@ -14,8 +11,6 @@ import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.picdora.models.Category;
 import com.picdora.models.Channel;
 import com.picdora.models.Image;
-
-import android.graphics.Bitmap;
 
 public class PicdoraApp extends Application {
 
@@ -52,7 +47,7 @@ public class PicdoraApp extends Application {
 
 	// Run db migrations with sprinkles
 	private void runMigrations() {
-		Util.log("Delete : " + deleteDatabase("sprinkles.db"));
+//		Util.log("Delete : " + deleteDatabase("sprinkles.db"));
 		Sprinkles sprinkles = Sprinkles.getInstance(getApplicationContext());
 
 		// create models
@@ -62,10 +57,6 @@ public class PicdoraApp extends Application {
 		addModelsMigration.createTable(Channel.class);
 		sprinkles.addMigration(addModelsMigration);
 		
-		
-		//ImageManager.getCategoriesFromServer();
-		
-		//ImageManager.getImagesFromServer(10, 1);
 	}
 
 }

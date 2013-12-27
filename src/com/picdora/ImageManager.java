@@ -56,7 +56,7 @@ public class ImageManager {
 		}
 	}
 
-	public static void getImagesFromServer(int count, int categoryId) {
+	public static void getImagesFromServer(int count, final int categoryId) {
 		AsyncHttpClient client = new AsyncHttpClient();
 		
 		ArrayList<Integer> exclude = new ArrayList<Integer>();
@@ -74,8 +74,10 @@ public class ImageManager {
 
 					@Override
 					public void onSuccess(org.json.JSONArray response) {
-						Util.log(response.toString());
 						saveImagesToDb(response);
+//						if(categoryId < 76){
+//							getImagesFromServer(50, categoryId + 1);
+//						}
 					}
 
 					@Override
@@ -118,7 +120,7 @@ public class ImageManager {
 		for (int i = 0; i < numImages; i++) {
 			try {
 				Image image = new Image(json.getJSONObject((i)));
-				image.save();
+				Util.log("save image: " + image.save());
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -131,7 +133,7 @@ public class ImageManager {
 		for (int i = 0; i < numCategories; i++) {
 			try {
 				Category cat = new Category(json.getJSONObject((i)));
-				cat.save();
+				Util.log("Save category: " + cat.save());
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

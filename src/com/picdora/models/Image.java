@@ -24,32 +24,16 @@ public class Image extends Model {
 	@Column("categoryId")
 	private int mCategoryId;
 
-	@Column("albumId")
-	private int mAlbumId;
-
-	@Column("reported")
-	private boolean mReported = false;
-
-	@Column("deleted")
-	private boolean mDeleted = false;;
 
 	@Column("nsfw")
 	private boolean mNsfw;
 
+	// TODO: Can take this out
 	@Column("porn")
-	private boolean mPorn;
+	private boolean mPorn;	
 
 	@Column("gif")
 	private boolean mGif;
-
-	@Column("landscape")
-	private boolean mLandscape;
-
-	@Column("liked")
-	private boolean mLiked = false;;
-
-	@Column("favorite")
-	private boolean mFavorite = false;
 
 	@Column("viewCount")
 	private int mViewCount = 0;
@@ -75,13 +59,12 @@ public class Image extends Model {
 	 * @param gif
 	 */
 	public Image(int id, String imgurId, int redditScore, int categoryId,
-			boolean nsfw, boolean porn, boolean gif) {
+			boolean nsfw, boolean gif) {
 		this.mId = id;
 		this.mImgurId = imgurId;
 		this.mRedditScore = redditScore;
 		this.mCategoryId = categoryId;
 		this.mNsfw = nsfw;
-		this.mPorn = porn;
 		this.mGif = gif;
 	}
 
@@ -126,14 +109,6 @@ public class Image extends Model {
 			e.printStackTrace();
 		}
 		
-		mPorn = false;
-		try {
-			mPorn = obj.getBoolean("porn");
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
 		mGif = false;
 		try {
 			mGif = obj.getBoolean("gif");
@@ -161,18 +136,6 @@ public class Image extends Model {
 		return mCategoryId;
 	}
 
-	public int getAlbumId() {
-		return mAlbumId;
-	}
-
-	public boolean isReported() {
-		return mReported;
-	}
-
-	public boolean isDeleted() {
-		return mDeleted;
-	}
-
 	public boolean isNsfw() {
 		return mNsfw;
 	}
@@ -185,18 +148,6 @@ public class Image extends Model {
 		return mGif;
 	}
 
-	public boolean isLandscape() {
-		return mLandscape;
-	}
-
-	public boolean isLiked() {
-		return mLiked;
-	}
-
-	public boolean isFavorite() {
-		return mFavorite;
-	}
-
 	public int getViewCount() {
 		return mViewCount;
 	}
@@ -206,31 +157,6 @@ public class Image extends Model {
 	}
 
 	/***************** Setters **********************/
-
-	public void setLiked(boolean liked) {
-		mLiked = liked;
-		save();
-	}
-
-	public void setLandscape(boolean landscape) {
-		mLandscape = landscape;
-		save();
-	}
-
-	public void setFavorite(boolean favorite) {
-		mFavorite = favorite;
-		save();
-	}
-
-	public void setDeleted(boolean deleted) {
-		mDeleted = deleted;
-		save();
-	}
-
-	public void setReported(boolean reported) {
-		mReported = reported;
-		save();
-	}
 	
 	public void setGif(boolean gif) {
 		mGif = true;
