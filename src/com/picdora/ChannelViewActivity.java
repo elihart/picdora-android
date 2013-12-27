@@ -7,6 +7,7 @@ import com.picdora.models.Category;
 import com.picdora.models.Channel;
 import com.picdora.models.Image;
 import com.picdora.models.Channel.GifSetting;
+import com.picdora.ui.SlidingMenuHelper;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -16,6 +17,8 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.Menu;
+import android.view.Window;
+import android.view.WindowManager;
 
 public class ChannelViewActivity extends PicdoraActivity {
 	/**
@@ -34,8 +37,17 @@ public class ChannelViewActivity extends PicdoraActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_main);
 		
+		// set full screen
+//		requestWindowFeature(Window.FEATURE_NO_TITLE);
+//        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, 
+//                                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        
+		setContentView(R.layout.activity_channel_view);
+		
+		SlidingMenuHelper.addMenuToActivity(this, false);
+		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+		getSupportActionBar().setHomeButtonEnabled(true);		
 
 		
 		//ImageManager.getCategoriesFromServer();

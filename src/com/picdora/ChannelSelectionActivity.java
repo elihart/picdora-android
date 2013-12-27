@@ -14,7 +14,6 @@ public class ChannelSelectionActivity extends PicdoraActivity {
 		setContentView(R.layout.activity_channel_selection);
 		
 		SlidingMenuHelper.addMenuToActivity(this, true);
-		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 		getSupportActionBar().setHomeButtonEnabled(true);
 	}
 

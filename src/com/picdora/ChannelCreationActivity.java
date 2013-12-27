@@ -1,8 +1,9 @@
 package com.picdora;
 
 import android.os.Bundle;
-import android.app.Activity;
 import android.view.Menu;
+
+import com.picdora.ui.SlidingMenuHelper;
 
 public class ChannelCreationActivity extends PicdoraActivity {
 
@@ -10,6 +11,10 @@ public class ChannelCreationActivity extends PicdoraActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_channel_creation);
+		
+		SlidingMenuHelper.addMenuToActivity(this, true);
+		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+		getSupportActionBar().setHomeButtonEnabled(true);
 	}
 
 	@Override

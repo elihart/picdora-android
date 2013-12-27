@@ -23,7 +23,7 @@
         <activity
             android:name="com.picdora.ChannelViewActivity"
             android:label="@string/app_name"
-            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" >
+             >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
