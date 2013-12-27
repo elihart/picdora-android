@@ -12,6 +12,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
 import com.picdora.ChannelSelectionActivity;
+import com.picdora.ChannelSelectionActivity_;
 import com.picdora.PicdoraActivity;
 import com.picdora.R;
 
@@ -31,7 +32,7 @@ public class SlidingMenuHelper {
 		ArrayList<SlidingMenuItem> items = new ArrayList<SlidingMenuItem>();
 
 		items.add(new SlidingMenuItem(R.drawable.ic_launcher, "Channels",
-				ChannelSelectionActivity.class));
+				ChannelSelectionActivity_.class));
 
 
 		return items;

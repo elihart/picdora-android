@@ -48,16 +48,9 @@ public class ChannelViewActivity extends PicdoraActivity {
 		getSupportActionBar().setHomeButtonEnabled(true);		
 
 		
-		//ImageManager.getCategoriesFromServer();
+		String json = getIntent().getStringExtra("channel");
+		Channel channel = Util.fromJson(json, Channel.class);
 		
-//		ImageManager.getImagesFromServer(50, 1);
-
-		// add some categories
-		List<Category> categories = new ArrayList<Category>();
-		categories.add(CategoryHelper.getCategoryById(1));
-
-		Channel channel = new Channel(1, "testChannel", categories, GifSetting.ALLOWED);
-		channel.save();
 		
 		mChannelPlayer = new ChannelPlayer(channel);
 
