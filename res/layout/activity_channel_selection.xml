@@ -12,7 +12,9 @@
         <ListView
             android:id="@+id/channelList"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" >
+            android:layout_height="wrap_content"
+            android:divider="@color/black"
+            android:dividerHeight="2dp" >
         </ListView>
 
     </RelativeLayout>

@@ -1,44 +1,58 @@
 package com.picdora;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import se.emilsjolander.sprinkles.CursorList;
+import se.emilsjolander.sprinkles.Model;
+import se.emilsjolander.sprinkles.Query;
+
+import se.emilsjolander.sprinkles.annotations.Table;
+
 import android.content.Context;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
 
 public class Util {
-	
+
 	/**
 	 * Converts a java object to a Json string. Uses Google GSON
-	 * @param src The object to be converted 
+	 * 
+	 * @param src
+	 *            The object to be converted
 	 * @return A string of JSON representing the source object
 	 */
-	public static String toJson(Object src){
-			// simple wrapper function for GSON
-			Gson gson = new Gson();		
-			return gson.toJson(src);
+	public static String toJson(Object src) {
+		// simple wrapper function for GSON
+		Gson gson = new Gson();
+		return gson.toJson(src);
 	}
-	
+
 	/**
 	 * Convert a JSON string to a java class object
+	 * 
 	 * @param <T>
 	 * 
-	 * @param json The json string to convert
-	 * @param classType The class to convert to - e.g. Song.class
+	 * @param json
+	 *            The json string to convert
+	 * @param classType
+	 *            The class to convert to - e.g. Song.class
 	 * @return The converted object. Null on failure
 	 */
 	public static <T> T fromJson(String json, Class<T> classType) {
 		// simple wrapper function for GSON
-		Gson gson = new Gson();	
+		Gson gson = new Gson();
 		T result = null;
 		try {
-			result = gson.fromJson(json, classType);		
-		} catch(Exception e) {
+			result = gson.fromJson(json, classType);
+		} catch (Exception e) {
 			return null;
 		}
-		
+
 		return result;
 	}
-	
+
 	/**
 	 * Display a toast with default settings
 	 * 
@@ -71,6 +85,16 @@ public class Util {
 		} else {
 			return false;
 		}
+	}
+
+	public static <T extends Model> List<T> all(Class<T> clazz) {
+		List<T> models = new ArrayList<T>();
+		String query = "SELECT * FROM " + clazz.getAnnotation(Table.class).value();
+		CursorList<T> list = Query.many(clazz, query, null).get();
+		models.addAll(list.asList());
+		list.close();
+
+		return models;
 	}
 
 }

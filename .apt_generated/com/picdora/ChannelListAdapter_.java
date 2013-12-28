@@ -24,7 +24,6 @@ public final class ChannelListAdapter_
         if (!(context_ instanceof Activity)) {
             return ;
         }
-        ((ChannelHelper_) channelHelper).afterSetContentView_();
     }
 
     /**
@@ -42,7 +41,6 @@ public final class ChannelListAdapter_
             Activity activity = ((Activity) context_);
         }
         context = context_;
-        channelHelper = ChannelHelper_.getInstance_(context_);
         initAdapter();
     }
 

@@ -1,8 +1,5 @@
 package com.picdora;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -11,19 +8,22 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.Menu;
 
-import com.picdora.*;
-import com.picdora.models.Category;
+import com.googlecode.androidannotations.annotations.AfterViews;
+import com.googlecode.androidannotations.annotations.EActivity;
+import com.googlecode.androidannotations.annotations.Fullscreen;
+import com.googlecode.androidannotations.annotations.NoTitle;
+import com.googlecode.androidannotations.annotations.ViewById;
 import com.picdora.models.Channel;
-import com.picdora.models.Channel.GifSetting;
 import com.picdora.models.Image;
 import com.picdora.ui.SlidingMenuHelper;
 
+@NoTitle
+@Fullscreen
+@EActivity(R.layout.activity_channel_view)
 public class ChannelViewActivity extends PicdoraActivity {
-	/**
-	 * The pager widget, which handles animation and allows swiping horizontally
-	 * to access previous and next wizard steps.
-	 */
-	private ViewPager mPager;
+
+	 @ViewById
+	ViewPager pager;
 
 	/**
 	 * The pager adapter, which provides the pages to the view pager widget.
@@ -31,34 +31,19 @@ public class ChannelViewActivity extends PicdoraActivity {
 	private PagerAdapter mPagerAdapter;
 
 	private ChannelPlayer mChannelPlayer;
-
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		
-		// set full screen
-//		requestWindowFeature(Window.FEATURE_NO_TITLE);
-//        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, 
-//                                WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        
-		setContentView(R.layout.activity_channel_view);
-		
-		SlidingMenuHelper.addMenuToActivity(this, false);
-		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-		getSupportActionBar().setHomeButtonEnabled(true);		
-
+	
+	@AfterViews
+	void initViews() {
+		SlidingMenuHelper.addMenuToActivity(this, true);
 		
 		String json = getIntent().getStringExtra("channel");
-		Channel channel = Util.fromJson(json, Channel.class);
-		
+		Channel channel = Util.fromJson(json, Channel.class);		
 		
 		mChannelPlayer = new ChannelPlayer(channel);
 
-		// Instantiate a ViewPager and a PagerAdapter.
-		mPager = (ViewPager) findViewById(R.id.pager);
+		// Instantiate a ViewPager and a PagerAdapter
 		mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
-		mPager.setAdapter(mPagerAdapter);
-
+		pager.setAdapter(mPagerAdapter);
 	}
 
 	@Override

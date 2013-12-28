@@ -7,7 +7,10 @@
         android:id="@+id/channelName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
+        android:layout_alignParentLeft="true"
+        android:layout_margin="10dp"
+        android:layout_centerVertical="true"
+        android:textSize="25sp" />
+    
 
 </RelativeLayout>

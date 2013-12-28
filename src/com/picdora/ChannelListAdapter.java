@@ -5,11 +5,9 @@ import java.util.List;
 import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 
 import com.googlecode.androidannotations.annotations.AfterInject;
-import com.googlecode.androidannotations.annotations.Bean;
 import com.googlecode.androidannotations.annotations.EBean;
 import com.googlecode.androidannotations.annotations.RootContext;
 import com.picdora.models.Channel;
@@ -18,15 +16,12 @@ import com.picdora.models.Channel;
 public class ChannelListAdapter extends BaseAdapter {
 List<Channel> channels;
     
-    @Bean(ChannelHelper.class)
-    ChannelHelper channelHelper;
-    
     @RootContext
     Context context;
 
     @AfterInject
     void initAdapter() {
-        channels = channelHelper.getAll();
+        channels = Util.all(Channel.class);
     }
 
 

@@ -9,18 +9,16 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.view.ViewPager;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.ViewGroup.LayoutParams;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.ListView;
+import android.view.Window;
 import com.googlecode.androidannotations.api.SdkVersionHelper;
+import com.picdora.R.id;
 import com.picdora.R.layout;
-import com.picdora.models.Channel;
 
-public final class ChannelSelectionActivity_
-    extends ChannelSelectionActivity
+public final class ChannelViewActivity_
+    extends ChannelViewActivity
 {
 
 
@@ -28,31 +26,16 @@ public final class ChannelSelectionActivity_
     public void onCreate(Bundle savedInstanceState) {
         init_(savedInstanceState);
         super.onCreate(savedInstanceState);
-        setContentView(layout.activity_channel_selection);
+        setContentView(layout.activity_channel_view);
     }
 
     private void init_(Bundle savedInstanceState) {
-        adapter = ChannelListAdapter_.getInstance_(this);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN, android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN);
     }
 
     private void afterSetContentView_() {
-        channelList = ((ListView) findViewById(com.picdora.R.id.channelList));
-        {
-            AdapterView<?> view = ((AdapterView<?> ) findViewById(com.picdora.R.id.channelList));
-            if (view!= null) {
-                view.setOnItemClickListener(new OnItemClickListener() {
-
-
-                    @Override
-                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        channelListItemClicked(((Channel) parent.getAdapter().getItem(position)));
-                    }
-
-                }
-                );
-            }
-        }
-        ((ChannelListAdapter_) adapter).afterSetContentView_();
+        pager = ((ViewPager) findViewById(id.pager));
         initViews();
     }
 
@@ -63,7 +46,7 @@ public final class ChannelSelectionActivity_
     }
 
     @Override
-    public void setContentView(View view, LayoutParams params) {
+    public void setContentView(View view, android.view.ViewGroup.LayoutParams params) {
         super.setContentView(view, params);
         afterSetContentView_();
     }
@@ -82,8 +65,8 @@ public final class ChannelSelectionActivity_
         return super.onKeyDown(keyCode, event);
     }
 
-    public static ChannelSelectionActivity_.IntentBuilder_ intent(Context context) {
-        return new ChannelSelectionActivity_.IntentBuilder_(context);
+    public static ChannelViewActivity_.IntentBuilder_ intent(Context context) {
+        return new ChannelViewActivity_.IntentBuilder_(context);
     }
 
     public static class IntentBuilder_ {
@@ -93,14 +76,14 @@ public final class ChannelSelectionActivity_
 
         public IntentBuilder_(Context context) {
             context_ = context;
-            intent_ = new Intent(context, ChannelSelectionActivity_.class);
+            intent_ = new Intent(context, ChannelViewActivity_.class);
         }
 
         public Intent get() {
             return intent_;
         }
 
-        public ChannelSelectionActivity_.IntentBuilder_ flags(int flags) {
+        public ChannelViewActivity_.IntentBuilder_ flags(int flags) {
             intent_.setFlags(flags);
             return this;
         }
