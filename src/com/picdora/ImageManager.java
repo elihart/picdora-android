@@ -8,6 +8,7 @@ import org.json.JSONException;
 
 import se.emilsjolander.sprinkles.CursorList;
 import se.emilsjolander.sprinkles.Query;
+import se.emilsjolander.sprinkles.Transaction;
 
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
@@ -48,20 +49,23 @@ public class ImageManager {
 		images.addAll(list.asList());
 		list.close();
 	}
-	
-	public static void getImagesFromServer(int count){
-		CursorList<Category> list = Query.many(Category.class, "SELECT * FROM Categories", null).get();
-		for(Category cat : list.asList()){
+
+	public static void getImagesFromServer(int count) {
+		CursorList<Category> list = Query.many(Category.class,
+				"SELECT * FROM Categories", null).get();
+		for (Category cat : list.asList()) {
 			getImagesFromServer(count, cat.getId());
 		}
 	}
 
 	public static void getImagesFromServer(int count, final int categoryId) {
 		AsyncHttpClient client = new AsyncHttpClient();
-		
+
 		ArrayList<Integer> exclude = new ArrayList<Integer>();
-		CursorList<Image> list = Query.many(Image.class, "SELECT id FROM Images WHERE categoryId=" + categoryId, null).get();
-		for(Image img : list.asList()){
+		CursorList<Image> list = Query.many(Image.class,
+				"SELECT id FROM Images WHERE categoryId=" + categoryId, null)
+				.get();
+		for (Image img : list.asList()) {
 			exclude.add(img.getId());
 		}
 
@@ -75,9 +79,9 @@ public class ImageManager {
 					@Override
 					public void onSuccess(org.json.JSONArray response) {
 						saveImagesToDb(response);
-//						if(categoryId < 76){
-//							getImagesFromServer(50, categoryId + 1);
-//						}
+						if (categoryId < 76) {
+							getImagesFromServer(50, categoryId + 1);
+						}
 					}
 
 					@Override
@@ -90,7 +94,7 @@ public class ImageManager {
 	}
 
 	public static void getCategoriesFromServer() {
-		AsyncHttpClient client= new AsyncHttpClient();
+		AsyncHttpClient client = new AsyncHttpClient();
 
 		client.get("http://picdora.com:3000/categories",
 				new JsonHttpResponseHandler() {
@@ -116,28 +120,37 @@ public class ImageManager {
 	 * @param images
 	 */
 	private static void saveImagesToDb(JSONArray json) {
-		int numImages = json.length();
-		for (int i = 0; i < numImages; i++) {
-			try {
+		Transaction t = new Transaction();
+		try {
+			int numImages = json.length();
+			for (int i = numImages - 1; i >= 0; i--) {
 				Image image = new Image(json.getJSONObject((i)));
-				Util.log("save image: " + image.save());
-			} catch (JSONException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				image.save(t);
 			}
+			t.setSuccessful(true);
+		} catch (Exception e) {
+			e.printStackTrace();
+			t.setSuccessful(false);
+		} finally {
+			t.finish();
 		}
 	}
-	
+
 	private static void saveCategoriesToDb(JSONArray json) {
-		int numCategories = json.length();
-		for (int i = 0; i < numCategories; i++) {
-			try {
+		Transaction t = new Transaction();
+		try {
+			int numCategories = json.length();
+			for (int i = numCategories - 1; i >= 0; i--) {
 				Category cat = new Category(json.getJSONObject((i)));
-				Util.log("Save category: " + cat.save());
-			} catch (JSONException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				cat.save(t);
 			}
+			t.setSuccessful(true);
+		} catch (Exception e) {
+			Util.log("Exception thrown while saving categories");
+			e.printStackTrace();
+			t.setSuccessful(false);
+		} finally {
+			t.finish();
 		}
 	}
 }

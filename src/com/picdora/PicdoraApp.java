@@ -47,7 +47,7 @@ public class PicdoraApp extends Application {
 
 	// Run db migrations with sprinkles
 	private void runMigrations() {
-//		Util.log("Delete : " + deleteDatabase("sprinkles.db"));
+		//Util.log("Delete : " + deleteDatabase("sprinkles.db"));
 		Sprinkles sprinkles = Sprinkles.getInstance(getApplicationContext());
 
 		// create models

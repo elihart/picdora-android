@@ -83,5 +83,25 @@ public class Category extends Model {
 	public boolean getPorn() {
 		return mPorn;
 	}
+	
+	
+
+	// base equals and hashcode on id
+	@Override
+    public boolean equals(Object obj) {
+        if (obj == null)
+            return false;
+        if (obj == this)
+            return true;
+        if (!(obj instanceof Category))
+            return false;
+
+        Category cat = (Category) obj;
+        return cat.getId() == mId;
+    }
+    
+    public int hashCode() {
+        return mId;
+    }
 
 }

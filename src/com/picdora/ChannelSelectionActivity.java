@@ -27,13 +27,14 @@ public class ChannelSelectionActivity extends PicdoraActivity {
 		getSupportActionBar().setHomeButtonEnabled(true);
 		
         channelList.setAdapter(adapter);
+		
+//		ImageManager.getCategoriesFromServer();
+		//ImageManager.getImagesFromServer(50, 1);
     }
 	
 	@ItemClick
     void channelListItemClicked(Channel channel) {
-        Intent intent = new Intent(this, ChannelViewActivity_.class);
-        intent.putExtra("channel", Util.toJson(channel));
-        startActivity(intent);
+        ChannelHelper.playChannel(channel, this);
     }
 
 	@Override
@@ -56,7 +57,7 @@ public class ChannelSelectionActivity extends PicdoraActivity {
 	}
 	
 	private void newChannel(){
-		startActivity(new Intent(this, ChannelCreationActivity.class));
+		startActivity(new Intent(this, ChannelCreationActivity_.class));
 	}
 
 }

@@ -34,8 +34,12 @@
             android:label="@string/app_name" >
         </activity>
         <activity
-            android:name="com.picdora.ChannelCreationActivity"
-            android:label="@string/title_activity_channel_creation" >
+            android:name="com.picdora.ChannelCreationActivity_"
+            android:label="@string/title_activity_channel_creation"
+            android:parentActivityName="com.picdora.ChannelSelectionActivity_" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="om.picdora.ChannelSelectionActivity_" />
         </activity>
     </application>
 

@@ -10,9 +10,97 @@
         android:layout_height="match_parent" >
 
         <TextView
+            android:id="@+id/nameLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/hello_world" />
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="10dp"
+            android:textSize="20sp"
+            android:text="Channel Name" />
+
+        <EditText
+            android:id="@+id/channelName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_below="@+id/nameLabel"
+            android:layout_marginLeft="20dp"
+            android:singleLine="true"
+            android:imeOptions="actionDone"
+            android:hint="My New Channel"
+            android:ems="10" >
+
+            <requestFocus />
+        </EditText>
+
+        <TextView
+            android:id="@+id/gifLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_below="@+id/channelName"
+            android:layout_margin="10dp"
+            android:textSize="20sp"
+            android:text="Show Gifs?" />
+
+        <RadioGroup
+            android:id="@+id/gifSetting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_below="@+id/gifLabel"
+            android:layout_marginLeft="20dp"
+            android:checkedButton="@+id/gif_allowed"
+            android:orientation="horizontal" >
+
+            <RadioButton
+                android:id="@+id/gif_none"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="No" />
+
+            <RadioButton
+                android:id="@+id/gif_allowed"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Yes" />
+
+            <RadioButton
+                android:id="@+id/gif_only"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Exclusively!" />
+        </RadioGroup>
+
+        <TextView
+            android:id="@+id/categoryLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_below="@+id/gifSetting"
+            android:layout_marginTop="10dp"
+            android:layout_marginLeft="10dp"
+            android:textSize="20sp"
+            android:text="Categories" />
+
+        <ListView
+            android:id="@+id/categoryList"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/createButton"
+            android:layout_below="@+id/categoryLabel"
+            android:layout_marginTop="20dp" >
+        </ListView>
+
+        <Button
+            android:id="@+id/createButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:text="Create Channel!" />
     </RelativeLayout>
 
     <!-- The navigation drawer -->

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import se.emilsjolander.sprinkles.Model;
+import se.emilsjolander.sprinkles.annotations.AutoIncrementPrimaryKey;
 import se.emilsjolander.sprinkles.annotations.Column;
 import se.emilsjolander.sprinkles.annotations.PrimaryKey;
 import se.emilsjolander.sprinkles.annotations.Table;
@@ -19,9 +20,9 @@ public class Channel extends Model {
 	}
 	
 	/********** DB Fields ***********************/
-	@PrimaryKey
+	@AutoIncrementPrimaryKey
 	@Column("id")
-	private int mId;
+	private long mId;
 
 	@Column("name")
 	private String mName;
@@ -36,9 +37,7 @@ public class Channel extends Model {
 	@Column("gifSetting")
 	private int mGifSetting;
 	
-	public Channel(int id, String name, List<Category> categories, GifSetting gifSetting) {
-		super();
-		mId = id;
+	public Channel(String name, List<Category> categories, GifSetting gifSetting) {
 		mName = name;
 		mCategories = categories;
 		mGifSetting = gifSetting.ordinal();
@@ -51,7 +50,7 @@ public class Channel extends Model {
 	}
 	
 
-	public int getId() {
+	public long getId() {
 		return mId;
 	}
 
