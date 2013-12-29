@@ -67,6 +67,7 @@ public abstract class ImageManager {
 		// TODO: Efficient raw query to get image ids
 		Date start = new Date();
 		List<Integer> exclude = new ArrayList<Integer>();
+		// TODO: Fix this to allow multiple ids
 		CursorList<Image> list = Query.many(Image.class,
 				"SELECT id FROM Images WHERE categoryId=" + categoryIds, null)
 				.get();

@@ -5,9 +5,14 @@ import java.util.List;
 
 import org.json.JSONException;
 
+import se.emilsjolander.sprinkles.Sprinkles;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
+import android.text.TextUtils;
 
 import com.googlecode.androidannotations.annotations.EBean;
 import com.googlecode.androidannotations.annotations.RootContext;
@@ -38,7 +43,7 @@ public class ChannelHelper {
 		RequestParams params = new RequestParams();
 
 		// set the categories to include
-		params.put("category_ids", getCategoryIds(channel));
+		params.put("category_ids", getCategoryIdsList(channel));
 
 		// set the gif setting. Leave it blank if gifs should be included,
 		// false if we don't want them, and true if we only want gifs
@@ -64,19 +69,19 @@ public class ChannelHelper {
 
 						int count;
 						try {
-							count = response.getInt("key");
+							count = response.getInt("count");
 							listener.onSuccess(count);
 						} catch (JSONException e) {
 							listener.onFailure("Json error");
 						}
-						
+
 					}
 
 					@Override
 					public void onFailure(int statusCode,
 							org.apache.http.Header[] headers,
 							java.lang.String responseBody, java.lang.Throwable e) {
-						
+
 						listener.onFailure("Request failed");
 					}
 				});
@@ -88,7 +93,7 @@ public class ChannelHelper {
 	 * @param channel
 	 * @return A list of the category ids
 	 */
-	private static List<Integer> getCategoryIds(Channel channel) {
+	private static List<Integer> getCategoryIdsList(Channel channel) {
 		List<Integer> ids = new ArrayList<Integer>();
 		for (Category cat : channel.getCategories()) {
 			ids.add(cat.getId());
@@ -98,6 +103,7 @@ public class ChannelHelper {
 
 	public interface OnImageCountReadyListener {
 		public void onSuccess(int count);
+
 		public void onFailure(String errorMsg);
 	}
 
@@ -106,14 +112,37 @@ public class ChannelHelper {
 	 * channel
 	 * 
 	 * @param channel
+	 * @param unseen
+	 *            Whether or not to just count images where view count is 0
 	 */
-	public static int getLocalImageCount(Channel channel) {
-		// TODO:
-		// SQLiteStatement s = mDb.compileStatement(select count(*) from users
-		// where uname='"+loginname+ "' and pwd='"+loginpass+"');";
-		//
-		// long count = s.simpleQueryForLong();
-		return 0;
+	public static long getLocalImageCount(Channel channel, boolean unseen) {
+		SQLiteDatabase db = Sprinkles.getDatabase();
+		String query = "SELECT count(*) FROM Images WHERE categoryId IN "
+				+ ChannelHelper.getCategoryIdsString(channel);
+		
+		if(unseen){
+			query += " AND viewCount=0";
+		}
 
+		SQLiteStatement s = db.compileStatement(query);
+
+		return s.simpleQueryForLong();
 	}
+
+	/**
+	 * get a comma separated list of categories ids for use in a sql query
+	 * 
+	 * @return
+	 */
+	public static String getCategoryIdsString(Channel channel) {
+		List<Category> categories = channel.getCategories();
+
+		List<Integer> ids = new ArrayList<Integer>();
+		for (Category cat : categories) {
+			ids.add(cat.getId());
+		}
+
+		return ("(" + TextUtils.join(",", ids) + ")");
+	}
+
 }

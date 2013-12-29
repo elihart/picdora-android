@@ -8,6 +8,8 @@ import se.emilsjolander.sprinkles.Query;
 
 import android.text.TextUtils;
 
+import com.picdora.ChannelHelper;
+import com.picdora.ImageManager;
 import com.picdora.models.Category;
 import com.picdora.models.Channel;
 import com.picdora.models.Image;
@@ -28,10 +30,14 @@ public class ChannelPlayer {
 		mChannel = channel;
 		mImages = new ArrayList<Image>();
 		
+		// TODO: Async?
 		int numImagesLoaded = loadImageBatchFromDb(STARTING_IMAGE_COUNT, mImages);
 		
+		// if we don't have enough local images for this channel retrieve some from the database
 		if(numImagesLoaded < IMAGE_UPDATE_THRESHOLD){
-			
+			//ImageManager.getImagesFromServer(limit, categoryIds, gif)
+		} else {
+			listener.onReady();
 		}
 	}
 
@@ -54,7 +60,7 @@ public class ChannelPlayer {
 		// build the query. Start by only selecting images from categories that
 		// this channel includes
 		String query = "SELECT * FROM Images WHERE categoryId IN "
-				+ getCategoryIds();
+				+ ChannelHelper.getCategoryIdsString(mChannel);
 
 		// add the gif setting
 		switch (mChannel.getGifSetting()) {
@@ -80,17 +86,7 @@ public class ChannelPlayer {
 		return resultCount;
 	}
 
-	// get a comma separated list of categories ids for use in a sql query
-	private String getCategoryIds() {
-		List<Category> categories = mChannel.getCategories();
-
-		List<Integer> ids = new ArrayList<Integer>();
-		for (Category cat : categories) {
-			ids.add(cat.getId());
-		}
-
-		return ("(" + TextUtils.join(",", ids) + ")");
-	}
+	
 
 	/**
 	 * Callback methods for when the player is ready to start playing

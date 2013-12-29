@@ -1,6 +1,7 @@
 package se.emilsjolander.sprinkles;
 
 import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +29,10 @@ public class Sprinkles {
 		}
 		sInstance.mContext = context.getApplicationContext();
 		return sInstance;
+	}
+	
+	public static SQLiteDatabase getDatabase(){
+		return DbOpenHelper.getInstance();
 	}
 
     /**
