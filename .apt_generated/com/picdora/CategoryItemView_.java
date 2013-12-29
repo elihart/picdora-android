@@ -41,8 +41,8 @@ public final class CategoryItemView_
     }
 
     private void afterSetContentView_() {
-        categoryName = ((TextView) findViewById(id.categoryName));
         checkBox = ((CheckBox) findViewById(id.checkBox));
+        categoryName = ((TextView) findViewById(id.categoryName));
     }
 
     /**

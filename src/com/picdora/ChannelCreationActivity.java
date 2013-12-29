@@ -1,13 +1,11 @@
 package com.picdora;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import android.view.Menu;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.EditText;
@@ -18,7 +16,6 @@ import com.googlecode.androidannotations.annotations.AfterViews;
 import com.googlecode.androidannotations.annotations.Bean;
 import com.googlecode.androidannotations.annotations.Click;
 import com.googlecode.androidannotations.annotations.EActivity;
-import com.googlecode.androidannotations.annotations.ItemClick;
 import com.googlecode.androidannotations.annotations.ViewById;
 import com.picdora.models.Category;
 import com.picdora.models.Channel;
@@ -66,10 +63,16 @@ public class ChannelCreationActivity extends PicdoraActivity {
 				itemView.toggleChecked();
 
 				// set the item as selected
-				CategoryItem categoryItem = categoryListAdapter.getItem(position);
+				CategoryItem categoryItem = categoryListAdapter
+						.getItem(position);
 				categoryItem.selected = itemView.isChecked();
 			}
 		});
+	}
+	
+	@Click
+	void channelNameClicked(){
+		channelName.setError(null);
 	}
 
 	@Click
@@ -79,6 +82,14 @@ public class ChannelCreationActivity extends PicdoraActivity {
 		String name = channelName.getText().toString();
 
 		List<Category> categories = categoryListAdapter.getSelectedCategories();
+
+		if (categories.isEmpty()) {
+			Util.makeBasicToast(this, "You must select at least one category!");
+			return;
+		} else if (Util.isStringBlank(name)) {
+			channelName.setError("You have to give this channel a name!");
+			return;
+		}
 
 		Channel channel = new Channel(name, categories, gif);
 		boolean success = channel.save();

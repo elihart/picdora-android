@@ -37,8 +37,8 @@ public final class ChannelCreationActivity_
     }
 
     private void afterSetContentView_() {
-        categoryList = ((ListView) findViewById(id.categoryList));
         channelName = ((EditText) findViewById(id.channelName));
+        categoryList = ((ListView) findViewById(id.categoryList));
         gifSetting = ((RadioGroup) findViewById(id.gifSetting));
         {
             View view = findViewById(id.createButton);
@@ -55,9 +55,24 @@ public final class ChannelCreationActivity_
                 );
             }
         }
+        {
+            View view = findViewById(id.channelName);
+            if (view!= null) {
+                view.setOnClickListener(new OnClickListener() {
+
+
+                    @Override
+                    public void onClick(View view) {
+                        ChannelCreationActivity_.this.channelNameClicked();
+                    }
+
+                }
+                );
+            }
+        }
         ((CategoryListAdapter_) categoryListAdapter).afterSetContentView_();
-        initViews();
         initClickListener();
+        initViews();
     }
 
     @Override

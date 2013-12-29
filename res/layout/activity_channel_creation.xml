@@ -30,10 +30,7 @@
             android:singleLine="true"
             android:imeOptions="actionDone"
             android:hint="My New Channel"
-            android:ems="10" >
-
-            <requestFocus />
-        </EditText>
+            android:ems="10" />
 
         <TextView
             android:id="@+id/gifLabel"
