@@ -3,7 +3,7 @@
 //
 
 
-package com.picdora;
+package com.picdora.player;
 
 import android.app.Activity;
 import android.content.Context;
@@ -36,7 +36,7 @@ public final class ChannelViewActivity_
 
     private void afterSetContentView_() {
         pager = ((ViewPager) findViewById(id.pager));
-        initViews();
+        initChannel();
     }
 
     @Override

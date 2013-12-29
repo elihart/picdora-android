@@ -1,6 +1,7 @@
 package com.picdora;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.json.JSONArray;
@@ -17,21 +18,7 @@ import com.loopj.android.http.SyncHttpClient;
 import com.picdora.models.Category;
 import com.picdora.models.Image;
 
-public class ImageManager {
-	private ArrayList<Image> mImages;
-
-	public ImageManager() {
-		mImages = new ArrayList<Image>();
-	}
-
-	public Image getImage(int index) {
-		if (index >= mImages.size()) {
-			loadImageBatchFromDb(index - mImages.size() + 1 + 10, mImages);
-		}
-
-		return mImages.get(index);
-
-	}
+public abstract class ImageManager {
 
 	/**
 	 * Get the specified number of images from the database and load them into
@@ -50,38 +37,70 @@ public class ImageManager {
 		list.close();
 	}
 
-	public static void getImagesFromServer(int count) {
+	/**
+	 * Get images from every category that we have. Includes gifs indiscriminately
+	 * @param limit The number of images to try to get from each category. May be less if the category doesn't have enough images
+	 */
+	public static void getImagesFromServer(int limit) {
+		// TODO: Efficient raw query to just get category ids
 		CursorList<Category> list = Query.many(Category.class,
 				"SELECT * FROM Categories", null).get();
+		
+		List<Integer> ids = new ArrayList<Integer>();
 		for (Category cat : list.asList()) {
-			getImagesFromServer(count, cat.getId());
+			ids.add(cat.getId());
 		}
+		
+		getImagesFromServer(limit, ids, null);
 	}
 
-	public static void getImagesFromServer(int count, final int categoryId) {
-		AsyncHttpClient client = new AsyncHttpClient();
-
-		ArrayList<Integer> exclude = new ArrayList<Integer>();
+	/**
+	 * Get more images from the server, excluding images that we already have locally
+	 * @param limit The number of images to attempt to get. May retrieve less than this if we don't have this many unique images on the server
+	 * @param categoryIds The ids of the categories that the images should come from
+	 * @param gif Whether or not to retrieve gifs. false for no, true if we only want gifs, and null to mix gifs with images indiscriminately
+	 */
+	public static void getImagesFromServer(int limit,
+			final List<Integer> categoryIds, Boolean gif) {
+		// get list of images that we already have that we don't want the server
+		// to give us again
+		// TODO: Efficient raw query to get image ids
+		Date start = new Date();
+		List<Integer> exclude = new ArrayList<Integer>();
 		CursorList<Image> list = Query.many(Image.class,
-				"SELECT id FROM Images WHERE categoryId=" + categoryId, null)
+				"SELECT id FROM Images WHERE categoryId=" + categoryIds, null)
 				.get();
-		for (Image img : list.asList()) {
+		List<Image> imageList = list.asList();
+		for (Image img : imageList) {
 			exclude.add(img.getId());
 		}
+		Date end = new Date();
+		long duration = end.getTime() - start.getTime();
+		Util.log("Getting image exclude list took " + duration);
 
 		RequestParams params = new RequestParams();
-		params.put("count", Integer.toString(count));
-		params.put("category_id", Integer.toString(categoryId));
+		params.put("count", Integer.toString(limit));
+		params.put("category_ids", categoryIds);
 		params.put("exclude", exclude);
-		client.get("http://picdora.com:3000/images/top", params,
+
+		// set the gif setting. Leave it blank if gifs should be included,
+		// false if we don't want them, and true if we only want gifs
+		if (gif == null) {
+			// don't do anything and the server will include gifs by default
+		} else if (gif.booleanValue()) {
+			// get only gifs
+			params.put("gif", true);
+		} else {
+			// exclude gifs entirely
+			params.put("gif", false);
+		}
+
+		PicdoraApiClient.get("images/top", params,
 				new JsonHttpResponseHandler() {
 
 					@Override
 					public void onSuccess(org.json.JSONArray response) {
 						saveImagesToDb(response);
-						if (categoryId < 76) {
-							getImagesFromServer(50, categoryId + 1);
-						}
 					}
 
 					@Override
@@ -94,9 +113,7 @@ public class ImageManager {
 	}
 
 	public static void getCategoriesFromServer() {
-		AsyncHttpClient client = new AsyncHttpClient();
-
-		client.get("http://picdora.com:3000/categories",
+		PicdoraApiClient.get("categories",
 				new JsonHttpResponseHandler() {
 
 					@Override

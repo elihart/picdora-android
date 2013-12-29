@@ -1,4 +1,4 @@
-package com.picdora;
+package com.picdora.player;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -13,8 +13,15 @@ import com.googlecode.androidannotations.annotations.EActivity;
 import com.googlecode.androidannotations.annotations.Fullscreen;
 import com.googlecode.androidannotations.annotations.NoTitle;
 import com.googlecode.androidannotations.annotations.ViewById;
+import com.picdora.PicdoraActivity;
+import com.picdora.R;
+import com.picdora.Util;
+import com.picdora.R.layout;
+import com.picdora.R.menu;
 import com.picdora.models.Channel;
 import com.picdora.models.Image;
+import com.picdora.player.ChannelPlayer.ChannelError;
+import com.picdora.player.ChannelPlayer.OnReadyListener;
 import com.picdora.ui.SlidingMenuHelper;
 
 @NoTitle
@@ -22,7 +29,7 @@ import com.picdora.ui.SlidingMenuHelper;
 @EActivity(R.layout.activity_channel_view)
 public class ChannelViewActivity extends PicdoraActivity {
 
-	 @ViewById
+	@ViewById
 	ViewPager pager;
 
 	/**
@@ -31,16 +38,40 @@ public class ChannelViewActivity extends PicdoraActivity {
 	private PagerAdapter mPagerAdapter;
 
 	private ChannelPlayer mChannelPlayer;
-	
+
 	@AfterViews
-	void initViews() {
+	void initChannel() {
+		// add drawer
 		SlidingMenuHelper.addMenuToActivity(this, true);
 		
-		String json = getIntent().getStringExtra("channel");
-		Channel channel = Util.fromJson(json, Channel.class);		
-		
-		mChannelPlayer = new ChannelPlayer(channel);
+		// show loading screen
 
+		
+		// Load channel and play when ready
+		String json = getIntent().getStringExtra("channel");
+		Channel channel = Util.fromJson(json, Channel.class);
+
+		mChannelPlayer = new ChannelPlayer(channel, new OnReadyListener() {
+
+			@Override
+			public void onReady() {
+				startChannel();
+			}
+
+			@Override
+			public void onError(ChannelError error) {
+				handleError(error);
+			}
+		});
+
+	}
+
+	protected void handleError(ChannelError error) {
+		// TODO Auto-generated method stub
+
+	}
+
+	protected void startChannel() {
 		// Instantiate a ViewPager and a PagerAdapter
 		mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
 		pager.setAdapter(mPagerAdapter);

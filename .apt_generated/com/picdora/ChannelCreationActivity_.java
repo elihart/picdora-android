@@ -37,9 +37,9 @@ public final class ChannelCreationActivity_
     }
 
     private void afterSetContentView_() {
+        gifSetting = ((RadioGroup) findViewById(id.gifSetting));
         channelName = ((EditText) findViewById(id.channelName));
         categoryList = ((ListView) findViewById(id.categoryList));
-        gifSetting = ((RadioGroup) findViewById(id.gifSetting));
         {
             View view = findViewById(id.createButton);
             if (view!= null) {
@@ -71,8 +71,8 @@ public final class ChannelCreationActivity_
             }
         }
         ((CategoryListAdapter_) categoryListAdapter).afterSetContentView_();
-        initClickListener();
         initViews();
+        initClickListener();
     }
 
     @Override

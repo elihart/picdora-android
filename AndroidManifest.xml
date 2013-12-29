@@ -30,7 +30,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.picdora.ChannelViewActivity_"
+            android:name="com.picdora.player.ChannelViewActivity_"
             android:label="@string/app_name" >
         </activity>
         <activity

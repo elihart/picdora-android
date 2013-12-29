@@ -4,11 +4,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import com.picdora.models.Category;
-
 import se.emilsjolander.sprinkles.Query;
 
-public class CategoryHelper {
+import com.picdora.models.Category;
+
+public abstract class CategoryHelper {
 
 	public static Category getCategoryById(int categoryId) {
 		return Query.one(Category.class, "SELECT * FROM Categories WHERE id=?",
@@ -24,5 +24,7 @@ public class CategoryHelper {
 			}
 		});
 	}
+	
+	
 
 }

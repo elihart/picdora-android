@@ -1,4 +1,4 @@
-package com.picdora;
+package com.picdora.player;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,9 +17,22 @@ public class ChannelPlayer {
 	private Channel mChannel;
 	private List<Image> mImages;
 
-	public ChannelPlayer(Channel channel) {
+	// the number of images to start the channel with. If these are all run
+	// through then more can be retrieved
+	private static final int STARTING_IMAGE_COUNT = 50;
+	// The threshold for the number of unseen pictures left in this channel
+	// before we try to retrieve more from the database
+	private static final int IMAGE_UPDATE_THRESHOLD = 25;
+
+	public ChannelPlayer(Channel channel, OnReadyListener listener) {
 		mChannel = channel;
 		mImages = new ArrayList<Image>();
+		
+		int numImagesLoaded = loadImageBatchFromDb(STARTING_IMAGE_COUNT, mImages);
+		
+		if(numImagesLoaded < IMAGE_UPDATE_THRESHOLD){
+			
+		}
 	}
 
 	public Image getImage(int index) {
@@ -37,7 +50,7 @@ public class ChannelPlayer {
 	 * 
 	 * @param count
 	 */
-	private void loadImageBatchFromDb(int count, List<Image> images) {
+	private int loadImageBatchFromDb(int count, List<Image> images) {
 		// build the query. Start by only selecting images from categories that
 		// this channel includes
 		String query = "SELECT * FROM Images WHERE categoryId IN "
@@ -60,8 +73,11 @@ public class ChannelPlayer {
 				+ Integer.toString(count);
 
 		CursorList<Image> list = Query.many(Image.class, query, null).get();
+		int resultCount = list.size();
 		images.addAll(list.asList());
 		list.close();
+		
+		return resultCount;
 	}
 
 	// get a comma separated list of categories ids for use in a sql query
@@ -74,6 +90,22 @@ public class ChannelPlayer {
 		}
 
 		return ("(" + TextUtils.join(",", ids) + ")");
+	}
+
+	/**
+	 * Callback methods for when the player is ready to start playing
+	 * 
+	 * @author Eli
+	 * 
+	 */
+	public interface OnReadyListener {
+		public void onReady();
+
+		public void onError(ChannelError error);
+	}
+
+	public enum ChannelError {
+		NO_IMAGES, SERVER_ERROR
 	}
 
 }

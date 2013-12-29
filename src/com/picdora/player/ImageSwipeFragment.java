@@ -1,4 +1,4 @@
-package com.picdora;
+package com.picdora.player;
 
 import java.io.File;
 
@@ -27,6 +27,11 @@ import com.nostra13.universalimageloader.core.assist.DiscCacheUtil;
 import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.assist.ImageLoadingListener;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
+import com.picdora.R;
+import com.picdora.Util;
+import com.picdora.R.drawable;
+import com.picdora.R.id;
+import com.picdora.R.layout;
 import com.picdora.models.Image;
 
 @EFragment(R.layout.swipable_image)
