@@ -41,7 +41,7 @@ public abstract class ImageManager {
 	 * Get images from every category that we have. Includes gifs indiscriminately
 	 * @param limit The number of images to try to get from each category. May be less if the category doesn't have enough images
 	 */
-	public static void getImagesFromServer(int limit) {
+	public static void getImagesFromServer(int limit, OnResultListener listener) {
 		// TODO: Efficient raw query to just get category ids
 		CursorList<Category> list = Query.many(Category.class,
 				"SELECT * FROM Categories", null).get();
@@ -51,7 +51,7 @@ public abstract class ImageManager {
 			ids.add(cat.getId());
 		}
 		
-		getImagesFromServer(limit, ids, null);
+		getImagesFromServer(limit, ids, null, listener);
 	}
 
 	/**
@@ -61,7 +61,7 @@ public abstract class ImageManager {
 	 * @param gif Whether or not to retrieve gifs. false for no, true if we only want gifs, and null to mix gifs with images indiscriminately
 	 */
 	public static void getImagesFromServer(int limit,
-			final List<Integer> categoryIds, Boolean gif) {
+			final List<Integer> categoryIds, Boolean gif, final OnResultListener listener) {
 		// get list of images that we already have that we don't want the server
 		// to give us again
 		// TODO: Efficient raw query to get image ids
@@ -101,7 +101,12 @@ public abstract class ImageManager {
 
 					@Override
 					public void onSuccess(org.json.JSONArray response) {
-						saveImagesToDb(response);
+						boolean success = saveImagesToDb(response);
+						if(success){
+							listener.onSuccess();
+						} else {
+							listener.onFailure();
+						}
 					}
 
 					@Override
@@ -109,6 +114,7 @@ public abstract class ImageManager {
 							org.apache.http.Header[] headers,
 							java.lang.String responseBody, java.lang.Throwable e) {
 						Util.log("Get images failed");
+						listener.onFailure();
 					}
 				});
 	}
@@ -136,22 +142,26 @@ public abstract class ImageManager {
 	 * 
 	 * @param json
 	 * @param images
+	 * @return Whether or not the images saved successfully
 	 */
-	private static void saveImagesToDb(JSONArray json) {
+	private static boolean saveImagesToDb(JSONArray json) {
 		Transaction t = new Transaction();
+		boolean success = true;
 		try {
 			int numImages = json.length();
 			for (int i = numImages - 1; i >= 0; i--) {
 				Image image = new Image(json.getJSONObject((i)));
 				image.save(t);
 			}
-			t.setSuccessful(true);
 		} catch (Exception e) {
 			e.printStackTrace();
-			t.setSuccessful(false);
+			success = false;
 		} finally {
+			t.setSuccessful(success);
 			t.finish();
 		}
+		
+		return success;
 	}
 
 	private static void saveCategoriesToDb(JSONArray json) {
@@ -170,5 +180,10 @@ public abstract class ImageManager {
 		} finally {
 			t.finish();
 		}
+	}
+	
+	public interface OnResultListener {
+		public void onSuccess();
+		public void onFailure();
 	}
 }

@@ -3,10 +3,11 @@ package com.picdora;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.androidannotations.annotations.EBean;
+import org.androidannotations.annotations.RootContext;
 import org.json.JSONException;
 
 import se.emilsjolander.sprinkles.Sprinkles;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -14,10 +15,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.text.TextUtils;
 
-import com.googlecode.androidannotations.annotations.EBean;
-import com.googlecode.androidannotations.annotations.RootContext;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
+import com.picdora.ImageManager.OnResultListener;
 import com.picdora.models.Category;
 import com.picdora.models.Channel;
 import com.picdora.player.ChannelViewActivity_;
@@ -119,8 +119,8 @@ public class ChannelHelper {
 		SQLiteDatabase db = Sprinkles.getDatabase();
 		String query = "SELECT count(*) FROM Images WHERE categoryId IN "
 				+ ChannelHelper.getCategoryIdsString(channel);
-		
-		if(unseen){
+
+		if (unseen) {
 			query += " AND viewCount=0";
 		}
 
@@ -143,6 +143,47 @@ public class ChannelHelper {
 		}
 
 		return ("(" + TextUtils.join(",", ids) + ")");
+	}
+
+	public static void getChannelImagesFromServer(Channel channel, int limit,
+			final OnGetImageReadyListener listener) {
+		
+		// get gif setting
+		Boolean gif;
+		switch (channel.getGifSetting()) {
+		case ONLY:
+			gif = true;
+			break;
+		case NONE:
+			gif = false;
+			break;
+		case ALLOWED:
+			gif = null;
+			break;
+		default:
+			gif = null;
+			break;
+		}
+
+		ImageManager.getImagesFromServer(limit, getCategoryIdsList(channel),
+				gif, new OnResultListener() {
+					
+					@Override
+					public void onSuccess() {
+						listener.onSuccess();						
+					}
+					
+					@Override
+					public void onFailure() {
+						listener.onFailure();						
+					}
+				});
+	}
+
+	public interface OnGetImageReadyListener {
+		public void onSuccess();
+
+		public void onFailure();
 	}
 
 }

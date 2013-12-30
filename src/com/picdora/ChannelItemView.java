@@ -1,11 +1,12 @@
 package com.picdora;
 
+import org.androidannotations.annotations.EViewGroup;
+import org.androidannotations.annotations.ViewById;
+
 import android.content.Context;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.googlecode.androidannotations.annotations.EViewGroup;
-import com.googlecode.androidannotations.annotations.ViewById;
 import com.picdora.models.Channel;
 
 @EViewGroup(R.layout.channel_list_item)

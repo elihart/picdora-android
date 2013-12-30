@@ -2,11 +2,15 @@ package com.picdora.player;
 
 import java.io.File;
 
-import uk.co.senab.photoview.PhotoView;
-
 import net.frakbot.imageviewex.ImageViewNext;
 import net.frakbot.imageviewex.ImageViewNext.CacheLevel;
 import net.frakbot.imageviewex.ImageViewNext.ImageLoadCompletionListener;
+
+import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.EFragment;
+import org.androidannotations.annotations.ViewById;
+
+import uk.co.senab.photoview.PhotoView;
 import android.graphics.Bitmap;
 import android.graphics.Movie;
 import android.graphics.drawable.BitmapDrawable;
@@ -14,12 +18,8 @@ import android.graphics.drawable.Drawable;
 import android.support.v4.app.Fragment;
 import android.util.DisplayMetrics;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
 
-import com.googlecode.androidannotations.annotations.AfterViews;
-import com.googlecode.androidannotations.annotations.EFragment;
-import com.googlecode.androidannotations.annotations.ViewById;
 import com.nostra13.universalimageloader.cache.disc.DiscCacheAware;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -29,9 +29,6 @@ import com.nostra13.universalimageloader.core.assist.ImageLoadingListener;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.picdora.R;
 import com.picdora.Util;
-import com.picdora.R.drawable;
-import com.picdora.R.id;
-import com.picdora.R.layout;
 import com.picdora.models.Image;
 
 @EFragment(R.layout.swipable_image)

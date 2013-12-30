@@ -4,6 +4,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.Bean;
+import org.androidannotations.annotations.Click;
+import org.androidannotations.annotations.EActivity;
+import org.androidannotations.annotations.ViewById;
+
 import android.view.Menu;
 import android.view.View;
 import android.widget.AdapterView;
@@ -12,11 +18,6 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.RadioGroup;
 
-import com.googlecode.androidannotations.annotations.AfterViews;
-import com.googlecode.androidannotations.annotations.Bean;
-import com.googlecode.androidannotations.annotations.Click;
-import com.googlecode.androidannotations.annotations.EActivity;
-import com.googlecode.androidannotations.annotations.ViewById;
 import com.picdora.models.Category;
 import com.picdora.models.Channel;
 import com.picdora.models.Channel.GifSetting;

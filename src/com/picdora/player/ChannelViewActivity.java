@@ -1,5 +1,15 @@
 package com.picdora.player;
 
+import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.Bean;
+import org.androidannotations.annotations.EActivity;
+import org.androidannotations.annotations.Fullscreen;
+import org.androidannotations.annotations.NoTitle;
+import org.androidannotations.annotations.ViewById;
+
+import android.app.Dialog;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnCancelListener;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -7,17 +17,11 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.Menu;
+import android.widget.TextView;
 
-import com.googlecode.androidannotations.annotations.AfterViews;
-import com.googlecode.androidannotations.annotations.EActivity;
-import com.googlecode.androidannotations.annotations.Fullscreen;
-import com.googlecode.androidannotations.annotations.NoTitle;
-import com.googlecode.androidannotations.annotations.ViewById;
 import com.picdora.PicdoraActivity;
 import com.picdora.R;
 import com.picdora.Util;
-import com.picdora.R.layout;
-import com.picdora.R.menu;
 import com.picdora.models.Channel;
 import com.picdora.models.Image;
 import com.picdora.player.ChannelPlayer.ChannelError;
@@ -31,30 +35,36 @@ public class ChannelViewActivity extends PicdoraActivity {
 
 	@ViewById
 	ViewPager pager;
+	@Bean
+	ChannelPlayer mChannelPlayer;
+
+	
 
 	/**
 	 * The pager adapter, which provides the pages to the view pager widget.
 	 */
 	private PagerAdapter mPagerAdapter;
-
-	private ChannelPlayer mChannelPlayer;
+	
+	// Loading dialog to show while channel initializes
+	private Dialog busyDialog;
 
 	@AfterViews
 	void initChannel() {
 		// add drawer
 		SlidingMenuHelper.addMenuToActivity(this, true);
-		
-		// show loading screen
 
-		
+		// show loading screen
+		showBusyDialog("Loading Channel...");
+
 		// Load channel and play when ready
 		String json = getIntent().getStringExtra("channel");
 		Channel channel = Util.fromJson(json, Channel.class);
 
-		mChannelPlayer = new ChannelPlayer(channel, new OnReadyListener() {
+		mChannelPlayer.loadChannel(channel, new OnReadyListener() {
 
 			@Override
 			public void onReady() {
+				dismissBusyDialog();
 				startChannel();
 			}
 
@@ -66,9 +76,29 @@ public class ChannelViewActivity extends PicdoraActivity {
 
 	}
 
-	protected void handleError(ChannelError error) {
-		// TODO Auto-generated method stub
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
 
+		if (mChannelPlayer != null) {
+			mChannelPlayer.destroy();
+		}
+	}
+
+	protected void handleError(ChannelError error) {
+		String msg = "Sorry! We failed to load your channel :(";
+		switch (error) {
+		case NO_IMAGES:
+			msg = "Uh oh! Unable to load images for this channel :(";
+			break;
+		case SERVER_ERROR:
+			msg = "Whoops! We're unable to connect to the server :(";
+			break;
+		default:
+			break;
+		}
+		Util.makeBasicToast(this, msg);
+		finish();
 	}
 
 	protected void startChannel() {
@@ -82,6 +112,33 @@ public class ChannelViewActivity extends PicdoraActivity {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.channel_view, menu);
 		return true;
+	}
+
+	public void showBusyDialog(String message) {
+		busyDialog = new Dialog(this, R.style.lightbox_dialog);
+		busyDialog.setContentView(R.layout.lightbox_dialog);
+		((TextView) busyDialog.findViewById(R.id.dialogText)).setText(message);
+
+		// if the user presses back while the loading dialog is up we want to
+		// cancel the whole activity and go back. Otherwise just the dialog will
+		// be canceled and they'll be left with a blank screen
+		busyDialog.setOnCancelListener(new OnCancelListener() {
+
+			@Override
+			public void onCancel(DialogInterface dialog) {
+				dialog.dismiss();
+				finish();
+			}
+		});
+
+		busyDialog.show();
+	}
+
+	public void dismissBusyDialog() {
+		if (busyDialog != null)
+			busyDialog.dismiss();
+
+		busyDialog = null;
 	}
 
 	private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {

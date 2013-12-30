@@ -1,15 +1,16 @@
 package com.picdora;
 
+import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.Bean;
+import org.androidannotations.annotations.EActivity;
+import org.androidannotations.annotations.ItemClick;
+import org.androidannotations.annotations.ViewById;
+
 import android.content.Intent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ListView;
 
-import com.googlecode.androidannotations.annotations.AfterViews;
-import com.googlecode.androidannotations.annotations.Bean;
-import com.googlecode.androidannotations.annotations.EActivity;
-import com.googlecode.androidannotations.annotations.ItemClick;
-import com.googlecode.androidannotations.annotations.ViewById;
 import com.picdora.models.Channel;
 import com.picdora.ui.SlidingMenuHelper;
 
@@ -26,6 +27,7 @@ public class ChannelSelectionActivity extends PicdoraActivity {
 		SlidingMenuHelper.addMenuToActivity(this, true);
 		getSupportActionBar().setHomeButtonEnabled(true);
 		
+		// TODO: Load list in background and show loading icon
         channelList.setAdapter(adapter);
 		
 //		ImageManager.getCategoriesFromServer();
