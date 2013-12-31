@@ -6,10 +6,16 @@ import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import se.emilsjolander.sprinkles.CursorList;
 import se.emilsjolander.sprinkles.Query;
+import se.emilsjolander.sprinkles.Sprinkles;
 import se.emilsjolander.sprinkles.Transaction;
+
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.text.TextUtils;
 
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
@@ -46,9 +52,9 @@ public abstract class ImageManager {
 		CursorList<Category> list = Query.many(Category.class,
 				"SELECT * FROM Categories", null).get();
 		
-		List<Integer> ids = new ArrayList<Integer>();
+		List<String> ids = new ArrayList<String>();
 		for (Category cat : list.asList()) {
-			ids.add(cat.getId());
+			ids.add(Integer.toString(cat.getId()));
 		}
 		
 		getImagesFromServer(limit, ids, null, listener);
@@ -61,23 +67,10 @@ public abstract class ImageManager {
 	 * @param gif Whether or not to retrieve gifs. false for no, true if we only want gifs, and null to mix gifs with images indiscriminately
 	 */
 	public static void getImagesFromServer(int limit,
-			final List<Integer> categoryIds, Boolean gif, final OnResultListener listener) {
+			final List<String> categoryIds, Boolean gif, final OnResultListener listener) {
 		// get list of images that we already have that we don't want the server
 		// to give us again
-		// TODO: Efficient raw query to get image ids
-		Date start = new Date();
-		List<Integer> exclude = new ArrayList<Integer>();
-		// TODO: Fix this to allow multiple ids
-		CursorList<Image> list = Query.many(Image.class,
-				"SELECT id FROM Images WHERE categoryId=" + categoryIds, null)
-				.get();
-		List<Image> imageList = list.asList();
-		for (Image img : imageList) {
-			exclude.add(img.getId());
-		}
-		Date end = new Date();
-		long duration = end.getTime() - start.getTime();
-		Util.log("Getting image exclude list took " + duration);
+		List<String> exclude = getImageIdsInCategories(categoryIds);
 
 		RequestParams params = new RequestParams();
 		params.put("count", Integer.toString(limit));
@@ -100,7 +93,7 @@ public abstract class ImageManager {
 				new JsonHttpResponseHandler() {
 
 					@Override
-					public void onSuccess(org.json.JSONArray response) {
+					public void onSuccess(org.json.JSONObject response) {
 						boolean success = saveImagesToDb(response);
 						if(success){
 							listener.onSuccess();
@@ -136,6 +129,30 @@ public abstract class ImageManager {
 					}
 				});
 	}
+	
+	/**
+	 * Get a list of image ids as strings for use in telling the server which ids to exclude
+	 * @param categoryIds
+	 * @return
+	 */
+	private static List<String> getImageIdsInCategories(List<String> categoryIds) {
+		List<String> ids = new ArrayList<String>();
+		SQLiteDatabase db = Sprinkles.getDatabase();
+		
+		String idString = "(" + TextUtils.join(",", categoryIds) + ")";
+		String selection = "categoryId IN " + idString;
+		
+		Cursor cursor = db.query("Images", new String[] {"id"}, 
+                selection, null, null, null, null);
+		
+		int index = cursor.getColumnIndex("id");
+		while(cursor.moveToNext()){
+			int id = cursor.getInt(index);
+			ids.add(Integer.toString(id));
+		}
+
+		return ids;
+	}
 
 	/**
 	 * Parse a json array of Images and save them to the database
@@ -144,10 +161,11 @@ public abstract class ImageManager {
 	 * @param images
 	 * @return Whether or not the images saved successfully
 	 */
-	private static boolean saveImagesToDb(JSONArray json) {
+	private static boolean saveImagesToDb(JSONObject jsonObject) {		
 		Transaction t = new Transaction();
 		boolean success = true;
 		try {
+			JSONArray json = jsonObject.getJSONArray("images");
 			int numImages = json.length();
 			for (int i = numImages - 1; i >= 0; i--) {
 				Image image = new Image(json.getJSONObject((i)));

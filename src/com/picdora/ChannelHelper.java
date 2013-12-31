@@ -70,9 +70,9 @@ public class ChannelHelper {
 						int count;
 						try {
 							count = response.getInt("count");
-							listener.onSuccess(count);
+							listener.onReady(count);
 						} catch (JSONException e) {
-							listener.onFailure("Json error");
+							listener.onReady(null);
 						}
 
 					}
@@ -82,7 +82,7 @@ public class ChannelHelper {
 							org.apache.http.Header[] headers,
 							java.lang.String responseBody, java.lang.Throwable e) {
 
-						listener.onFailure("Request failed");
+						listener.onReady(null);
 					}
 				});
 	}
@@ -93,18 +93,16 @@ public class ChannelHelper {
 	 * @param channel
 	 * @return A list of the category ids
 	 */
-	private static List<Integer> getCategoryIdsList(Channel channel) {
-		List<Integer> ids = new ArrayList<Integer>();
+	private static List<String> getCategoryIdsList(Channel channel) {
+		List<String> ids = new ArrayList<String>();
 		for (Category cat : channel.getCategories()) {
-			ids.add(cat.getId());
+			ids.add(Integer.toString(cat.getId()));
 		}
 		return ids;
 	}
 
 	public interface OnImageCountReadyListener {
-		public void onSuccess(int count);
-
-		public void onFailure(String errorMsg);
+		void onReady(Integer count);
 	}
 
 	/**
@@ -119,6 +117,18 @@ public class ChannelHelper {
 		SQLiteDatabase db = Sprinkles.getDatabase();
 		String query = "SELECT count(*) FROM Images WHERE categoryId IN "
 				+ ChannelHelper.getCategoryIdsString(channel);
+
+		// add the gif setting
+		switch (channel.getGifSetting()) {
+		case ALLOWED:
+			break;
+		case NONE:
+			query += " AND gif=0";
+			break;
+		case ONLY:
+			query += " AND gif=1";
+			break;
+		}
 
 		if (unseen) {
 			query += " AND viewCount=0";
@@ -146,8 +156,8 @@ public class ChannelHelper {
 	}
 
 	public static void getChannelImagesFromServer(Channel channel, int limit,
-			final OnGetImageReadyListener listener) {
-		
+			final OnImageRequestReady listener) {
+
 		// get gif setting
 		Boolean gif;
 		switch (channel.getGifSetting()) {
@@ -167,23 +177,22 @@ public class ChannelHelper {
 
 		ImageManager.getImagesFromServer(limit, getCategoryIdsList(channel),
 				gif, new OnResultListener() {
-					
+
 					@Override
 					public void onSuccess() {
-						listener.onSuccess();						
+						listener.onReady(true);
 					}
-					
+
 					@Override
 					public void onFailure() {
-						listener.onFailure();						
+						listener.onReady(false);
 					}
 				});
 	}
 
-	public interface OnGetImageReadyListener {
-		public void onSuccess();
-
-		public void onFailure();
+	// callback for an image request to the server
+	public interface OnImageRequestReady {
+		public void onReady(boolean successful);
 	}
 
 }

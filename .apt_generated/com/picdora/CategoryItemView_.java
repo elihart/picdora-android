@@ -67,8 +67,8 @@ public final class CategoryItemView_
 
     @Override
     public void onViewChanged(HasViews hasViews) {
-        categoryName = ((TextView) hasViews.findViewById(id.categoryName));
         checkBox = ((CheckBox) hasViews.findViewById(id.checkBox));
+        categoryName = ((TextView) hasViews.findViewById(id.categoryName));
     }
 
 }
