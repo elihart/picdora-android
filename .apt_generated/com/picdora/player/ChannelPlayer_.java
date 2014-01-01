@@ -5,15 +5,9 @@
 
 package com.picdora.player;
 
-import android.app.Activity;
 import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
-import android.util.Log;
-import com.picdora.ChannelHelper.OnImageCountReadyListener;
-import com.picdora.ChannelHelper.OnImageRequestReady;
 import com.picdora.models.Channel;
-import com.picdora.player.ChannelPlayer.ChannelError;
+import com.picdora.player.ChannelPlayer.OnReadyListener;
 import org.androidannotations.api.BackgroundExecutor;
 
 public final class ChannelPlayer_
@@ -21,7 +15,6 @@ public final class ChannelPlayer_
 {
 
     private Context context_;
-    private Handler handler_ = new Handler(Looper.getMainLooper());
 
     private ChannelPlayer_(Context context) {
         context_ = context;
@@ -33,11 +26,6 @@ public final class ChannelPlayer_
     }
 
     private void init_() {
-        if (context_ instanceof Activity) {
-            activity = ((Activity) context_);
-        } else {
-            Log.w("ChannelPlayer_", (("Due to Context class "+ context_.getClass().getSimpleName())+", the @RootContext Activity won't be populated"));
-        }
     }
 
     public void rebind(Context context) {
@@ -46,56 +34,14 @@ public final class ChannelPlayer_
     }
 
     @Override
-    public void requestImagesFromServer(final OnImageRequestReady listener) {
-        handler_.post(new Runnable() {
-
-
-            @Override
-            public void run() {
-                ChannelPlayer_.super.requestImagesFromServer(listener);
-            }
-
-        }
-        );
-    }
-
-    @Override
-    public void getServerImageCount(final OnImageCountReadyListener onImageCountReadyListener) {
-        handler_.post(new Runnable() {
-
-
-            @Override
-            public void run() {
-                ChannelPlayer_.super.getServerImageCount(onImageCountReadyListener);
-            }
-
-        }
-        );
-    }
-
-    @Override
-    public void loadFinished(final boolean successful, final ChannelError error) {
-        handler_.post(new Runnable() {
-
-
-            @Override
-            public void run() {
-                ChannelPlayer_.super.loadFinished(successful, error);
-            }
-
-        }
-        );
-    }
-
-    @Override
-    public void handleImageRequestResult(final boolean successful) {
-        BackgroundExecutor.execute(new BackgroundExecutor.Task("", 0, "") {
+    public void loadMoreImagesIfNeeded(final int index) {
+        BackgroundExecutor.execute(new BackgroundExecutor.Task("", 0, "loadImagesInBackground") {
 
 
             @Override
             public void execute() {
                 try {
-                    ChannelPlayer_.super.handleImageRequestResult(successful);
+                    ChannelPlayer_.super.loadMoreImagesIfNeeded(index);
                 } catch (Throwable e) {
                     Thread.getDefaultUncaughtExceptionHandler().uncaughtException(Thread.currentThread(), e);
                 }
@@ -106,32 +52,14 @@ public final class ChannelPlayer_
     }
 
     @Override
-    public void loadChannelAsync(final Channel channel) {
+    public void loadChannel(final Channel channel, final OnReadyListener listener) {
         BackgroundExecutor.execute(new BackgroundExecutor.Task("", 0, "") {
 
 
             @Override
             public void execute() {
                 try {
-                    ChannelPlayer_.super.loadChannelAsync(channel);
-                } catch (Throwable e) {
-                    Thread.getDefaultUncaughtExceptionHandler().uncaughtException(Thread.currentThread(), e);
-                }
-            }
-
-        }
-        );
-    }
-
-    @Override
-    public void afterServerImageCount() {
-        BackgroundExecutor.execute(new BackgroundExecutor.Task("", 0, "") {
-
-
-            @Override
-            public void execute() {
-                try {
-                    ChannelPlayer_.super.afterServerImageCount();
+                    ChannelPlayer_.super.loadChannel(channel, listener);
                 } catch (Throwable e) {
                     Thread.getDefaultUncaughtExceptionHandler().uncaughtException(Thread.currentThread(), e);
                 }

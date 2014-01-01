@@ -18,10 +18,12 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 import com.picdora.R.layout;
 import com.picdora.models.Channel;
+import org.androidannotations.api.BackgroundExecutor;
 import org.androidannotations.api.SdkVersionHelper;
 import org.androidannotations.api.view.HasViews;
 import org.androidannotations.api.view.OnViewChangedListener;
 import org.androidannotations.api.view.OnViewChangedNotifier;
+import org.json.JSONArray;
 
 public final class ChannelSelectionActivity_
     extends ChannelSelectionActivity
@@ -97,6 +99,24 @@ public final class ChannelSelectionActivity_
             }
         }
         initViews();
+    }
+
+    @Override
+    public void saveImageJsonToDb(final JSONArray json, final int id) {
+        BackgroundExecutor.execute(new BackgroundExecutor.Task("", 0, "saveImages") {
+
+
+            @Override
+            public void execute() {
+                try {
+                    ChannelSelectionActivity_.super.saveImageJsonToDb(json, id);
+                } catch (Throwable e) {
+                    Thread.getDefaultUncaughtExceptionHandler().uncaughtException(Thread.currentThread(), e);
+                }
+            }
+
+        }
+        );
     }
 
     public static class IntentBuilder_ {

@@ -5,6 +5,11 @@
           android:icon="@drawable/ic_action_new"
           lyricoo:showAsAction="always"
           android:title="@string/action_new_channel"/>
+    
+    <item android:id="@+id/action_refresh_images"
+          android:icon="@drawable/ic_action_refresh"
+          lyricoo:showAsAction="always"
+          android:title="@string/action_refresh_images"/>
 
 
 </menu>

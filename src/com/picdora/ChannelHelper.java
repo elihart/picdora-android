@@ -34,78 +34,6 @@ public class ChannelHelper {
 	}
 
 	/**
-	 * Get the number of images on the server that can be used in this channel
-	 * 
-	 * @param channel
-	 */
-	public static void getServerImageCount(Channel channel,
-			final OnImageCountReadyListener listener) {
-		RequestParams params = new RequestParams();
-
-		// set the categories to include
-		params.put("category_ids", getCategoryIdsList(channel));
-
-		// set the gif setting. Leave it blank if gifs should be included,
-		// false if we don't want them, and true if we only want gifs
-		switch (channel.getGifSetting()) {
-		case ONLY:
-			params.put("gif", true);
-			break;
-		case NONE:
-			params.put("gif", false);
-			break;
-		case ALLOWED:
-			// don't put anything
-			break;
-		default:
-			break;
-		}
-
-		PicdoraApiClient.get("/images/count", params,
-				new JsonHttpResponseHandler() {
-
-					@Override
-					public void onSuccess(org.json.JSONObject response) {
-
-						int count;
-						try {
-							count = response.getInt("count");
-							listener.onReady(count);
-						} catch (JSONException e) {
-							listener.onReady(null);
-						}
-
-					}
-
-					@Override
-					public void onFailure(int statusCode,
-							org.apache.http.Header[] headers,
-							java.lang.String responseBody, java.lang.Throwable e) {
-
-						listener.onReady(null);
-					}
-				});
-	}
-
-	/**
-	 * Get the category ids for the categories in this channel
-	 * 
-	 * @param channel
-	 * @return A list of the category ids
-	 */
-	private static List<String> getCategoryIdsList(Channel channel) {
-		List<String> ids = new ArrayList<String>();
-		for (Category cat : channel.getCategories()) {
-			ids.add(Integer.toString(cat.getId()));
-		}
-		return ids;
-	}
-
-	public interface OnImageCountReadyListener {
-		void onReady(Integer count);
-	}
-
-	/**
 	 * Get the number of images in the local database that can be used in this
 	 * channel
 	 * 
@@ -153,46 +81,6 @@ public class ChannelHelper {
 		}
 
 		return ("(" + TextUtils.join(",", ids) + ")");
-	}
-
-	public static void getChannelImagesFromServer(Channel channel, int limit,
-			final OnImageRequestReady listener) {
-
-		// get gif setting
-		Boolean gif;
-		switch (channel.getGifSetting()) {
-		case ONLY:
-			gif = true;
-			break;
-		case NONE:
-			gif = false;
-			break;
-		case ALLOWED:
-			gif = null;
-			break;
-		default:
-			gif = null;
-			break;
-		}
-
-		ImageManager.getImagesFromServer(limit, getCategoryIdsList(channel),
-				gif, new OnResultListener() {
-
-					@Override
-					public void onSuccess() {
-						listener.onReady(true);
-					}
-
-					@Override
-					public void onFailure() {
-						listener.onReady(false);
-					}
-				});
-	}
-
-	// callback for an image request to the server
-	public interface OnImageRequestReady {
-		public void onReady(boolean successful);
 	}
 
 }

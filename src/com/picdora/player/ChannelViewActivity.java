@@ -91,9 +91,6 @@ public class ChannelViewActivity extends PicdoraActivity {
 		case NO_IMAGES:
 			msg = "Uh oh! Unable to load images for this channel :(";
 			break;
-		case SERVER_ERROR:
-			msg = "Whoops! We're unable to connect to the server :(";
-			break;
 		default:
 			break;
 		}

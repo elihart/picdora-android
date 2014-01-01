@@ -81,24 +81,9 @@ public final class ChannelCreationActivity_
 
     @Override
     public void onViewChanged(HasViews hasViews) {
-        categoryList = ((ListView) hasViews.findViewById(id.categoryList));
         gifSetting = ((RadioGroup) hasViews.findViewById(id.gifSetting));
         channelName = ((EditText) hasViews.findViewById(id.channelName));
-        {
-            View view = hasViews.findViewById(id.createButton);
-            if (view!= null) {
-                view.setOnClickListener(new OnClickListener() {
-
-
-                    @Override
-                    public void onClick(View view) {
-                        ChannelCreationActivity_.this.createButtonClicked();
-                    }
-
-                }
-                );
-            }
-        }
+        categoryList = ((ListView) hasViews.findViewById(id.categoryList));
         {
             View view = hasViews.findViewById(id.channelName);
             if (view!= null) {
@@ -108,6 +93,21 @@ public final class ChannelCreationActivity_
                     @Override
                     public void onClick(View view) {
                         ChannelCreationActivity_.this.channelNameClicked();
+                    }
+
+                }
+                );
+            }
+        }
+        {
+            View view = hasViews.findViewById(id.createButton);
+            if (view!= null) {
+                view.setOnClickListener(new OnClickListener() {
+
+
+                    @Override
+                    public void onClick(View view) {
+                        ChannelCreationActivity_.this.createButtonClicked();
                     }
 
                 }
