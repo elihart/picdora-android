@@ -1,5 +1,8 @@
 package com.picdora;
 
+import org.androidannotations.annotations.Bean;
+import org.androidannotations.annotations.EApplication;
+
 import se.emilsjolander.sprinkles.Migration;
 import se.emilsjolander.sprinkles.Sprinkles;
 import android.app.Application;
@@ -12,7 +15,10 @@ import com.picdora.models.Category;
 import com.picdora.models.Channel;
 import com.picdora.models.Image;
 
+@EApplication
 public class PicdoraApp extends Application {
+	@Bean
+	protected ImageUpdater mImageUpdater;
 
 	@Override
 	public void onCreate() {
@@ -25,6 +31,8 @@ public class PicdoraApp extends Application {
 		initImageLoader();
 
 		initGifLoader();
+		
+		mImageUpdater.getUpdates();
 	}
 
 	private void initGifLoader() {

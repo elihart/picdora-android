@@ -28,8 +28,6 @@ import com.picdora.models.Image;
 
 public abstract class ImageManager {
 
-
-
 	/**
 	 * Get images from every category that we have. Includes gifs
 	 * indiscriminately
@@ -111,28 +109,58 @@ public abstract class ImageManager {
 				});
 	}
 
-	public static void getImagesFromServer(int start, int end, final OnServerResultListener listener) {
+	public static void getImagesFromServer(int start, int end,
+			final OnServerResultListener listener) {
 
-				RequestParams params = new RequestParams();
-				params.put("start", Integer.toString(start));
-				params.put("end", Integer.toString(end));
+		RequestParams params = new RequestParams();
+		params.put("start", Integer.toString(start));
+		params.put("end", Integer.toString(end));
 
-				PicdoraApiClient.get("images/range", params,
-						new JsonHttpResponseHandler() {
+		PicdoraApiClient.get("images/range", params,
+				new JsonHttpResponseHandler() {
 
-							@Override
-							public void onSuccess(org.json.JSONArray response) {
-								listener.onSuccess(response);
-							}
+					@Override
+					public void onSuccess(org.json.JSONArray response) {
+						listener.onSuccess(response);
+					}
 
-							@Override
-							public void onFailure(int statusCode,
-									org.apache.http.Header[] headers,
-									java.lang.String responseBody, java.lang.Throwable e) {
-								Util.log("Get images failed");
-								listener.onFailure();
-							}
-						});
+					@Override
+					public void onFailure(int statusCode,
+							org.apache.http.Header[] headers,
+							java.lang.String responseBody, java.lang.Throwable e) {
+						Util.log("Get images failed");
+						listener.onFailure();
+					}
+				});
+	}
+
+	public static void getImageUpdates(int idIndex, long lastUpdated,
+			Integer batchSize, final OnImageUpdateListener listener) {
+
+		RequestParams params = new RequestParams();
+		params.put("id", Integer.toString(idIndex));
+		params.put("time", String.valueOf(lastUpdated));
+
+		if (batchSize != null) {
+			params.put("limit", batchSize.toString());
+		}
+
+		PicdoraApiClient.get("images/update", params,
+				new JsonHttpResponseHandler() {
+
+					@Override
+					public void onSuccess(org.json.JSONObject response) {
+						listener.onSuccess(response);
+					}
+
+					@Override
+					public void onFailure(int statusCode,
+							org.apache.http.Header[] headers,
+							java.lang.String responseBody, java.lang.Throwable e) {
+						// network or server failure
+						listener.onFailure();
+					}
+				});
 	}
 
 	public static void getCategoriesFromServer() {
@@ -243,11 +271,19 @@ public abstract class ImageManager {
 
 	public interface OnResultListener {
 		public void onSuccess();
+
 		public void onFailure();
 	}
-	
+
 	public interface OnServerResultListener {
 		public void onSuccess(JSONArray json);
+
+		public void onFailure();
+	}
+
+	public interface OnImageUpdateListener {
+		public void onSuccess(JSONObject json);
+
 		public void onFailure();
 	}
 }

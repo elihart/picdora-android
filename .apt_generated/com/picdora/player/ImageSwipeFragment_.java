@@ -65,9 +65,9 @@ public final class ImageSwipeFragment_
 
     @Override
     public void onViewChanged(HasViews hasViews) {
+        mPhotoView = ((PhotoView) hasViews.findViewById(com.picdora.R.id.image));
         mProgress = ((ProgressBar) hasViews.findViewById(com.picdora.R.id.progress));
         mGifView = ((ImageViewNext) hasViews.findViewById(com.picdora.R.id.gif));
-        mPhotoView = ((PhotoView) hasViews.findViewById(com.picdora.R.id.image));
         addImage();
     }
 
