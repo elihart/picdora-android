@@ -95,10 +95,10 @@ public abstract class Model {
      *
      * @return whether or not the save was successful.
      */
-	final public boolean save(Transaction t) {
+	final public boolean save(Transaction t) {		
 		if (!isValid()) {
 			return false;
-		}
+		}		
 
 		beforeSave();
 		if (exists()) {

@@ -134,12 +134,12 @@ public abstract class ImageManager {
 				});
 	}
 
-	public static void getImageUpdates(int idIndex, long lastUpdated,
+	public static void getNewImagesFromServer(int idIndex, long createdAfter,
 			Integer batchSize, final OnImageUpdateListener listener) {
 
 		RequestParams params = new RequestParams();
 		params.put("id", Integer.toString(idIndex));
-		params.put("time", String.valueOf(lastUpdated));
+		params.put("time", String.valueOf(createdAfter));
 
 		if (batchSize != null) {
 			params.put("limit", batchSize.toString());
@@ -163,12 +163,13 @@ public abstract class ImageManager {
 				});
 	}
 
-	public static void getCategoriesFromServer() {
+	public static void getCategoriesFromServer(final OnResultListener listener) {
 		PicdoraApiClient.get("categories", new JsonHttpResponseHandler() {
 
 			@Override
 			public void onSuccess(org.json.JSONArray response) {
 				saveCategoriesToDb(response);
+				listener.onSuccess();
 			}
 
 			@Override
@@ -176,6 +177,7 @@ public abstract class ImageManager {
 					org.apache.http.Header[] headers,
 					java.lang.String responseBody, java.lang.Throwable e) {
 				Util.log("Get categories failed");
+				listener.onFailure();
 			}
 		});
 	}

@@ -63,6 +63,10 @@ public final class Transaction {
 	long insert(String table, ContentValues values) {
 		return mDb.insert(table, null, values);
 	}
+	
+	public long insertOrReplace(String table, ContentValues values){
+		return mDb.insertWithOnConflict(table, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+	}
 
 	int update(String table, ContentValues values, String where) {
 		return mDb.update(table, values, where, null);

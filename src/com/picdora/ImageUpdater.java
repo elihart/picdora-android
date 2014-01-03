@@ -10,6 +10,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import se.emilsjolander.sprinkles.Sprinkles;
+import android.content.ContentValues;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
+
 import com.picdora.ImageManager.OnImageUpdateListener;
 
 /**
@@ -34,7 +39,7 @@ public class ImageUpdater {
 
 	// The number of images to get from the server in each batch. Null if we
 	// want to go with the server default
-	private static final Integer BATCH_SIZE = null;
+	private static final Integer BATCH_SIZE = 1000;
 	// The number of consecutive failures we need to hit before we give up on
 	// updating.
 	private static final int FAILURE_LIMIT = 3;
@@ -54,8 +59,7 @@ public class ImageUpdater {
 	}
 
 	@Background
-	public void getUpdates() {
-
+	public void getNewImages() {
 		mStartTime = new Date().getTime();
 		// get all images on the server that have changed since the last time we
 		// updated. Start with id 0 and increment in batches till we have them
@@ -67,20 +71,20 @@ public class ImageUpdater {
 		mNumFailures = 0;
 
 		Util.log("Last updated " + new Date(mLastUpdated));
-		doUpdate(0);
+		getNewImageBatch(0);
 
 	}
 
 	// has to be run on the ui thread so http async can work
 	@UiThread
-	protected void doUpdate(final int index) {
+	protected void getNewImageBatch(final int index) {
 		Util.log("Getting update at id " + index);
-		ImageManager.getImageUpdates(index, mLastUpdated, BATCH_SIZE,
+		ImageManager.getNewImagesFromServer(index, mLastUpdated, BATCH_SIZE,
 				new OnImageUpdateListener() {
 
 					@Override
 					public void onSuccess(JSONObject json) {
-						handleUpdateSuccess(json);
+						handleNewImageSuccess(json);
 					}
 
 					@Override
@@ -89,7 +93,7 @@ public class ImageUpdater {
 						// try again if we haven't hit the retry limit
 						Util.log("Update failure. Retrying " + index);
 						if (mNumFailures < FAILURE_LIMIT) {
-							doUpdate(index);
+							getNewImageBatch(index);
 						}
 
 					}
@@ -97,10 +101,10 @@ public class ImageUpdater {
 	}
 
 	@Background
-	protected void handleUpdateSuccess(JSONObject json) {
+	protected void handleNewImageSuccess(JSONObject json) {
 		// reset consecutive error count
 		mNumFailures = 0;
-		
+
 		// get the image data
 		JSONArray arr = null;
 		try {
@@ -113,7 +117,7 @@ public class ImageUpdater {
 		if (arr != null) {
 			Util.log("Updating " + arr.length() + " images in the db");
 			Date start = new Date();
-			ImageManager.saveImagesToDb(arr);
+			addNewImagesToDb(arr);
 			Date end = new Date();
 			Util.log("DB update took " + (end.getTime() - start.getTime()));
 		} else {
@@ -134,8 +138,45 @@ public class ImageUpdater {
 			Util.log("Finished updating");
 			prefs.lastUpdated().put(mStartTime);
 		} else {
-			doUpdate(mIdIndex);
+			// do another batch starting with the returned id
+			getNewImageBatch(mIdIndex);
 		}
 	}
 
+	protected void addNewImagesToDb(JSONArray array) {
+		if(array == null || array.length() == 0){
+			return;
+		}
+		
+		SQLiteDatabase db = Sprinkles.getDatabase();
+		db.beginTransaction();
+
+		try {
+			int numImages = array.length();
+			for (int i = numImages - 1; i >= 0; i--) {
+				JSONObject imageJson = array.getJSONObject(i);		
+
+				ContentValues values = new ContentValues();
+				values.put("id", imageJson.getLong("id"));
+				values.put("imgurId", imageJson.getString("imgurId"));
+				values.put("redditScore", imageJson.getLong("reddit_score"));
+				values.put("nsfw", imageJson.getBoolean("nsfw"));
+				values.put("gif", imageJson.getBoolean("gif"));
+				values.put("categoryId", imageJson.getLong("category_id"));
+
+				long id = db.insertWithOnConflict("Images", null, values,
+						SQLiteDatabase.CONFLICT_REPLACE);
+
+				if (id == -1) {
+					Util.log("Db insert error");
+				}
+			}
+			Util.log("Batch successful!");
+			db.setTransactionSuccessful();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			db.endTransaction();
+		}
+	}
 }

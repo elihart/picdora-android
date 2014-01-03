@@ -81,9 +81,9 @@ public final class ChannelCreationActivity_
 
     @Override
     public void onViewChanged(HasViews hasViews) {
-        gifSetting = ((RadioGroup) hasViews.findViewById(id.gifSetting));
         channelName = ((EditText) hasViews.findViewById(id.channelName));
         categoryList = ((ListView) hasViews.findViewById(id.categoryList));
+        gifSetting = ((RadioGroup) hasViews.findViewById(id.gifSetting));
         {
             View view = hasViews.findViewById(id.channelName);
             if (view!= null) {
@@ -114,8 +114,8 @@ public final class ChannelCreationActivity_
                 );
             }
         }
-        initViews();
         initClickListener();
+        initViews();
     }
 
     public static class IntentBuilder_ {

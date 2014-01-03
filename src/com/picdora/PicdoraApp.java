@@ -32,7 +32,7 @@ public class PicdoraApp extends Application {
 
 		initGifLoader();
 		
-		mImageUpdater.getUpdates();
+		mImageUpdater.getNewImages();
 	}
 
 	private void initGifLoader() {

@@ -37,13 +37,13 @@ public final class ImageUpdater_
     }
 
     @Override
-    public void doUpdate(final int index) {
+    public void getNewImageBatch(final int index) {
         handler_.post(new Runnable() {
 
 
             @Override
             public void run() {
-                ImageUpdater_.super.doUpdate(index);
+                ImageUpdater_.super.getNewImageBatch(index);
             }
 
         }
@@ -51,14 +51,14 @@ public final class ImageUpdater_
     }
 
     @Override
-    public void getUpdates() {
+    public void handleNewImageSuccess(final JSONObject json) {
         BackgroundExecutor.execute(new BackgroundExecutor.Task("", 0, "") {
 
 
             @Override
             public void execute() {
                 try {
-                    ImageUpdater_.super.getUpdates();
+                    ImageUpdater_.super.handleNewImageSuccess(json);
                 } catch (Throwable e) {
                     Thread.getDefaultUncaughtExceptionHandler().uncaughtException(Thread.currentThread(), e);
                 }
@@ -69,14 +69,14 @@ public final class ImageUpdater_
     }
 
     @Override
-    public void handleUpdateSuccess(final JSONObject json) {
+    public void getNewImages() {
         BackgroundExecutor.execute(new BackgroundExecutor.Task("", 0, "") {
 
 
             @Override
             public void execute() {
                 try {
-                    ImageUpdater_.super.handleUpdateSuccess(json);
+                    ImageUpdater_.super.getNewImages();
                 } catch (Throwable e) {
                     Thread.getDefaultUncaughtExceptionHandler().uncaughtException(Thread.currentThread(), e);
                 }
