@@ -5,7 +5,8 @@ import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
 public class PicdoraApiClient {
-	private static final String BASE_URL = "http://picdora.com:3000/";
+//	private static final String BASE_URL = "http://picdora.com:3000/";
+	private static final String BASE_URL = "http://192.168.150.1:3000/";
 
 	private static AsyncHttpClient client = new AsyncHttpClient();
 

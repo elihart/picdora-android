@@ -145,7 +145,7 @@ public abstract class ImageManager {
 			params.put("limit", batchSize.toString());
 		}
 
-		PicdoraApiClient.get("images/update", params,
+		PicdoraApiClient.get("images/new", params,
 				new JsonHttpResponseHandler() {
 
 					@Override

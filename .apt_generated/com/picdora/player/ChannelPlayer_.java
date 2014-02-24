@@ -34,14 +34,14 @@ public final class ChannelPlayer_
     }
 
     @Override
-    public void loadMoreImagesIfNeeded(final int index) {
-        BackgroundExecutor.execute(new BackgroundExecutor.Task("", 0, "loadImagesInBackground") {
+    public void loadChannel(final Channel channel, final OnReadyListener listener) {
+        BackgroundExecutor.execute(new BackgroundExecutor.Task("", 0, "") {
 
 
             @Override
             public void execute() {
                 try {
-                    ChannelPlayer_.super.loadMoreImagesIfNeeded(index);
+                    ChannelPlayer_.super.loadChannel(channel, listener);
                 } catch (Throwable e) {
                     Thread.getDefaultUncaughtExceptionHandler().uncaughtException(Thread.currentThread(), e);
                 }
@@ -52,14 +52,14 @@ public final class ChannelPlayer_
     }
 
     @Override
-    public void loadChannel(final Channel channel, final OnReadyListener listener) {
-        BackgroundExecutor.execute(new BackgroundExecutor.Task("", 0, "") {
+    public void loadMoreImagesIfNeeded(final int index) {
+        BackgroundExecutor.execute(new BackgroundExecutor.Task("", 0, "loadImagesInBackground") {
 
 
             @Override
             public void execute() {
                 try {
-                    ChannelPlayer_.super.loadChannel(channel, listener);
+                    ChannelPlayer_.super.loadMoreImagesIfNeeded(index);
                 } catch (Throwable e) {
                     Thread.getDefaultUncaughtExceptionHandler().uncaughtException(Thread.currentThread(), e);
                 }

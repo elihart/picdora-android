@@ -85,21 +85,6 @@ public final class ChannelCreationActivity_
         categoryList = ((ListView) hasViews.findViewById(id.categoryList));
         gifSetting = ((RadioGroup) hasViews.findViewById(id.gifSetting));
         {
-            View view = hasViews.findViewById(id.channelName);
-            if (view!= null) {
-                view.setOnClickListener(new OnClickListener() {
-
-
-                    @Override
-                    public void onClick(View view) {
-                        ChannelCreationActivity_.this.channelNameClicked();
-                    }
-
-                }
-                );
-            }
-        }
-        {
             View view = hasViews.findViewById(id.createButton);
             if (view!= null) {
                 view.setOnClickListener(new OnClickListener() {
@@ -114,8 +99,23 @@ public final class ChannelCreationActivity_
                 );
             }
         }
-        initClickListener();
+        {
+            View view = hasViews.findViewById(id.channelName);
+            if (view!= null) {
+                view.setOnClickListener(new OnClickListener() {
+
+
+                    @Override
+                    public void onClick(View view) {
+                        ChannelCreationActivity_.this.channelNameClicked();
+                    }
+
+                }
+                );
+            }
+        }
         initViews();
+        initClickListener();
     }
 
     public static class IntentBuilder_ {
