@@ -82,8 +82,8 @@ public final class ChannelCreationActivity_
     @Override
     public void onViewChanged(HasViews hasViews) {
         channelName = ((EditText) hasViews.findViewById(id.channelName));
-        categoryList = ((ListView) hasViews.findViewById(id.categoryList));
         gifSetting = ((RadioGroup) hasViews.findViewById(id.gifSetting));
+        categoryList = ((ListView) hasViews.findViewById(id.categoryList));
         {
             View view = hasViews.findViewById(id.createButton);
             if (view!= null) {
