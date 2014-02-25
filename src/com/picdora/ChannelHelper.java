@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.androidannotations.annotations.EBean;
 import org.androidannotations.annotations.RootContext;
-import org.json.JSONException;
 
 import se.emilsjolander.sprinkles.Sprinkles;
 import android.app.Activity;
@@ -15,9 +14,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.text.TextUtils;
 
-import com.loopj.android.http.JsonHttpResponseHandler;
-import com.loopj.android.http.RequestParams;
-import com.picdora.ImageManager.OnResultListener;
 import com.picdora.models.Category;
 import com.picdora.models.Channel;
 import com.picdora.player.ChannelViewActivity_;

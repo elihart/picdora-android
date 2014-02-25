@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EBean;
+import org.androidannotations.annotations.UiThread;
 
 import se.emilsjolander.sprinkles.CursorList;
 import se.emilsjolander.sprinkles.Query;
@@ -35,15 +36,19 @@ public class ChannelPlayer {
 		mChannel = channel;
 		mImages = new ArrayList<Image>();
 		loadImageBatch(STARTING_BATCH_SIZE, mImages);
-
-		if (listener == null) {
+		loadChannelCompleted();		
+	}
+	
+	@UiThread
+	public void loadChannelCompleted(){
+		if (mListener == null) {
 			return;
 		}
 
 		if (mImages.isEmpty()) {
-			listener.onError(ChannelError.NO_IMAGES);
+			mListener.onError(ChannelError.NO_IMAGES);
 		} else {
-			listener.onReady();
+			mListener.onReady();
 		}
 	}
 

@@ -34,8 +34,6 @@ public class ChannelCreationActivity extends PicdoraActivity {
 	@Bean
 	CategoryListAdapter categoryListAdapter;
 
-	private Set<Category> mSelectedCategories = new HashSet<Category>();
-
 	@AfterViews
 	void initViews() {
 		SlidingMenuHelper.addMenuToActivity(this, false);

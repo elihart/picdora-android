@@ -24,6 +24,11 @@ List<Channel> channels;
     void initAdapter() {
         channels = Util.all(Channel.class);
     }
+    
+    public void refresh(){
+    	channels = Util.all(Channel.class);
+    	notifyDataSetChanged();
+    }
 
 
 	@Override
