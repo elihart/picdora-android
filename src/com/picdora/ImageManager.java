@@ -163,24 +163,7 @@ public abstract class ImageManager {
 				});
 	}
 
-	public static void getCategoriesFromServer(final OnResultListener listener) {
-		PicdoraApiClient.get("categories", new JsonHttpResponseHandler() {
-
-			@Override
-			public void onSuccess(org.json.JSONArray response) {
-				saveCategoriesToDb(response);
-				listener.onSuccess();
-			}
-
-			@Override
-			public void onFailure(int statusCode,
-					org.apache.http.Header[] headers,
-					java.lang.String responseBody, java.lang.Throwable e) {
-				Util.log("Get categories failed");
-				listener.onFailure();
-			}
-		});
-	}
+	
 
 	/**
 	 * Get a list of image ids as strings for use in telling the server which
@@ -253,23 +236,7 @@ public abstract class ImageManager {
 		return success;
 	}
 
-	private static void saveCategoriesToDb(JSONArray json) {
-		Transaction t = new Transaction();
-		try {
-			int numCategories = json.length();
-			for (int i = numCategories - 1; i >= 0; i--) {
-				Category cat = new Category(json.getJSONObject((i)));
-				cat.save(t);
-			}
-			t.setSuccessful(true);
-		} catch (Exception e) {
-			Util.log("Exception thrown while saving categories");
-			e.printStackTrace();
-			t.setSuccessful(false);
-		} finally {
-			t.finish();
-		}
-	}
+	
 
 	public interface OnResultListener {
 		public void onSuccess();

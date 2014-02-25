@@ -11,6 +11,7 @@ import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
+import com.picdora.ImageManager.OnResultListener;
 import com.picdora.models.Category;
 import com.picdora.models.Channel;
 import com.picdora.models.Image;
@@ -32,7 +33,26 @@ public class PicdoraApp extends Application {
 
 		initGifLoader();
 		
-		mImageUpdater.getNewImages();
+		syncDb();		
+	}
+
+	private void syncDb() {
+		CategoryHelper.syncCategoriesWithServer(new OnResultListener() {
+			
+			@Override
+			public void onSuccess() {
+				Util.log("Category sync success");
+				mImageUpdater.getNewImages();				
+			}
+			
+			@Override
+			public void onFailure() {
+				Util.log("Category sync failure");
+				mImageUpdater.getNewImages();				
+			}
+		});
+		
+		
 	}
 
 	private void initGifLoader() {
