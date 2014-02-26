@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.http.client.params.ClientPNames;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -46,6 +48,7 @@ public class ImageLoader {
 
 		// setup async client
 		client = new AsyncHttpClient();
+		client.getHttpClient().getParams().setParameter(ClientPNames.ALLOW_CIRCULAR_REDIRECTS, true);
 	}
 
 	public static ImageLoader instance() {
