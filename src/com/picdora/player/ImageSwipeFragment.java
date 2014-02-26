@@ -10,11 +10,9 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.v4.app.Fragment;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.koushikdutta.async.future.Future;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.imageloader.ImageLoader;
@@ -111,12 +109,12 @@ public class ImageSwipeFragment extends Fragment implements ImageLoader.LoadCall
 	}
 
 	@Override
-	public void onSuccess(Bitmap bm) {
+	public void onSuccess(Drawable drawable) {
 		if(mPhotoView == null){
 			return;
 		}
 		
-		mPhotoView.setImageBitmap(bm);
+		mPhotoView.setImageDrawable(drawable);
 		mPhotoView.setVisibility(View.VISIBLE);
 		mProgress.setVisibility(View.GONE);		
 	}

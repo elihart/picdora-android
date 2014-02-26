@@ -11,6 +11,8 @@ import org.apache.http.client.params.ClientPNames;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.util.DisplayMetrics;
 
 import com.loopj.android.http.AsyncHttpClient;
@@ -28,27 +30,32 @@ public class ImageLoader {
 	private Map<String, Download> mDownloads;
 	private AsyncHttpClient client;
 	private Context mContext;
-	
+
 	// keep track of the largest dimension that the image should fit
 	private int mMaxDimension;
+
+	private PicdoraImageCache mCache;
 
 	private ImageLoader(Context context) {
 		mContext = context;
 
-		// init caches
+		// init cache
+		mCache = new PicdoraImageCache();
 
 		// save screen size
-		DisplayMetrics displaymetrics = mContext.getResources().getDisplayMetrics();
+		DisplayMetrics displaymetrics = mContext.getResources()
+				.getDisplayMetrics();
 		int width = displaymetrics.widthPixels;
 		int height = displaymetrics.heightPixels;
-		mMaxDimension =  Math.max(width, height); 
+		mMaxDimension = Math.max(width, height);
 
 		// init downloads map
 		mDownloads = new HashMap<String, Download>();
 
 		// setup async client
 		client = new AsyncHttpClient();
-		client.getHttpClient().getParams().setParameter(ClientPNames.ALLOW_CIRCULAR_REDIRECTS, true);
+		client.getHttpClient().getParams()
+				.setParameter(ClientPNames.ALLOW_CIRCULAR_REDIRECTS, true);
 	}
 
 	public static ImageLoader instance() {
@@ -58,7 +65,7 @@ public class ImageLoader {
 	public interface LoadCallbacks {
 		public void onProgress(int percentComplete);
 
-		public void onSuccess(Bitmap bm);
+		public void onSuccess(Drawable drawable);
 
 		public void onError(LoadError error);
 
@@ -95,6 +102,13 @@ public class ImageLoader {
 		}
 
 		// check cache first
+		Drawable d = mCache.get(image);
+		if (d != null) {
+			if (callbacks != null) {
+				callbacks.onSuccess(d);
+			}
+			return;
+		}
 
 		// on cache miss check if there is an existing download
 		Download download = mDownloads.get(image.getImgurId());
@@ -192,20 +206,26 @@ public class ImageLoader {
 		}
 
 		// process the image
-		Bitmap bm = BitmapFactory.decodeByteArray(binaryData, 0,binaryData.length);
+		Drawable d = processImageData(binaryData);
 
 		// cache the image
 
 		for (LoadCallbacks listener : download.listeners) {
 			if (listener != null) {
 				// pass the image back to listeners
-				listener.onSuccess(bm);
+				listener.onSuccess(d);
 			}
 		}
 
 		// remove download from list
 		removeDownload(download);
 
+	}
+
+	private Drawable processImageData(byte[] binaryData) {
+		Bitmap bm = BitmapFactory.decodeByteArray(binaryData, 0,
+				binaryData.length);
+		return new BitmapDrawable(mContext.getResources(), bm);
 	}
 
 	/**
