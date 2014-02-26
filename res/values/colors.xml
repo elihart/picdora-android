@@ -3,4 +3,5 @@
      <color name="transparent">#00000000</color>
      <color name="black">#000000</color>
      <color name="translucent_black">#44000000</color>
+     <color name="white">#ffffff</color>
 </resources>

@@ -18,8 +18,14 @@ import android.graphics.drawable.Drawable;
 import android.support.v4.app.Fragment;
 import android.util.DisplayMetrics;
 import android.view.View;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
+import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.ion.Ion;
+import com.koushikdutta.ion.ProgressCallback;
 import com.nostra13.universalimageloader.cache.disc.DiscCacheAware;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -31,14 +37,15 @@ import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.models.Image;
 
-@EFragment(R.layout.swipable_image)
+@EFragment(R.layout.fragment_swipable_image)
 public class ImageSwipeFragment extends Fragment {
-	@ViewById(R.id.gif)
 	ImageViewNext mGifView;
 	@ViewById(R.id.image)
 	PhotoView mPhotoView;
 	@ViewById(R.id.progress)
-	ProgressBar mProgress;
+	LinearLayout mProgress;
+	@ViewById(R.id.progressText)
+	TextView mProgressText;
 
 	@AfterViews
 	void addImage() {
@@ -55,141 +62,35 @@ public class ImageSwipeFragment extends Fragment {
 
 		// reset and hide the views until an image is loaded
 		cleanupImages();
-		mGifView.setVisibility(View.GONE);
+
 		mPhotoView.setVisibility(View.GONE);
 		mProgress.setVisibility(View.VISIBLE);
 
-		// use a different loader if the image is an animated gif
-		if (image.isGif()) {
-			loadGif(image);
-		} else {
-			loadImage(image, null);
-		}
+		loadImage(image);
 	}
 
-	private void loadGif(final Image image) {
-		mGifView.setLoadCallbacks(new ImageLoadCompletionListener() {
+	private void loadImage(final Image image) {
 
-			@Override
-			public void onLoadStarted(ImageViewNext v, CacheLevel level) {
+		Ion.with(getActivity(), image.getUrl())
+				.progressHandler(new ProgressCallback() {
 
-			}
-
-			@Override
-			public void onLoadError(ImageViewNext v, CacheLevel level) {
-				// don't care about the cache misses, but if the network misses
-				// then we have a problem
-				switch (level) {
-				case DISK:
-					break;
-				case MEMORY:
-					break;
-				case NETWORK:
-					Util.log("Error getting gif from network");
-					// TODO: Handle this
-					break;
-				default:
-					break;
-				}
-			}
-
-			@Override
-			public void onLoadCompleted(ImageViewNext v, CacheLevel level) {
-				mProgress.setVisibility(View.GONE);
-				mGifView.setVisibility(View.VISIBLE);
-			}
-		});
-
-		mGifView.setUrl(image.getUrl());
-	}
-
-	private void loadImage(final Image image, final DisplayImageOptions options) {
-
-		ImageLoadingListener listener = new ImageLoadingListener() {
-
-			@Override
-			public void onLoadingStarted(String arg0, View arg1) {
-
-			}
-
-			@Override
-			public void onLoadingFailed(String arg0, View arg1,
-					FailReason reason) {
-				mPhotoView.setImageResource(R.drawable.ic_launcher);
-				switch (reason.getType()) {
-				case DECODING_ERROR:
-					break;
-				case IO_ERROR:
-					break;
-				case NETWORK_DENIED:
-					break;
-				case OUT_OF_MEMORY:
-					// Do something about the memory error. If options were
-					// already passed in tell the handler not to try again with
-					// new options
-					if (options != null) {
-						handleOutOfMemory(image, false);
-					} else {
-						handleOutOfMemory(image, true);
+					@Override
+					public void onProgress(int current, int size) {
+						int percent = (int) (current * 100f / size);
+						Util.log("progress: " + current + " " + size + "" + percent);						
+						mProgressText.setText(percent + "%");
 					}
-					break;
-				case UNKNOWN:
-					break;
-				default:
-					break;
-				}
-			}
+				})
+				.withBitmap().intoImageView(mPhotoView)
+				.setCallback(new FutureCallback<ImageView>() {
 
-			@Override
-			public void onLoadingComplete(String imageUri, View view, Bitmap bm) {
+					@Override
+					public void onCompleted(Exception arg0, ImageView arg1) {
+						mProgress.setVisibility(View.GONE);
+						mPhotoView.setVisibility(View.VISIBLE);					
 
-				// check if this image is actually a gif.
-				DiscCacheAware cache = ImageLoader.getInstance().getDiscCache();
-				File file = DiscCacheUtil.findInCache(image.getUrl(), cache);
-				
-				// check for image deletion
-				// http://imgur.com/l7sMPQe.jpg
-				int deletedImgHash = 1101349688;
-				if(deletedImgHash == bm.hashCode()){
-					Util.log("deleted image found! " + imageUri);
-				}
-				Util.log(imageUri + " : " + bm.hashCode());
-
-				try {
-					Movie gif = Movie.decodeFile(file.getAbsolutePath());
-					if (gif != null) {
-						image.setGif(true);
-						loadGif(image);
-						return;
 					}
-				} catch (Exception e) {
-
-				}
-
-				// add image to view
-				mPhotoView.setImageBitmap(bm);
-				mProgress.setVisibility(View.GONE);
-				mPhotoView.setVisibility(View.VISIBLE);
-
-				// attacher Photoviewer for zooming
-				//mAttacher = new PhotoViewAttacher(mImageView);
-
-			}
-
-			@Override
-			public void onLoadingCancelled(String arg0, View arg1) {
-
-			}
-		};
-
-		// If specific display options were specified then use them. otherwise
-		// use the defaults
-		String url = image.getUrl();
-		if (options == null) {
-			ImageLoader.getInstance().loadImage(url, listener);
-		} else {
-			ImageLoader.getInstance().loadImage(url, options, listener);
-		}
+				});
 	}
 
 	/**
@@ -205,11 +106,7 @@ public class ImageSwipeFragment extends Fragment {
 
 		if (tryAgain) {
 			// retry with lower bitmap display
-			DisplayImageOptions options = new DisplayImageOptions.Builder()
-					.cacheOnDisc(true).imageScaleType(ImageScaleType.EXACTLY)
-					.bitmapConfig(Bitmap.Config.RGB_565).build();
 
-			loadImage(image, options);
 		} else {
 			// TODO: Display error or something.
 		}
@@ -229,9 +126,6 @@ public class ImageSwipeFragment extends Fragment {
 		// get max size for display
 		int screenHeight = displaymetrics.heightPixels;
 		int screenWidth = displaymetrics.widthPixels;
-
-		mGifView.setMaxHeight(screenHeight);
-		mGifView.setMaxWidth(screenWidth);
 
 		mPhotoView.setMaxHeight(screenHeight);
 		mPhotoView.setMaxWidth(screenWidth);
