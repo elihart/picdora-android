@@ -49,6 +49,7 @@ public class ImageSwipeFragment extends Fragment {
 
 		mPhotoView.setVisibility(View.GONE);
 		mProgress.setVisibility(View.VISIBLE);
+		mProgressText.setVisibility(View.GONE);
 
 		loadImage(image);
 	}
@@ -60,18 +61,20 @@ public class ImageSwipeFragment extends Fragment {
 
 					@Override
 					public void onProgress(int current, int size) {
+						mProgressText.setVisibility(View.VISIBLE);
 						int percent = (int) (current * 100f / size);					
 						mProgressText.setText(percent + "%");
 					}
 				})
-				.withBitmap().intoImageView(mPhotoView)
+				.withBitmap()
+				.error(R.drawable.ic_launcher)
+				.intoImageView(mPhotoView)				
 				.setCallback(new FutureCallback<ImageView>() {
 
 					@Override
 					public void onCompleted(Exception arg0, ImageView arg1) {
 						mProgress.setVisibility(View.GONE);
-						mPhotoView.setVisibility(View.VISIBLE);					
-
+						mPhotoView.setVisibility(View.VISIBLE);	
 					}
 				});
 	}
