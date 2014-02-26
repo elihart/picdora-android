@@ -8,6 +8,7 @@ import se.emilsjolander.sprinkles.Sprinkles;
 import android.app.Application;
 
 import com.picdora.ImageManager.OnResultListener;
+import com.picdora.imageloader.ImageLoader;
 import com.picdora.models.Category;
 import com.picdora.models.Channel;
 import com.picdora.models.Image;
@@ -21,7 +22,7 @@ public class PicdoraApp extends Application {
 	public void onCreate() {
 		super.onCreate();
 
-		// Util.log("Creating app at " + new Date());
+		ImageLoader.init(this);
 
 		runMigrations();
 		
