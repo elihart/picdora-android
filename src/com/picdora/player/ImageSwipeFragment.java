@@ -1,11 +1,15 @@
 package com.picdora.player;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.ViewById;
 
 import uk.co.senab.photoview.PhotoView;
 import android.graphics.Bitmap;
+import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.v4.app.Fragment;
@@ -56,7 +60,31 @@ public class ImageSwipeFragment extends Fragment {
 
 	private void loadImage(final Image image) {
 
-		mDownloading = Ion.with(getActivity(), image.getUrl())
+//		mDownloading = Ion.with(getActivity(), image.getUrl())
+//				.progressHandler(new ProgressCallback() {
+//
+//					@Override
+//					public void onProgress(int current, int size) {
+//						mProgressText.setVisibility(View.VISIBLE);
+//						int percent = (int) (current * 100f / size);
+//						mProgressText.setText(percent + "%");
+//					}
+//				}).withBitmap().error(R.drawable.ic_launcher)
+//				.intoImageView(mPhotoView)
+//				.setCallback(new FutureCallback<ImageView>() {
+//
+//					@Override
+//					public void onCompleted(Exception arg0, ImageView arg1) {
+//						mProgress.setVisibility(View.GONE);
+//						mPhotoView.setVisibility(View.VISIBLE);
+//					}
+//				});
+		
+		File path = new File(getActivity().getFilesDir(), "test");
+		 path.mkdirs();
+		 File imgFile = new File(path, image.getImgurId());
+		
+		Ion.with(getActivity(), image.getUrl())
 				.progressHandler(new ProgressCallback() {
 
 					@Override
@@ -65,16 +93,30 @@ public class ImageSwipeFragment extends Fragment {
 						int percent = (int) (current * 100f / size);
 						mProgressText.setText(percent + "%");
 					}
-				}).withBitmap().error(R.drawable.ic_launcher)
-				.intoImageView(mPhotoView)
-				.setCallback(new FutureCallback<ImageView>() {
-
+				})
+				.write(imgFile)
+				.setCallback(new FutureCallback<File>() {
+					
 					@Override
-					public void onCompleted(Exception arg0, ImageView arg1) {
-						mProgress.setVisibility(View.GONE);
-						mPhotoView.setVisibility(View.VISIBLE);
+					public void onCompleted(Exception arg0, File arg1) {
+						try {
+							AnimationDrawable drawable = new GifAnimationDrawable(arg1);
+							mPhotoView.setImageDrawable(drawable);
+							mProgress.setVisibility(View.GONE);
+							mPhotoView.setVisibility(View.VISIBLE);
+							
+							drawable.setVisible(true, true);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+							mPhotoView.setImageResource(R.drawable.ic_launcher);
+							mProgress.setVisibility(View.GONE);
+							mPhotoView.setVisibility(View.VISIBLE);
+						}
+						
 					}
 				});
+				
 	}
 
 	/**
