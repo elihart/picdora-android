@@ -34,7 +34,7 @@ import com.picdora.ui.SlidingMenuHelper;
 public class ChannelViewActivity extends PicdoraActivity {
 
 	@ViewById
-	ViewPager pager;
+	PicdoraViewPager pager;
 	@Bean
 	ChannelPlayer mChannelPlayer;
 
@@ -50,8 +50,6 @@ public class ChannelViewActivity extends PicdoraActivity {
 
 	@AfterViews
 	void initChannel() {
-		// add drawer
-		SlidingMenuHelper.addMenuToActivity(this, true);
 
 		// show loading screen
 		showBusyDialog("Loading Channel...");

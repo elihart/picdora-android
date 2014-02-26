@@ -1,18 +1,11 @@
 package com.picdora.player;
 
-import java.io.File;
-
-import net.frakbot.imageviewex.ImageViewNext;
-import net.frakbot.imageviewex.ImageViewNext.CacheLevel;
-import net.frakbot.imageviewex.ImageViewNext.ImageLoadCompletionListener;
-
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.ViewById;
 
 import uk.co.senab.photoview.PhotoView;
 import android.graphics.Bitmap;
-import android.graphics.Movie;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.v4.app.Fragment;
@@ -20,26 +13,17 @@ import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.ProgressCallback;
-import com.nostra13.universalimageloader.cache.disc.DiscCacheAware;
-import com.nostra13.universalimageloader.core.DisplayImageOptions;
-import com.nostra13.universalimageloader.core.ImageLoader;
-import com.nostra13.universalimageloader.core.assist.DiscCacheUtil;
-import com.nostra13.universalimageloader.core.assist.FailReason;
-import com.nostra13.universalimageloader.core.assist.ImageLoadingListener;
-import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.models.Image;
 
 @EFragment(R.layout.fragment_swipable_image)
 public class ImageSwipeFragment extends Fragment {
-	ImageViewNext mGifView;
 	@ViewById(R.id.image)
 	PhotoView mPhotoView;
 	@ViewById(R.id.progress)
@@ -76,8 +60,7 @@ public class ImageSwipeFragment extends Fragment {
 
 					@Override
 					public void onProgress(int current, int size) {
-						int percent = (int) (current * 100f / size);
-						Util.log("progress: " + current + " " + size + "" + percent);						
+						int percent = (int) (current * 100f / size);					
 						mProgressText.setText(percent + "%");
 					}
 				})
@@ -143,17 +126,6 @@ public class ImageSwipeFragment extends Fragment {
 	 * references, and cleanup the image attacher
 	 */
 	private void cleanupImages() {
-
-		if (mGifView != null) {
-			Drawable drawable = mGifView.getDrawable();
-			if (drawable instanceof BitmapDrawable) {
-				BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
-				Bitmap bitmap = bitmapDrawable.getBitmap();
-				if (bitmap != null) {
-					bitmap.recycle();
-				}
-			}
-		}
 
 		if (mPhotoView != null) {
 			Drawable drawable = mPhotoView.getDrawable();
