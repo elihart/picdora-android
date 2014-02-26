@@ -15,6 +15,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.ProgressCallback;
@@ -30,6 +31,8 @@ public class ImageSwipeFragment extends Fragment {
 	LinearLayout mProgress;
 	@ViewById(R.id.progressText)
 	TextView mProgressText;
+	
+	Future<ImageView> mDownloading;
 
 	@AfterViews
 	void addImage() {
@@ -44,9 +47,6 @@ public class ImageSwipeFragment extends Fragment {
 
 		setScreenSize();
 
-		// reset and hide the views until an image is loaded
-		cleanupImages();
-
 		mPhotoView.setVisibility(View.GONE);
 		mProgress.setVisibility(View.VISIBLE);
 		mProgressText.setVisibility(View.GONE);
@@ -56,25 +56,23 @@ public class ImageSwipeFragment extends Fragment {
 
 	private void loadImage(final Image image) {
 
-		Ion.with(getActivity(), image.getUrl())
+		mDownloading = Ion.with(getActivity(), image.getUrl())
 				.progressHandler(new ProgressCallback() {
 
 					@Override
 					public void onProgress(int current, int size) {
 						mProgressText.setVisibility(View.VISIBLE);
-						int percent = (int) (current * 100f / size);					
+						int percent = (int) (current * 100f / size);
 						mProgressText.setText(percent + "%");
 					}
-				})
-				.withBitmap()
-				.error(R.drawable.ic_launcher)
-				.intoImageView(mPhotoView)				
+				}).withBitmap().error(R.drawable.ic_launcher)
+				.intoImageView(mPhotoView)
 				.setCallback(new FutureCallback<ImageView>() {
 
 					@Override
 					public void onCompleted(Exception arg0, ImageView arg1) {
 						mProgress.setVisibility(View.GONE);
-						mPhotoView.setVisibility(View.VISIBLE);	
+						mPhotoView.setVisibility(View.VISIBLE);
 					}
 				});
 	}
@@ -120,6 +118,10 @@ public class ImageSwipeFragment extends Fragment {
 	@Override
 	public void onDestroyView() {
 		super.onDestroyView();
+		
+		if(mDownloading != null){
+			mDownloading.cancel();
+		}
 
 		cleanupImages();
 	}

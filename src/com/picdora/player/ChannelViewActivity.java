@@ -38,49 +38,56 @@ public class ChannelViewActivity extends PicdoraActivity {
 	@Bean
 	ChannelPlayer mChannelPlayer;
 
-	
+	private DataFragment dataFragment;
 
 	/**
 	 * The pager adapter, which provides the pages to the view pager widget.
 	 */
 	private PagerAdapter mPagerAdapter;
-	
+
 	// Loading dialog to show while channel initializes
 	private Dialog busyDialog;
 
 	@AfterViews
 	void initChannel() {
 
-		// show loading screen
-		showBusyDialog("Loading Channel...");
+		FragmentManager fm = getSupportFragmentManager();
+		dataFragment = (DataFragment) fm.findFragmentByTag("data");
 
-		// Load channel and play when ready
-		String json = getIntent().getStringExtra("channel");
-		Channel channel = Util.fromJson(json, Channel.class);
+		// create the fragment and data the first time
+		if (dataFragment == null) {
+			// show loading screen
+			showBusyDialog("Loading Channel...");
 
-		mChannelPlayer.loadChannel(channel, new OnReadyListener() {
+			// add the fragment
+			dataFragment = new DataFragment();
+			fm.beginTransaction().add(dataFragment, "data").commit();
 
-			@Override
-			public void onReady() {
-				dismissBusyDialog();
-				startChannel();
-			}
+			dataFragment.setData(mChannelPlayer);
 
-			@Override
-			public void onError(ChannelError error) {
-				handleError(error);
-			}
-		});
+			// Load channel and play when ready
+			String json = getIntent().getStringExtra("channel");
+			Channel channel = Util.fromJson(json, Channel.class);
 
-	}
+			mChannelPlayer.loadChannel(channel, new OnReadyListener() {
 
-	@Override
-	public void onDestroy() {
-		super.onDestroy();
+				@Override
+				public void onReady() {
+					dismissBusyDialog();
+					startChannel();
+				}
 
-		if (mChannelPlayer != null) {
-			mChannelPlayer.destroy();
+				@Override
+				public void onError(ChannelError error) {
+					handleError(error);
+				}
+			});
+
+		} else {
+			mChannelPlayer = dataFragment.getData();
+			startChannel();
 		}
+
 	}
 
 	protected void handleError(ChannelError error) {
