@@ -13,6 +13,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.AsyncTask;
 import android.util.DisplayMetrics;
 
 import com.loopj.android.http.AsyncHttpClient;
@@ -33,6 +34,8 @@ public class ImageLoader {
 
 	// keep track of the largest dimension that the image should fit
 	private int mMaxDimension;
+	// allow the image to be slightly bigger than the max size if the alternative is to downsample a lot
+	private static final float SIZE_ALLOWANCE = 1.1f;
 
 	private PicdoraImageCache mCache;
 
@@ -40,14 +43,16 @@ public class ImageLoader {
 		mContext = context;
 
 		// init cache
-		mCache = new PicdoraImageCache();
+		mCache = new PicdoraImageCache(mContext);
 
 		// save screen size
 		DisplayMetrics displaymetrics = mContext.getResources()
 				.getDisplayMetrics();
 		int width = displaymetrics.widthPixels;
 		int height = displaymetrics.heightPixels;
-		mMaxDimension = Math.max(width, height);
+
+		// if the height or width don't come out right, use a fallback value
+		mMaxDimension = (int) (Math.max(Math.max(width, height), 480) * SIZE_ALLOWANCE);
 
 		// init downloads map
 		mDownloads = new HashMap<String, Download>();
@@ -96,34 +101,43 @@ public class ImageLoader {
 	 * @param image
 	 * @param callbacks
 	 */
-	public synchronized void loadImage(Image image, LoadCallbacks callbacks) {
-		if (image == null) {
-			return;
-		}
+	public synchronized void loadImage(final Image image,
+			final LoadCallbacks callbacks) {
+		// query the cache in the background. On hit return the image, on miss
+		// download it
+		new AsyncTask<Void, Void, Drawable>() {
 
-		// check cache first
-		Drawable d = mCache.get(image);
-		if (d != null) {
-			if (callbacks != null) {
-				callbacks.onSuccess(d);
+			@Override
+			protected Drawable doInBackground(Void... params) {
+				// check cache
+				return mCache.get(image);
 			}
-			return;
-		}
 
-		// on cache miss check if there is an existing download
-		Download download = mDownloads.get(image.getImgurId());
-		if (download != null) {
-			// update the start time
-			download.startTime = new Date().getTime();
+			protected void onPostExecute(Drawable d) {
+				// on cache hit return the result
+				if (d != null) {
+					if (callbacks != null) {
+						callbacks.onSuccess(d);
+					}
+					return;
+				}
 
-			// add the callback
-			download.listeners.add(callbacks);
-		}
+				// on cache miss check if there is an existing download
+				Download download = mDownloads.get(image.getImgurId());
+				if (download != null) {
+					// update the start time
+					download.startTime = new Date().getTime();
 
-		// otherwise start a new download
-		else {
-			startDownload(image, callbacks);
-		}
+					// add the callback
+					download.listeners.add(callbacks);
+				}
+
+				// otherwise start a new download
+				else {
+					startDownload(image, callbacks);
+				}
+			}
+		}.execute();
 	}
 
 	/**
@@ -133,7 +147,7 @@ public class ImageLoader {
 	 * @param callbacks
 	 */
 	private void startDownload(Image image, LoadCallbacks callbacks) {
-		final String imageId = new String(image.getImgurId());
+		final String imageId = image.getImgurId();
 
 		RequestHandle handle = client.get(image.getUrl(),
 				new BinaryHttpResponseHandler() {
@@ -157,7 +171,7 @@ public class ImageLoader {
 				});
 
 		addDownload(new Download(new Date().getTime(), callbacks, handle,
-				new String(image.getImgurId())));
+				image.getImgurId()));
 
 	}
 
@@ -182,10 +196,13 @@ public class ImageLoader {
 		for (LoadCallbacks listener : download.listeners) {
 			// TODO: Customize error
 			if (listener != null) {
+				error.printStackTrace();
 				listener.onError(LoadError.UNKOWN);
 			}
 		}
 
+		// remove download from list
+		removeDownload(download);
 	}
 
 	/**
@@ -194,8 +211,8 @@ public class ImageLoader {
 	 * @param imageId
 	 * @param binaryData
 	 */
-	protected void handleSuccess(String imageId, byte[] binaryData) {
-		Download download = mDownloads.get(imageId);
+	protected void handleSuccess(final String imageId, final byte[] binaryData) {
+		final Download download = mDownloads.get(imageId);
 		if (download == null) {
 			Util.log("Success for download that doesn't exist");
 			return;
@@ -205,27 +222,83 @@ public class ImageLoader {
 			return;
 		}
 
-		// process the image
-		Drawable d = processImageData(binaryData);
+		// decode the image into a drawable and cache it in a background thread
+		new AsyncTask<Void, Void, Drawable>(){
 
-		// cache the image
+			@Override
+			protected Drawable doInBackground(Void... params) {
+				return processImageData(imageId, binaryData);
+			}
+			
+			@Override
+			protected void onPostExecute(Drawable d){
+				for (LoadCallbacks listener : download.listeners) {
+					if (listener != null) {
+						// pass the image back to listeners
+						listener.onSuccess(d);
+					}
+				}
 
-		for (LoadCallbacks listener : download.listeners) {
-			if (listener != null) {
-				// pass the image back to listeners
-				listener.onSuccess(d);
+				// remove download from list
+				removeDownload(download);
+			}
+			
+		}.execute();		
+	}
+
+	private Drawable processImageData(String imageId, byte[] binaryData) {
+		Date decodeStart = new Date();
+		// get image dimensions
+		BitmapFactory.Options options = new BitmapFactory.Options();
+		options.inJustDecodeBounds = true;
+		BitmapFactory
+				.decodeByteArray(binaryData, 0, binaryData.length, options);
+		int width = options.outWidth;
+		int height = options.outHeight;
+
+		// Calculate inSampleSize
+		options.inSampleSize = calculateInSampleSize(options);
+		
+		// TODO: catch out of memory error and retry with larger sample size
+
+		// Decode bitmap with inSampleSize set
+		options.inJustDecodeBounds = false;
+		Bitmap bm = BitmapFactory.decodeByteArray(binaryData, 0,
+				binaryData.length, options);
+		
+		Date decodeEnd = new Date();
+		
+		Util.log("Decode image took " + (decodeEnd.getTime() - decodeStart.getTime()) + " milliseconds. Sample size: " + options.inSampleSize 
+				+ " from " + width + "x" + height + " to "  + bm.getWidth() + "x" + bm.getHeight());
+
+//		Date cacheStart = new Date();
+//		mCache.put(imageId, bm);
+//		Date cacheEnd = new Date();
+//		Util.log("Cache image took " + (cacheEnd.getTime() - cacheStart.getTime()) + " milliseconds");
+		
+		
+		return new BitmapDrawable(mContext.getResources(), bm);
+	}
+
+	private int calculateInSampleSize(BitmapFactory.Options options) {
+
+		// Raw height and width of image
+		final int height = options.outHeight;
+		final int width = options.outWidth;
+		int inSampleSize = 1;
+
+		if (height > mMaxDimension || width > mMaxDimension) {
+
+			// Calculate the largest inSampleSize value that is a power of 2 and
+			// keeps both
+			// height and width larger than the requested height and width.
+			while ((height / inSampleSize) > mMaxDimension
+					|| (width / inSampleSize) > mMaxDimension) {
+				inSampleSize *= 2;
 			}
 		}
 
-		// remove download from list
-		removeDownload(download);
-
-	}
-
-	private Drawable processImageData(byte[] binaryData) {
-		Bitmap bm = BitmapFactory.decodeByteArray(binaryData, 0,
-				binaryData.length);
-		return new BitmapDrawable(mContext.getResources(), bm);
+		return inSampleSize;
 	}
 
 	/**

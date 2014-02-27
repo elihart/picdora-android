@@ -79,28 +79,9 @@ public class ImageSwipeFragment extends Fragment implements ImageLoader.LoadCall
 		
 		ImageLoader.instance().unregisterCallbacks(mImage.getImgurId(), this);
 
-		cleanupImages();		
+		mPhotoView = null;	
 	}
 
-	/**
-	 * Cleanup memory being used for images. Recycle any bitmaps in use, remove
-	 * references, and cleanup the image attacher
-	 */
-	private void cleanupImages() {
-
-		if (mPhotoView != null) {
-			Drawable drawable = mPhotoView.getDrawable();
-			if (drawable instanceof BitmapDrawable) {
-				BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
-				Bitmap bitmap = bitmapDrawable.getBitmap();
-				if (bitmap != null) {
-					bitmap.recycle();
-				}
-			}
-		}
-		
-		mPhotoView = null;
-	}
 
 	@Override
 	public void onProgress(int percentComplete) {
