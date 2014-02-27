@@ -113,19 +113,16 @@ public class ImageLoader {
 			@Override
 			protected Drawable doInBackground(Void... params) {
 				// check cache
-				byte[] data =  mCache.get(image);
-				
-				if(data != null){
-					Util.log("cache hit");
-					try{
+				byte[] data = mCache.get(image);
+
+				if (data != null) {
+					try {
 						return createDrawable(data);
-					} catch(OutOfMemoryError e){
+					} catch (OutOfMemoryError e) {
 						// TODO: Need to be able to pass an error back
-						Util.log("out of memory on cache hit");
 					}
 				}
-				
-				Util.log("cache miss");
+
 				return null;
 			}
 
@@ -166,32 +163,32 @@ public class ImageLoader {
 	 * @param callbacks
 	 */
 	private void startDownload(Image image, LoadCallbacks callbacks) {
-		
-		final Download download = new Download(new Date().getTime(), callbacks, null,
-				image);
+
+		final Download download = new Download(new Date().getTime(), callbacks,
+				null, image);
 
 		RequestHandle handle = client.get(image.getUrl(),
 				new BinaryHttpResponseHandler(ALLOWED_CONTENT_TYPES) {
 					@Override
 					public void onProgress(int progress, int size) {
-							handleProgress(download, progress, size);
+						handleProgress(download, progress, size);
 					}
 
 					@Override
 					public void onSuccess(byte[] binaryData) {
-							handleSuccess(download, binaryData);
-							removeDownload(download);
+						handleSuccess(download, binaryData);
+						removeDownload(download);
 					}
 
 					@Override
 					public void onFailure(int statusCode,
 							org.apache.http.Header[] headers,
 							byte[] binaryData, java.lang.Throwable error) {
-							handleFailure(download, statusCode, error);
-							removeDownload(download);
+						handleFailure(download, statusCode, error);
+						removeDownload(download);
 					}
 				});
-		
+
 		download.handle = handle;
 
 		addDownload(download);
@@ -242,7 +239,9 @@ public class ImageLoader {
 		// cache data
 		new CacheDownloadsAsync().execute(download);
 
-		if (download.listeners == null) {
+		// if there are no listeners waiting for the result then there is no
+		// point in decoding the image
+		if (download.listeners == null || download.listeners.isEmpty()) {
 			return;
 		}
 
@@ -344,6 +343,14 @@ public class ImageLoader {
 		}
 
 		mDownloads.put(download.image.getImgurId(), download);
+
+		logDownloads();
+	}
+
+	private void logDownloads() {
+		// print debug information about the current downloads
+		// Util.log("# of downloads: " + mDownloads.size());
+
 	}
 
 	/**
@@ -399,6 +406,8 @@ public class ImageLoader {
 	 */
 	private void removeDownload(Download download) {
 		mDownloads.remove(download.image.getImgurId());
+
+		logDownloads();
 	}
 
 	class Download {
