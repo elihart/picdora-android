@@ -113,7 +113,20 @@ public class ImageLoader {
 			@Override
 			protected Drawable doInBackground(Void... params) {
 				// check cache
-				return mCache.get(image);
+				byte[] data =  mCache.get(image);
+				
+				if(data != null){
+					Util.log("cache hit");
+					try{
+						return createDrawable(data);
+					} catch(OutOfMemoryError e){
+						// TODO: Need to be able to pass an error back
+						Util.log("out of memory on cache hit");
+					}
+				}
+				
+				Util.log("cache miss");
+				return null;
 			}
 
 			protected void onPostExecute(Drawable d) {
@@ -155,7 +168,7 @@ public class ImageLoader {
 	private void startDownload(Image image, LoadCallbacks callbacks) {
 		
 		final Download download = new Download(new Date().getTime(), callbacks, null,
-				image.getImgurId());
+				image);
 
 		RequestHandle handle = client.get(image.getUrl(),
 				new BinaryHttpResponseHandler(ALLOWED_CONTENT_TYPES) {
@@ -330,7 +343,7 @@ public class ImageLoader {
 			removeOldestDownload();
 		}
 
-		mDownloads.put(download.imageId, download);
+		mDownloads.put(download.image.getImgurId(), download);
 	}
 
 	/**
@@ -385,14 +398,14 @@ public class ImageLoader {
 	 * @param download
 	 */
 	private void removeDownload(Download download) {
-		mDownloads.remove(download.imageId);
+		mDownloads.remove(download.image.getImgurId());
 	}
 
 	class Download {
 		public long startTime;
 		public List<LoadCallbacks> listeners;
 		public RequestHandle handle;
-		public String imageId;
+		public Image image;
 
 		// the resulting data and decoded drawable of the download. These can be
 		// set manually once they are available
@@ -402,10 +415,10 @@ public class ImageLoader {
 		public Throwable error;
 
 		public Download(long startTime, LoadCallbacks listener,
-				RequestHandle handle, String imageId) {
+				RequestHandle handle, Image image) {
 			this.startTime = startTime;
 			this.handle = handle;
-			this.imageId = imageId;
+			this.image = image;
 
 			listeners = new ArrayList<LoadCallbacks>();
 			if (listener != null) {
@@ -420,7 +433,7 @@ public class ImageLoader {
 			int count = downloads.length;
 			for (int i = 0; i < count; i++) {
 				Download d = downloads[i];
-				// cache the data
+				mCache.put(d.image, d.data);
 			}
 			return null;
 		}
