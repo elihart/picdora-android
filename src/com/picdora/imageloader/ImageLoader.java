@@ -1,12 +1,17 @@
 package com.picdora.imageloader;
 
+import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.http.Header;
 import org.apache.http.client.params.ClientPNames;
+
+import uk.co.senab.bitmapcache.BitmapLruCache;
+import uk.co.senab.bitmapcache.CacheableBitmapDrawable;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -139,6 +144,9 @@ public class ImageLoader {
 			}
 		}.execute();
 	}
+	
+	// tell the binary response handler to allow all content
+	private static final String[] ALLOWED_CONTENT_TYPES = new String[] { ".*" };
 
 	/**
 	 * Start an image downloading and add it to the download list
@@ -149,8 +157,10 @@ public class ImageLoader {
 	private void startDownload(Image image, LoadCallbacks callbacks) {
 		final String imageId = image.getImgurId();
 
+		
+		
 		RequestHandle handle = client.get(image.getUrl(),
-				new BinaryHttpResponseHandler() {
+				new BinaryHttpResponseHandler(ALLOWED_CONTENT_TYPES) {
 					@Override
 					public void onProgress(int progress, int size) {
 						handleProgress(imageId, progress, size);
@@ -165,6 +175,10 @@ public class ImageLoader {
 					public void onFailure(int statusCode,
 							org.apache.http.Header[] headers,
 							byte[] binaryData, java.lang.Throwable error) {
+						for (Header header : headers)
+					    {
+					        Util.log(header.getName()+" / "+header.getValue());
+					    }
 						handleFailure(imageId, statusCode, error);
 					}
 
@@ -197,6 +211,7 @@ public class ImageLoader {
 			// TODO: Customize error
 			if (listener != null) {
 				error.printStackTrace();
+				
 				listener.onError(LoadError.UNKOWN);
 			}
 		}
@@ -265,14 +280,16 @@ public class ImageLoader {
 		options.inJustDecodeBounds = false;
 		Bitmap bm = BitmapFactory.decodeByteArray(binaryData, 0,
 				binaryData.length, options);
-		
-		Date decodeEnd = new Date();
-		
-		Util.log("Decode image took " + (decodeEnd.getTime() - decodeStart.getTime()) + " milliseconds. Sample size: " + options.inSampleSize 
-				+ " from " + width + "x" + height + " to "  + bm.getWidth() + "x" + bm.getHeight());
-
+//		
+//		Date decodeEnd = new Date();
+//		
+//		Util.log("Decode image took " + (decodeEnd.getTime() - decodeStart.getTime()) + " milliseconds. Sample size: " + options.inSampleSize 
+//				+ " from " + width + "x" + height + " to "  + bm.getWidth() + "x" + bm.getHeight());
+//		
+//		Util.log("byte array: " + ((float)bm.getRowBytes() * bm.getHeight() / binaryData.length));
+//
 //		Date cacheStart = new Date();
-//		mCache.put(imageId, bm);
+//		mCache.put(imageId, new ByteArrayInputStream(binaryData));
 //		Date cacheEnd = new Date();
 //		Util.log("Cache image took " + (cacheEnd.getTime() - cacheStart.getTime()) + " milliseconds");
 		

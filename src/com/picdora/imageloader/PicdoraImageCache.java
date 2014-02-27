@@ -1,10 +1,12 @@
 package com.picdora.imageloader;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 
 import uk.co.senab.bitmapcache.BitmapLruCache;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.os.Environment;
 
@@ -46,6 +48,7 @@ public class PicdoraImageCache {
 
 		BitmapLruCache.Builder builder = new BitmapLruCache.Builder(mContext);
 		builder.setMemoryCacheEnabled(false);
+		builder.setRecyclePolicy(BitmapLruCache.RecyclePolicy.ALWAYS);
 
 		builder.setDiskCacheEnabled(true).setDiskCacheLocation(cacheLocation)
 				.setDiskCacheMaxSize(DISK_CACHE_SIZE);
@@ -67,6 +70,12 @@ public class PicdoraImageCache {
 
 	public void put(final String imageId, final Bitmap bm) {
 		mBitmapCache.put(imageId, bm);
+		
+	}
+
+	public Drawable put(final String imageId, ByteArrayInputStream byteArrayInputStream, BitmapFactory.Options options) {
+		return mBitmapCache.put(imageId, byteArrayInputStream, options);
+		
 	}
 
 }
