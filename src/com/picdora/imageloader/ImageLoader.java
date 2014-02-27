@@ -1,18 +1,15 @@
 package com.picdora.imageloader;
 
-import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.http.Header;
 import org.apache.http.client.params.ClientPNames;
 
-import uk.co.senab.bitmapcache.BitmapLruCache;
-import uk.co.senab.bitmapcache.CacheableBitmapDrawable;
-
+import pl.droidsonroids.gif.GifDrawable;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -39,7 +36,8 @@ public class ImageLoader {
 
 	// keep track of the largest dimension that the image should fit
 	private int mMaxDimension;
-	// allow the image to be slightly bigger than the max size if the alternative is to downsample a lot
+	// allow the image to be slightly bigger than the max size if the
+	// alternative is to downsample a lot
 	private static final float SIZE_ALLOWANCE = 1.1f;
 
 	private PicdoraImageCache mCache;
@@ -82,7 +80,7 @@ public class ImageLoader {
 	}
 
 	public enum LoadError {
-		UNKOWN, OUT_OF_MEMORY, DOWNLOAD_FAILURE, DOWNLOAD_CANCELED
+		UNKOWN, OUT_OF_MEMORY, DOWNLOAD_FAILURE, DOWNLOAD_CANCELED, FAILED_DECODE
 	}
 
 	/**
@@ -144,7 +142,7 @@ public class ImageLoader {
 			}
 		}.execute();
 	}
-	
+
 	// tell the binary response handler to allow all content
 	private static final String[] ALLOWED_CONTENT_TYPES = new String[] { ".*" };
 
@@ -155,37 +153,35 @@ public class ImageLoader {
 	 * @param callbacks
 	 */
 	private void startDownload(Image image, LoadCallbacks callbacks) {
-		final String imageId = image.getImgurId();
+		
+		final Download download = new Download(new Date().getTime(), callbacks, null,
+				image.getImgurId());
 
-		
-		
 		RequestHandle handle = client.get(image.getUrl(),
 				new BinaryHttpResponseHandler(ALLOWED_CONTENT_TYPES) {
 					@Override
 					public void onProgress(int progress, int size) {
-						handleProgress(imageId, progress, size);
+							handleProgress(download, progress, size);
 					}
 
 					@Override
 					public void onSuccess(byte[] binaryData) {
-						handleSuccess(imageId, binaryData);
+							handleSuccess(download, binaryData);
+							removeDownload(download);
 					}
 
 					@Override
 					public void onFailure(int statusCode,
 							org.apache.http.Header[] headers,
 							byte[] binaryData, java.lang.Throwable error) {
-						for (Header header : headers)
-					    {
-					        Util.log(header.getName()+" / "+header.getValue());
-					    }
-						handleFailure(imageId, statusCode, error);
+							handleFailure(download, statusCode, error);
+							removeDownload(download);
 					}
-
 				});
+		
+		download.handle = handle;
 
-		addDownload(new Download(new Date().getTime(), callbacks, handle,
-				image.getImgurId()));
+		addDownload(download);
 
 	}
 
@@ -196,28 +192,29 @@ public class ImageLoader {
 	 * @param statusCode
 	 * @param error
 	 */
-	protected void handleFailure(String imageId, int statusCode, Throwable error) {
-		Download download = mDownloads.get(imageId);
-		if (download == null) {
-			Util.log("Failure for download that doesn't exist");
-			return;
-		}
+	protected void handleFailure(Download download, int statusCode,
+			Throwable error) {
 
 		if (download.listeners == null) {
 			return;
 		}
 
+		// alert listeners to error
+
+		LoadError loadError = LoadError.UNKOWN;
+
+		if (error instanceof OutOfMemoryError) {
+			loadError = LoadError.OUT_OF_MEMORY;
+		}
+		// TODO: Look for other error types
+
 		for (LoadCallbacks listener : download.listeners) {
-			// TODO: Customize error
 			if (listener != null) {
 				error.printStackTrace();
-				
-				listener.onError(LoadError.UNKOWN);
+
+				listener.onError(loadError);
 			}
 		}
-
-		// remove download from list
-		removeDownload(download);
 	}
 
 	/**
@@ -226,74 +223,46 @@ public class ImageLoader {
 	 * @param imageId
 	 * @param binaryData
 	 */
-	protected void handleSuccess(final String imageId, final byte[] binaryData) {
-		final Download download = mDownloads.get(imageId);
-		if (download == null) {
-			Util.log("Success for download that doesn't exist");
-			return;
-		}
+	protected void handleSuccess(Download download, byte[] binaryData) {
+		download.data = binaryData;
+
+		// cache data
+		new CacheDownloadsAsync().execute(download);
 
 		if (download.listeners == null) {
 			return;
 		}
 
-		// decode the image into a drawable and cache it in a background thread
-		new AsyncTask<Void, Void, Drawable>(){
-
-			@Override
-			protected Drawable doInBackground(Void... params) {
-				return processImageData(imageId, binaryData);
-			}
-			
-			@Override
-			protected void onPostExecute(Drawable d){
-				for (LoadCallbacks listener : download.listeners) {
-					if (listener != null) {
-						// pass the image back to listeners
-						listener.onSuccess(d);
-					}
-				}
-
-				// remove download from list
-				removeDownload(download);
-			}
-			
-		}.execute();		
+		// decode data and pass it to listeners.
+		new CreateDrawableFromDownloadAsync().execute(download);
 	}
 
-	private Drawable processImageData(String imageId, byte[] binaryData) {
-		Date decodeStart = new Date();
+	private Drawable createDrawable(byte[] binaryData) throws OutOfMemoryError {
+		// try to decode it as a gif
+		// TODO: Update the Image to have the correct gif status in database
+		try {
+			return new GifDrawable(binaryData);
+		} catch (IOException e) {
+			// not a bitmap
+		}
+
+		// decode as a bitmap if the gif decode fails
+
 		// get image dimensions
 		BitmapFactory.Options options = new BitmapFactory.Options();
 		options.inJustDecodeBounds = true;
 		BitmapFactory
 				.decodeByteArray(binaryData, 0, binaryData.length, options);
-		int width = options.outWidth;
-		int height = options.outHeight;
 
 		// Calculate inSampleSize
 		options.inSampleSize = calculateInSampleSize(options);
-		
-		// TODO: catch out of memory error and retry with larger sample size
 
 		// Decode bitmap with inSampleSize set
 		options.inJustDecodeBounds = false;
+
 		Bitmap bm = BitmapFactory.decodeByteArray(binaryData, 0,
 				binaryData.length, options);
-//		
-//		Date decodeEnd = new Date();
-//		
-//		Util.log("Decode image took " + (decodeEnd.getTime() - decodeStart.getTime()) + " milliseconds. Sample size: " + options.inSampleSize 
-//				+ " from " + width + "x" + height + " to "  + bm.getWidth() + "x" + bm.getHeight());
-//		
-//		Util.log("byte array: " + ((float)bm.getRowBytes() * bm.getHeight() / binaryData.length));
-//
-//		Date cacheStart = new Date();
-//		mCache.put(imageId, new ByteArrayInputStream(binaryData));
-//		Date cacheEnd = new Date();
-//		Util.log("Cache image took " + (cacheEnd.getTime() - cacheStart.getTime()) + " milliseconds");
-		
-		
+
 		return new BitmapDrawable(mContext.getResources(), bm);
 	}
 
@@ -325,12 +294,7 @@ public class ImageLoader {
 	 * @param progress
 	 * @param size
 	 */
-	protected void handleProgress(String imageId, int progress, int size) {
-		Download download = mDownloads.get(imageId);
-		if (download == null) {
-			Util.log("Progress for download that doesn't exist");
-			return;
-		}
+	protected void handleProgress(Download download, int progress, int size) {
 
 		if (download.listeners == null) {
 			return;
@@ -398,6 +362,8 @@ public class ImageLoader {
 	 * @param oldest
 	 */
 	private void cancelDownload(Download download) {
+		removeDownload(download);
+
 		download.handle.cancel(true);
 
 		if (download.listeners == null) {
@@ -409,8 +375,6 @@ public class ImageLoader {
 				listener.onError(LoadError.DOWNLOAD_CANCELED);
 			}
 		}
-
-		removeDownload(download);
 	}
 
 	/**
@@ -422,13 +386,6 @@ public class ImageLoader {
 	 */
 	private void removeDownload(Download download) {
 		mDownloads.remove(download.imageId);
-
-		if (download.listeners != null) {
-			download.listeners.clear();
-			download.listeners = null;
-		}
-
-		download.handle = null;
 	}
 
 	class Download {
@@ -436,6 +393,13 @@ public class ImageLoader {
 		public List<LoadCallbacks> listeners;
 		public RequestHandle handle;
 		public String imageId;
+
+		// the resulting data and decoded drawable of the download. These can be
+		// set manually once they are available
+		public Drawable drawable;
+		public byte[] data;
+		// An error that caused this download to fail
+		public Throwable error;
 
 		public Download(long startTime, LoadCallbacks listener,
 				RequestHandle handle, String imageId) {
@@ -449,5 +413,47 @@ public class ImageLoader {
 			}
 		}
 
+	}
+
+	private class CacheDownloadsAsync extends AsyncTask<Download, Void, Void> {
+		protected Void doInBackground(Download... downloads) {
+			int count = downloads.length;
+			for (int i = 0; i < count; i++) {
+				Download d = downloads[i];
+				// cache the data
+			}
+			return null;
+		}
+	}
+
+	private class CreateDrawableFromDownloadAsync extends
+			AsyncTask<Download, Void, Download> {
+
+		protected Download doInBackground(Download... downloads) {
+			Download download = downloads[0];
+
+			try {
+				download.drawable = createDrawable(download.data);
+			} catch (OutOfMemoryError e) {
+				download.error = e;
+			}
+
+			return download;
+		}
+
+		protected void onPostExecute(Download result) {
+			if (result.error != null) {
+				handleFailure(result, 200, result.error);
+			} else {
+				// pass drawable to listeners
+				if (result.listeners != null) {
+					for (LoadCallbacks listener : result.listeners) {
+						if (listener != null) {
+							listener.onSuccess(result.drawable);
+						}
+					}
+				}
+			}
+		}
 	}
 }

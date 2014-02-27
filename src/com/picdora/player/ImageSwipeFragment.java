@@ -102,6 +102,7 @@ public class ImageSwipeFragment extends Fragment implements ImageLoader.LoadCall
 
 	@Override
 	public void onError(LoadError error) {
-		Util.log("Image load error : " + error);		
+		Util.log("Image load error : " + error);	
+		// TODO: Handle error
 	}
 }
