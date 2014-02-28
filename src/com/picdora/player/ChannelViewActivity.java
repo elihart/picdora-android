@@ -138,7 +138,11 @@ public class ChannelViewActivity extends PicdoraActivity {
 
 	public void dismissBusyDialog() {
 		if (busyDialog != null)
+			try{
 			busyDialog.dismiss();
+			} catch(IllegalArgumentException e){
+			// catch the "View not attached to Window Manager" errors
+			}
 
 		busyDialog = null;
 	}
