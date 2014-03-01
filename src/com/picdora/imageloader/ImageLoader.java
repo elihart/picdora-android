@@ -147,9 +147,6 @@ public class ImageLoader {
 
 						// if there was a cache hit then attempt a drawable
 						if (data != null) {
-							if (attempts == 0) {
-								throw new OutOfMemoryError();
-							}
 							return createDrawable(data);
 						} else {
 							return null;
