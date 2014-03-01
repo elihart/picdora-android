@@ -1,8 +1,8 @@
 package com.picdora;
 
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.AsyncHttpResponseHandler;
-import com.loopj.android.http.RequestParams;
+import com.picdora.loopj.AsyncHttpClient;
+import com.picdora.loopj.AsyncHttpResponseHandler;
+import com.picdora.loopj.RequestParams;
 
 public class PicdoraApiClient {
 //	private static final String BASE_URL = "http://picdora.com:3000/";

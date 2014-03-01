@@ -1,28 +1,24 @@
 package com.picdora;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
+import org.apache.http.Header;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import se.emilsjolander.sprinkles.CursorList;
 import se.emilsjolander.sprinkles.Query;
 import se.emilsjolander.sprinkles.Sprinkles;
 import se.emilsjolander.sprinkles.Transaction;
-
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDoneException;
 import android.database.sqlite.SQLiteStatement;
 import android.text.TextUtils;
 
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.JsonHttpResponseHandler;
-import com.loopj.android.http.RequestParams;
-import com.loopj.android.http.SyncHttpClient;
+import com.picdora.loopj.JsonHttpResponseHandler;
+import com.picdora.loopj.RequestParams;
 import com.picdora.models.Category;
 import com.picdora.models.Image;
 
@@ -90,7 +86,8 @@ public abstract class ImageManager {
 				new JsonHttpResponseHandler() {
 
 					@Override
-					public void onSuccess(org.json.JSONArray response) {
+					public void onSuccess(int statusCode, Header[] headers,
+							org.json.JSONArray response) {
 						boolean success = saveImagesToDb(response);
 						if (success) {
 							listener.onSuccess();
@@ -120,7 +117,8 @@ public abstract class ImageManager {
 				new JsonHttpResponseHandler() {
 
 					@Override
-					public void onSuccess(org.json.JSONArray response) {
+					public void onSuccess(int statusCode, Header[] headers,
+							org.json.JSONArray response) {
 						listener.onSuccess(response);
 					}
 
@@ -149,7 +147,8 @@ public abstract class ImageManager {
 				new JsonHttpResponseHandler() {
 
 					@Override
-					public void onSuccess(org.json.JSONObject response) {
+					public void onSuccess(int statusCode, Header[] headers,
+							org.json.JSONObject response) {
 						listener.onSuccess(response);
 					}
 

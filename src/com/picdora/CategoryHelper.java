@@ -1,6 +1,7 @@
 package com.picdora;
 
 import java.util.Collections;
+import org.apache.http.Header;
 import java.util.Comparator;
 import java.util.List;
 
@@ -9,8 +10,8 @@ import org.json.JSONArray;
 import se.emilsjolander.sprinkles.Query;
 import se.emilsjolander.sprinkles.Transaction;
 
-import com.loopj.android.http.JsonHttpResponseHandler;
 import com.picdora.ImageManager.OnResultListener;
+import com.picdora.loopj.JsonHttpResponseHandler;
 import com.picdora.models.Category;
 
 public abstract class CategoryHelper {
@@ -29,12 +30,13 @@ public abstract class CategoryHelper {
 			}
 		});
 	}
-	
+
 	public static void syncCategoriesWithServer(final OnResultListener listener) {
 		PicdoraApiClient.get("categories", new JsonHttpResponseHandler() {
 
 			@Override
-			public void onSuccess(org.json.JSONArray response) {
+			public void onSuccess(int statusCode, Header[] headers,
+					org.json.JSONArray response) {
 				saveCategoriesToDb(response);
 				listener.onSuccess();
 			}
@@ -48,7 +50,7 @@ public abstract class CategoryHelper {
 			}
 		});
 	}
-	
+
 	private static void saveCategoriesToDb(JSONArray json) {
 		Transaction t = new Transaction();
 		try {
@@ -66,7 +68,5 @@ public abstract class CategoryHelper {
 			t.finish();
 		}
 	}
-	
-	
 
 }

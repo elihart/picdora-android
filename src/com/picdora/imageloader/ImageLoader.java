@@ -7,24 +7,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.http.Header;
 import org.apache.http.client.params.ClientPNames;
 
 import pl.droidsonroids.gif.GifDrawable;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.SystemClock;
 import android.util.DisplayMetrics;
 
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.BinaryHttpResponseHandler;
-import com.loopj.android.http.RequestHandle;
-import com.picdora.Util;
+import com.picdora.loopj.AsyncHttpClient;
+import com.picdora.loopj.BinaryHttpResponseHandler;
+import com.picdora.loopj.RequestHandle;
 import com.picdora.models.Image;
 
 public class ImageLoader {
@@ -70,6 +68,7 @@ public class ImageLoader {
 		client = new AsyncHttpClient();
 		client.getHttpClient().getParams()
 				.setParameter(ClientPNames.ALLOW_CIRCULAR_REDIRECTS, true);
+		client.setMaxConnections(MAX_DOWNLOADS);
 	}
 
 	public static ImageLoader instance() {
@@ -100,6 +99,22 @@ public class ImageLoader {
 		if (mLoader == null) {
 			mLoader = new ImageLoader(context);
 		}
+	}
+
+	/**
+	 * Cancel all downloads in the download list
+	 */
+	public void clearDownloads() {
+
+		// need to make a copy of the collection because the cancel method
+		// removes them from the list
+		List<Download> downloads = new ArrayList<Download>(mDownloads.values());
+
+		for (Download d : downloads) {
+			cancelDownload(d);
+		}
+
+		System.gc();
 	}
 
 	/**
@@ -214,18 +229,24 @@ public class ImageLoader {
 					}
 
 					@Override
-					public void onSuccess(byte[] binaryData) {
-						handleSuccess(download, binaryData);
-						removeDownload(download);
-					}
-
-					@Override
 					public void onFailure(int statusCode,
 							org.apache.http.Header[] headers,
 							byte[] binaryData, java.lang.Throwable error) {
 						handleFailure(download,
 								reasonForDownloadFailure(statusCode, error));
 						removeDownload(download);
+					}
+
+					@Override
+					public void onSuccess(int statusCode, Header[] headers,
+							byte[] binaryData) {
+						handleSuccess(download, binaryData);
+						removeDownload(download);
+					}
+
+					@Override
+					public void onCancel() {
+						// canceled
 					}
 				});
 
@@ -400,14 +421,6 @@ public class ImageLoader {
 		}
 
 		mDownloads.put(download.image.getImgurId(), download);
-
-		logDownloads();
-	}
-
-	private void logDownloads() {
-		// print debug information about the current downloads
-		// Util.log("# of downloads: " + mDownloads.size());
-
 	}
 
 	/**
@@ -443,10 +456,6 @@ public class ImageLoader {
 
 		download.handle.cancel(true);
 
-		if (download.listeners == null) {
-			return;
-		}
-
 		for (LoadCallbacks listener : download.listeners) {
 			if (listener != null) {
 				listener.onError(LoadError.DOWNLOAD_CANCELED);
@@ -463,8 +472,6 @@ public class ImageLoader {
 	 */
 	private void removeDownload(Download download) {
 		mDownloads.remove(download.image.getImgurId());
-
-		logDownloads();
 	}
 
 	class Download {
@@ -550,6 +557,9 @@ public class ImageLoader {
 					}
 				}
 			}
+
+			// passed the drawable on, don't need it anymore
+			result.drawable = null;
 		}
 	}
 }

@@ -78,6 +78,8 @@ public class ImageSwipeFragment extends Fragment implements ImageLoader.LoadCall
 		super.onDestroyView();
 		
 		ImageLoader.instance().unregisterCallbacks(mImage.getImgurId(), this);
+		
+		mPhotoView.setImageDrawable(null);
 
 		mPhotoView = null;	
 	}
