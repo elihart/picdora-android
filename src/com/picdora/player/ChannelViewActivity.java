@@ -106,6 +106,8 @@ public class ChannelViewActivity extends FragmentActivity {
 		// Instantiate a ViewPager and a PagerAdapter
 		mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
 		pager.setAdapter(mPagerAdapter);
+		
+		preloadImages(0, NUM_IMAGES_TO_PRELOAD - 1);
 
 		pager.setOnPageChangeListener(new OnPageChangeListener() {
 
@@ -141,7 +143,7 @@ public class ChannelViewActivity extends FragmentActivity {
 			return;
 		}
 		
-		for(int i = startPos; i<= endPos; i++){
+		for(int i = endPos; i >= startPos; i--){
 			Image image = mChannelPlayer.getImage(i);
 		}
 

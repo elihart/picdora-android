@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -20,12 +21,16 @@ import android.os.AsyncTask;
 import android.os.SystemClock;
 import android.util.DisplayMetrics;
 
+import com.picdora.Util;
 import com.picdora.loopj.AsyncHttpClient;
 import com.picdora.loopj.BinaryHttpResponseHandler;
 import com.picdora.loopj.RequestHandle;
 import com.picdora.models.Image;
 
 public class ImageLoader {
+	// TODO: Optimize preloading and max connections based on internet speed and
+	// speed that the user is going through the pictures
+
 	// maximum images to download at once
 	private static final int MAX_DOWNLOADS = 5;
 	// the number of times to attempt a method that might fail due to an out of
@@ -37,6 +42,12 @@ public class ImageLoader {
 	private Map<String, Download> mDownloads;
 	private AsyncHttpClient client;
 	private Context mContext;
+	// hold images that we had to kick out of the download list to make room for
+	// more recent ones. If we have space we can come back to these
+	private LinkedList<Image> mCanceledImages;
+	// hold a queue of upcoming images that can be preloaded if there is space
+	// in the download list
+	private LinkedList<Image> mUpcomingImages;
 
 	// keep track of the largest dimension that the image should fit
 	private int mMaxDimension;
@@ -63,6 +74,10 @@ public class ImageLoader {
 
 		// init downloads map
 		mDownloads = new HashMap<String, Download>();
+
+		// init queues
+		mCanceledImages = new LinkedList<Image>();
+		mUpcomingImages = new LinkedList<Image>();
 
 		// setup async client
 		client = new AsyncHttpClient();
@@ -105,6 +120,8 @@ public class ImageLoader {
 	 * Cancel all downloads in the download list
 	 */
 	public void clearDownloads() {
+		mUpcomingImages.clear();
+		mCanceledImages.clear();
 
 		// need to make a copy of the collection because the cancel method
 		// removes them from the list
@@ -207,6 +224,43 @@ public class ImageLoader {
 		}.execute();
 	}
 
+	/**
+	 * Start downloading and caching the given image in anticipation of needing
+	 * it soon
+	 * 
+	 * @param image
+	 */
+	public void preloadImage(Image image) {
+		// if it's in the cache we're already done
+		if (mCache.contains(image)) {
+			return;
+		}
+
+		// check if it's already downloading
+		if (mDownloads.containsKey(image.getImgurId())) {
+			return;
+		}
+
+		// otherwise remove it from any queue it's in now and start it if room
+		// or add it to the queue
+		clearFromQueue(image);
+
+		if (isDownloadsFull()) {
+			mUpcomingImages.addFirst(image);
+		} else {
+			loadImage(image, null);
+		}
+	}
+
+	/**
+	 * Whether or not we are maxed out on our number of concurrent downloads
+	 * 
+	 * @return
+	 */
+	private boolean isDownloadsFull() {
+		return mDownloads.size() >= MAX_DOWNLOADS;
+	}
+
 	// tell the binary response handler to allow all content
 	private static final String[] ALLOWED_CONTENT_TYPES = new String[] { ".*" };
 
@@ -217,6 +271,8 @@ public class ImageLoader {
 	 * @param callbacks
 	 */
 	private void startDownload(Image image, LoadCallbacks callbacks) {
+		// remove it from the queue if it's there
+		clearFromQueue(image);
 
 		final Download download = new Download(new Date().getTime(), callbacks,
 				null, image);
@@ -234,19 +290,21 @@ public class ImageLoader {
 							byte[] binaryData, java.lang.Throwable error) {
 						handleFailure(download,
 								reasonForDownloadFailure(statusCode, error));
-						removeDownload(download);
+						downloadFinished(download);
+
 					}
 
 					@Override
 					public void onSuccess(int statusCode, Header[] headers,
 							byte[] binaryData) {
 						handleSuccess(download, binaryData);
-						removeDownload(download);
+						downloadFinished(download);
+
 					}
 
 					@Override
 					public void onCancel() {
-						// canceled
+						downloadFinished(download);
 					}
 				});
 
@@ -254,6 +312,25 @@ public class ImageLoader {
 
 		addDownload(download);
 
+	}
+
+	protected void downloadFinished(Download download) {
+		removeDownload(download);
+
+		// preload an upcoming image, or restart a canceled image if there is room
+		if (isDownloadsFull()) {
+			return;
+		} else if (!mUpcomingImages.isEmpty()) {
+			loadImage(mUpcomingImages.removeFirst(), null);
+		} else if (!mCanceledImages.isEmpty()) {
+			loadImage(mCanceledImages.removeFirst(), null);
+		}
+	}
+
+	// remove the given image from all queues
+	private void clearFromQueue(Image image) {
+		mUpcomingImages.remove(image);
+		mCanceledImages.remove(image);
 	}
 
 	/**
@@ -416,7 +493,7 @@ public class ImageLoader {
 	 */
 	private void addDownload(Download download) {
 		// check if download list is full
-		if (mDownloads.size() > MAX_DOWNLOADS) {
+		if (isDownloadsFull()) {
 			removeOldestDownload();
 		}
 
@@ -443,6 +520,7 @@ public class ImageLoader {
 
 		cancelDownload(oldest);
 
+		mCanceledImages.addFirst(oldest.image);
 	}
 
 	/**

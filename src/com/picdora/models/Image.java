@@ -1,6 +1,7 @@
 package com.picdora.models;
 
 import java.util.Date;
+import java.util.Locale;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -14,7 +15,7 @@ public class Image extends Model {
 	@PrimaryKey
 	@Column("id")
 	private int mId;
-
+	// TODO: Add non null constraints in new Sprinkles version
 	@Column("imgurId")
 	private String mImgurId;
 
@@ -179,6 +180,24 @@ public class Image extends Model {
 	public String getUrl() {
 			return "http://imgur.com/" + mImgurId + ".jpg";		
 	}
+	
+	@Override
+	public int hashCode() {
+        return mImgurId.toLowerCase(Locale.US).hashCode();
+    }
+	
+	@Override
+    public boolean equals(Object obj) {
+        if (obj == null)
+            return false;
+        if (obj == this)
+            return true;
+        if (!(obj instanceof Image))
+            return false;
+
+        Image img = (Image) obj;
+        return img.getImgurId().equalsIgnoreCase(mImgurId);
+    }
 
 	
 }
