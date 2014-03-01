@@ -4,34 +4,33 @@ import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.Fullscreen;
-import org.androidannotations.annotations.NoTitle;
 import org.androidannotations.annotations.ViewById;
+import org.androidannotations.annotations.WindowFeature;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
 import android.view.Menu;
+import android.view.Window;
 import android.widget.TextView;
 
-import com.picdora.PicdoraActivity;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.models.Channel;
 import com.picdora.models.Image;
 import com.picdora.player.ChannelPlayer.ChannelError;
 import com.picdora.player.ChannelPlayer.OnReadyListener;
-import com.picdora.ui.SlidingMenuHelper;
 
-@NoTitle
 @Fullscreen
 @EActivity(R.layout.activity_channel_view)
-public class ChannelViewActivity extends PicdoraActivity {
+public class ChannelViewActivity extends FragmentActivity {
 
 	@ViewById
 	PicdoraViewPager pager;
