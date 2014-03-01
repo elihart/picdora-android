@@ -13,9 +13,12 @@ import pl.droidsonroids.gif.GifDrawable;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
+import android.os.SystemClock;
 import android.util.DisplayMetrics;
 
 import com.loopj.android.http.AsyncHttpClient;
@@ -27,6 +30,9 @@ import com.picdora.models.Image;
 public class ImageLoader {
 	// maximum images to download at once
 	private static final int MAX_DOWNLOADS = 5;
+	// the number of times to attempt a method that might fail due to an out of
+	// memory error
+	private static final int MAX_OOM_ATTEMPTS = 3;
 	// the inititalized loader
 	private static ImageLoader mLoader;
 
@@ -99,30 +105,66 @@ public class ImageLoader {
 	/**
 	 * Load the given image. Will attempt to load from cache if available,
 	 * otherwise it will download it. If a current download of the same image is
-	 * in progress then the callbacks are added to that download
+	 * in progress then the callbacks are added to that download.
+	 * <p>
+	 * If callbacks is null then this method checks if the image is already
+	 * cached, and downloads it if it isn't, but no callback is made on
+	 * completion; this essentially makes the method act as a preloader.
 	 * 
 	 * @param image
 	 * @param callbacks
 	 */
 	public synchronized void loadImage(final Image image,
 			final LoadCallbacks callbacks) {
+		// if the image has already been downloaded and cached, and there is no
+		// callback, then we are done
+		if (mCache.contains(image) && callbacks == null) {
+			return;
+		}
+
 		// query the cache in the background. On hit return the image, on miss
 		// download it
 		new AsyncTask<Void, Void, Drawable>() {
 
 			@Override
 			protected Drawable doInBackground(Void... params) {
-				// check cache
-				byte[] data = mCache.get(image);
+				// try to get the image from cache and create a drawable out of
+				// it. Both the cache access and the drawable creation can cause
+				// out of memory errors so we need to catch those and possibly
+				// retry
 
-				if (data != null) {
+				byte[] data = null;
+
+				int attempts = 0;
+
+				while (attempts < MAX_OOM_ATTEMPTS) {
 					try {
-						return createDrawable(data);
+						// if we are retrying due to OOM the data may already be
+						// loaded. In that case we don't need to get it again
+						if (data == null) {
+							data = mCache.get(image);
+						}
+
+						// if there was a cache hit then attempt a drawable
+						if (data != null) {
+							if (attempts == 0) {
+								throw new OutOfMemoryError();
+							}
+							return createDrawable(data);
+						} else {
+							return null;
+						}
 					} catch (OutOfMemoryError e) {
-						// TODO: Need to be able to pass an error back
+						// attempt a garbage collection to clean up memory and
+						// then wait briefly before trying again
+						// TODO: app wide memory management system
+						attempts++;
+						System.gc();
+						SystemClock.sleep(100);
 					}
 				}
 
+				// maxed out OOM attempts so give up
 				return null;
 			}
 
@@ -184,7 +226,8 @@ public class ImageLoader {
 					public void onFailure(int statusCode,
 							org.apache.http.Header[] headers,
 							byte[] binaryData, java.lang.Throwable error) {
-						handleFailure(download, statusCode, error);
+						handleFailure(download,
+								reasonForDownloadFailure(statusCode, error));
 						removeDownload(download);
 					}
 				});
@@ -196,14 +239,26 @@ public class ImageLoader {
 	}
 
 	/**
+	 * Return an ImageLoad error for a failed download based on the given
+	 * onFailure data
+	 * 
+	 * @param statusCode
+	 * @param error
+	 * @return
+	 */
+	protected LoadError reasonForDownloadFailure(int statusCode, Throwable error) {
+		// TODO: Specific reasons for download failure
+		return LoadError.DOWNLOAD_FAILURE;
+	}
+
+	/**
 	 * Handle a download that failed
 	 * 
 	 * @param imageId
 	 * @param statusCode
 	 * @param error
 	 */
-	protected void handleFailure(Download download, int statusCode,
-			Throwable error) {
+	protected void handleFailure(Download download, LoadError error) {
 
 		if (download.listeners == null) {
 			return;
@@ -211,18 +266,9 @@ public class ImageLoader {
 
 		// alert listeners to error
 
-		LoadError loadError = LoadError.UNKOWN;
-
-		if (error instanceof OutOfMemoryError) {
-			loadError = LoadError.OUT_OF_MEMORY;
-		}
-		// TODO: Look for other error types
-
 		for (LoadCallbacks listener : download.listeners) {
 			if (listener != null) {
-				error.printStackTrace();
-
-				listener.onError(loadError);
+				listener.onError(error);
 			}
 		}
 	}
@@ -249,6 +295,15 @@ public class ImageLoader {
 		new CreateDrawableFromDownloadAsync().execute(download);
 	}
 
+	/**
+	 * Create a drawable out of a byte array. Will be either an animated
+	 * drawable if the data is a gif, or a bitmapdrawable for an image. On error
+	 * null will be returned
+	 * 
+	 * @param binaryData
+	 * @return
+	 * @throws OutOfMemoryError
+	 */
 	private Drawable createDrawable(byte[] binaryData) throws OutOfMemoryError {
 		// try to decode it as a gif
 		// TODO: Update the Image to have the correct gif status in database
@@ -275,7 +330,12 @@ public class ImageLoader {
 		Bitmap bm = BitmapFactory.decodeByteArray(binaryData, 0,
 				binaryData.length, options);
 
-		return new BitmapDrawable(mContext.getResources(), bm);
+		if (bm == null) {
+			// error decoding data
+			return null;
+		} else {
+			return new BitmapDrawable(mContext.getResources(), bm);
+		}
 	}
 
 	private int calculateInSampleSize(BitmapFactory.Options options) {
@@ -421,7 +481,7 @@ public class ImageLoader {
 		public Drawable drawable;
 		public byte[] data;
 		// An error that caused this download to fail
-		public Throwable error;
+		public LoadError error;
 
 		public Download(long startTime, LoadCallbacks listener,
 				RequestHandle handle, Image image) {
@@ -454,10 +514,27 @@ public class ImageLoader {
 		protected Download doInBackground(Download... downloads) {
 			Download download = downloads[0];
 
-			try {
-				download.drawable = createDrawable(download.data);
-			} catch (OutOfMemoryError e) {
-				download.error = e;
+			int attempts = 0;
+
+			while (attempts < MAX_OOM_ATTEMPTS) {
+				// reset the error message and try to decode the download
+				download.error = null;
+
+				try {
+					download.drawable = createDrawable(download.data);
+					if (download.drawable == null) {
+						download.error = LoadError.FAILED_DECODE;
+					}
+					break;
+				} catch (OutOfMemoryError e) {
+					// attempt a garbage collection to clean up memory and
+					// then wait briefly before trying again
+					// TODO: app wide memory management system
+					download.error = LoadError.OUT_OF_MEMORY;
+					attempts++;
+					System.gc();
+					SystemClock.sleep(100);
+				}
 			}
 
 			return download;
@@ -465,7 +542,7 @@ public class ImageLoader {
 
 		protected void onPostExecute(Download result) {
 			if (result.error != null) {
-				handleFailure(result, 200, result.error);
+				handleFailure(result, result.error);
 			} else {
 				// pass drawable to listeners
 				if (result.listeners != null) {

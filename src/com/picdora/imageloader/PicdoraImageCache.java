@@ -2,6 +2,7 @@ package com.picdora.imageloader;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Locale;
@@ -25,7 +26,7 @@ import com.picdora.models.Image;
 public class PicdoraImageCache {
 	private Context mContext;
 
-	//private static BitmapLruCache mBitmapCache;
+	// private static BitmapLruCache mBitmapCache;
 
 	// Disk cache stuff
 	private static final String DISK_CACHE_NAME = "PicdoraDiskCache";
@@ -45,9 +46,9 @@ public class PicdoraImageCache {
 
 			@Override
 			protected Void doInBackground(Void... params) {
-//				if (mBitmapCache == null) {
-//					initBitmapCache();
-//				}
+				// if (mBitmapCache == null) {
+				// initBitmapCache();
+				// }
 
 				try {
 					if (mDiskCache == null) {
@@ -96,7 +97,7 @@ public class PicdoraImageCache {
 		// TODO: Create memcache for bitmaps
 	}
 
-	public byte[] get(Image image) {
+	public byte[] get(Image image) throws OutOfMemoryError {
 		byte[] result = null;
 		String key = getKeyForImage(image);
 		// First try Memory Cache
@@ -105,6 +106,8 @@ public class PicdoraImageCache {
 		if (result == null) {
 			// Memory Cache failed, so try Disk Cache
 			result = getFromDiskCache(key);
+
+			// if success load image to mem
 		}
 
 		return result;
@@ -115,7 +118,7 @@ public class PicdoraImageCache {
 		return image.getImgurId().toLowerCase(Locale.US);
 	}
 
-	private byte[] getFromDiskCache(String key) {
+	private byte[] getFromDiskCache(String key) throws OutOfMemoryError {
 		if (mDiskCache == null) {
 			return null;
 		}
@@ -125,13 +128,12 @@ public class PicdoraImageCache {
 		try {
 			DiskLruCache.Snapshot snapshot = mDiskCache.get(key);
 			if (snapshot != null) {
-				// TODO: put into memory cache
-				// if (null != result) {
-				// if (null != mMemoryCache) {
-				// mMemoryCache.put(result);
-				// }
-
-				return IOUtils.toByteArray(snapshot.getInputStream(0));
+				InputStream is = snapshot.getInputStream(0);
+				if (is != null) {
+					byte[] result = IOUtils.toByteArray(is);
+					snapshot.close();
+					return result;
+				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -225,4 +227,22 @@ public class PicdoraImageCache {
 		}
 	}
 
+	public boolean contains(Image image) {
+		String key = getKeyForImage(image);
+
+		// check memory cache
+
+		// check disk cache
+		try {
+			DiskLruCache.Snapshot snapshot = mDiskCache.get(key);
+			if (snapshot == null) {
+				return false;
+			} else {
+				snapshot.close();
+				return true;
+			}
+		} catch (IOException e) {
+			return false;
+		}
+	}
 }
