@@ -4,85 +4,89 @@ import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.Fullscreen;
-import org.androidannotations.annotations.NoTitle;
 import org.androidannotations.annotations.ViewById;
+import org.androidannotations.annotations.WindowFeature;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
 import android.view.Menu;
+import android.view.Window;
 import android.widget.TextView;
 
-import com.picdora.PicdoraActivity;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.models.Channel;
 import com.picdora.models.Image;
 import com.picdora.player.ChannelPlayer.ChannelError;
 import com.picdora.player.ChannelPlayer.OnReadyListener;
-import com.picdora.ui.SlidingMenuHelper;
 
-@NoTitle
 @Fullscreen
 @EActivity(R.layout.activity_channel_view)
-public class ChannelViewActivity extends PicdoraActivity {
+public class ChannelViewActivity extends FragmentActivity {
 
 	@ViewById
-	ViewPager pager;
+	PicdoraViewPager pager;
 	@Bean
 	ChannelPlayer mChannelPlayer;
 
-	
+	private DataFragment dataFragment;
 
 	/**
 	 * The pager adapter, which provides the pages to the view pager widget.
 	 */
 	private PagerAdapter mPagerAdapter;
-	
+
 	// Loading dialog to show while channel initializes
 	private Dialog busyDialog;
 
 	@AfterViews
 	void initChannel() {
-		// add drawer
-		SlidingMenuHelper.addMenuToActivity(this, true);
 
-		// show loading screen
-		showBusyDialog("Loading Channel...");
+		FragmentManager fm = getSupportFragmentManager();
+		dataFragment = (DataFragment) fm.findFragmentByTag("data");
 
-		// Load channel and play when ready
-		String json = getIntent().getStringExtra("channel");
-		Channel channel = Util.fromJson(json, Channel.class);
+		// create the fragment and data the first time
+		if (dataFragment == null) {
+			// show loading screen
+			showBusyDialog("Loading Channel...");
 
-		mChannelPlayer.loadChannel(channel, new OnReadyListener() {
+			// add the fragment
+			dataFragment = new DataFragment();
+			fm.beginTransaction().add(dataFragment, "data").commit();
 
-			@Override
-			public void onReady() {
-				dismissBusyDialog();
-				startChannel();
-			}
+			dataFragment.setData(mChannelPlayer);
 
-			@Override
-			public void onError(ChannelError error) {
-				handleError(error);
-			}
-		});
+			// Load channel and play when ready
+			String json = getIntent().getStringExtra("channel");
+			Channel channel = Util.fromJson(json, Channel.class);
 
-	}
+			mChannelPlayer.loadChannel(channel, new OnReadyListener() {
 
-	@Override
-	public void onDestroy() {
-		super.onDestroy();
+				@Override
+				public void onReady() {
+					dismissBusyDialog();
+					startChannel();
+				}
 
-		if (mChannelPlayer != null) {
-			mChannelPlayer.destroy();
+				@Override
+				public void onError(ChannelError error) {
+					handleError(error);
+				}
+			});
+
+		} else {
+			mChannelPlayer = dataFragment.getData();
+			startChannel();
 		}
+
 	}
 
 	protected void handleError(ChannelError error) {
@@ -133,7 +137,11 @@ public class ChannelViewActivity extends PicdoraActivity {
 
 	public void dismissBusyDialog() {
 		if (busyDialog != null)
+			try{
 			busyDialog.dismiss();
+			} catch(IllegalArgumentException e){
+			// catch the "View not attached to Window Manager" errors
+			}
 
 		busyDialog = null;
 	}

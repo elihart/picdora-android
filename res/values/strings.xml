@@ -10,7 +10,7 @@
     
     <string name="hello_world">Hello world!</string>
     <string name="title_activity_channel_creation">New Channel</string>
-    <string name="title_activity_channel_selection">Channels</string>
+    <string name="title_activity_channel_selection">Picdora</string>
 
     
     <string name="drawer_close">Close Drawer</string>
