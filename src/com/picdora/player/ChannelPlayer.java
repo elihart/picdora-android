@@ -12,45 +12,56 @@ import org.androidannotations.annotations.UiThread;
 import se.emilsjolander.sprinkles.CursorList;
 import se.emilsjolander.sprinkles.Query;
 
+import android.os.Looper;
+
 import com.picdora.ChannelHelper;
 import com.picdora.models.Channel;
 import com.picdora.models.Image;
 
 @EBean
 public class ChannelPlayer {
-	// keep track of the last channel so we don't have to reload it 
+	// keep track of the last channel so we don't have to reload it
 	protected static ChannelPlayer lastChannelPlayer;
 
 	private Channel mChannel;
 	private List<Image> mImages;
 	private Queue<Image> mUpcomingImages;
-	private GetPlayerListener mListener;
+	private OnLoadListener mListener;
 
 	// the number of images to load from the database when we ne
 	private static final int DB_BATCH_SIZE = 15;
 	// the number of images to load at the beginning
 	private static final int STARTING_BATCH_SIZE = 30;
 
-	public ChannelPlayer() {
+	protected ChannelPlayer() {
 		// empty constructor for enhanced class
 	}
 
-	public static void getPlayer(Channel channel, GetPlayerListener listener) {
-		if (channel.equals(lastChannelPlayer)) {
-			listener.onSuccess(lastChannelPlayer);
+	public static ChannelPlayer getCachedPlayer(Channel channel) {
+		if (lastChannelPlayer != null
+				&& channel.equals(lastChannelPlayer.getChannel())) {
+			return lastChannelPlayer;
 		} else {
-			lastChannelPlayer = new ChannelPlayer();
-			lastChannelPlayer.loadChannel(channel, listener);
+			return null;
+		}
+	}
+
+	public static Channel lastPlayedChannel() {
+		if (lastChannelPlayer != null) {
+			return lastChannelPlayer.getChannel();
+		} else {
+			return null;
 		}
 	}
 
 	@Background
-	protected void loadChannel(Channel channel, GetPlayerListener listener) {
+	public void loadChannel(Channel channel, OnLoadListener listener) {
 		mListener = listener;
 		mChannel = channel;
 		mImages = new ArrayList<Image>();
 		mUpcomingImages = new LinkedList<Image>();
 		loadImageBatch(STARTING_BATCH_SIZE, mImages);
+		
 
 		loadChannelCompleted();
 	}
@@ -64,8 +75,13 @@ public class ChannelPlayer {
 		if (mImages.isEmpty()) {
 			mListener.onFailure(ChannelError.NO_IMAGES);
 		} else {
-			mListener.onSuccess(this);
+			lastChannelPlayer = this;
+			mListener.onSuccess();
 		}
+	}
+
+	private Channel getChannel() {
+		return mChannel;
 	}
 
 	public Image getImage(int index) {
@@ -151,8 +167,8 @@ public class ChannelPlayer {
 	 * @author Eli
 	 * 
 	 */
-	public interface GetPlayerListener {
-		public void onSuccess(ChannelPlayer player);
+	public interface OnLoadListener {
+		public void onSuccess();
 
 		public void onFailure(ChannelError error);
 	}

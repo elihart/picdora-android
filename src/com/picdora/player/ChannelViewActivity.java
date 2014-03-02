@@ -28,7 +28,7 @@ import com.picdora.imageloader.ImageLoader;
 import com.picdora.models.Channel;
 import com.picdora.models.Image;
 import com.picdora.player.ChannelPlayer.ChannelError;
-import com.picdora.player.ChannelPlayer.GetPlayerListener;
+import com.picdora.player.ChannelPlayer.OnLoadListener;
 
 @Fullscreen
 @EActivity(R.layout.activity_channel_view)
@@ -37,8 +37,8 @@ public class ChannelViewActivity extends FragmentActivity {
 
 	@ViewById
 	PicdoraViewPager pager;
-
-	private ChannelPlayer mChannelPlayer;
+	@Bean
+	ChannelPlayer mChannelPlayer;
 
 	/**
 	 * The pager adapter, which provides the pages to the view pager widget.
@@ -57,20 +57,25 @@ public class ChannelViewActivity extends FragmentActivity {
 		String json = getIntent().getStringExtra("channel");
 		Channel channel = Util.fromJson(json, Channel.class);
 
-		ChannelPlayer.getPlayer(channel, new GetPlayerListener() {
+		ChannelPlayer cachedPlayer = ChannelPlayer.getCachedPlayer(channel);
 
-			@Override
-			public void onSuccess(ChannelPlayer player) {
-				mChannelPlayer = player;
-				dismissBusyDialog();
-				startChannel();
-			}
+		if (cachedPlayer != null) {
+			mChannelPlayer = cachedPlayer;
+			startChannel();
+		} else {
 
-			@Override
-			public void onFailure(ChannelError error) {
-				handleChannelLoadError(error);
-			}
-		});
+			mChannelPlayer.loadChannel(channel, new OnLoadListener() {
+				@Override
+				public void onSuccess() {
+					startChannel();
+				}
+
+				@Override
+				public void onFailure(ChannelError error) {
+					handleChannelLoadError(error);
+				}
+			});
+		}
 	}
 
 	protected void handleChannelLoadError(ChannelError error) {
@@ -113,6 +118,8 @@ public class ChannelViewActivity extends FragmentActivity {
 
 			}
 		});
+
+		dismissBusyDialog();
 	}
 
 	/**
