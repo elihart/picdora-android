@@ -12,6 +12,7 @@ import com.picdora.imageloader.ImageLoader;
 import com.picdora.models.Category;
 import com.picdora.models.Channel;
 import com.picdora.models.Image;
+import com.picdora.ui.FontHelper;
 
 @EApplication
 public class PicdoraApp extends Application {
@@ -21,6 +22,8 @@ public class PicdoraApp extends Application {
 	@Override
 	public void onCreate() {
 		super.onCreate();
+		
+		FontHelper.init(getApplicationContext());
 
 		ImageLoader.init(this);
 

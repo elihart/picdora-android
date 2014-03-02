@@ -1,5 +1,7 @@
 package com.picdora;
 
+import com.picdora.ui.FontHelper;
+
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.ActionBarDrawerToggle;
@@ -17,7 +19,7 @@ public class PicdoraActivity extends ActionBarActivity {
 
 		setActionBarTitle(null);
 	}
-	
+
 	/**
 	 * Set the action bar title
 	 * 
@@ -28,9 +30,11 @@ public class PicdoraActivity extends ActionBarActivity {
 	public void setActionBarTitle(String text) {
 		try {
 			String title = text != null ? text : getTitle().toString();
-			getSupportActionBar().setTitle(title);
+			getSupportActionBar().setTitle(
+					FontHelper.styleString(title, FontHelper.STYLE.BOLD));
 		} catch (Exception e) {
-
+			e.printStackTrace();
+			Util.log("Error setting title font");
 		}
 	}
 
@@ -41,7 +45,7 @@ public class PicdoraActivity extends ActionBarActivity {
 			mDrawerToggle.onConfigurationChanged(newConfig);
 		}
 	}
-	
+
 	@Override
 	protected void onPostCreate(Bundle savedInstanceState) {
 		super.onPostCreate(savedInstanceState);
