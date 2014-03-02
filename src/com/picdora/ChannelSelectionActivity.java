@@ -7,6 +7,7 @@ import org.androidannotations.annotations.ItemClick;
 import org.androidannotations.annotations.ViewById;
 
 import android.content.Intent;
+import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ListView;
@@ -25,13 +26,11 @@ public class ChannelSelectionActivity extends PicdoraActivity {
 	@AfterViews
 	void initViews() {
 		SlidingMenuHelper.addMenuToActivity(this, true);
+		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 		getSupportActionBar().setHomeButtonEnabled(true);
 
 		// TODO: Load list in background and show loading icon
 		channelList.setAdapter(adapter);
-
-		// ImageManager.getCategoriesFromServer();
-		// ImageManager.getImagesFromServer(50, 1);
 	}
 	
 	@Override

@@ -47,14 +47,14 @@ public class SlidingMenuHelper {
 	 * @param showIcon
 	 *            Whether or not to show the drawer icon in the action bar
 	 */
-	public static void addMenuToActivity(final PicdoraActivity activity,
-			boolean showIcon) {
+	public static DrawerLayout addMenuToActivity(
+			final PicdoraActivity activity, boolean showIcon) {
 		final DrawerLayout drawerLayout = (DrawerLayout) activity
 				.findViewById(R.id.drawer_layout);
 
 		// make sure this activity actually has a drawer layout
 		if (drawerLayout == null) {
-			return;
+			return null;
 		}
 
 		final ListView drawerList = (ListView) activity
@@ -66,6 +66,8 @@ public class SlidingMenuHelper {
 
 		addClickListener(activity, drawerLayout, drawerList);
 		addDrawerListener(activity, drawerLayout, showIcon);
+
+		return drawerLayout;
 	}
 
 	private static void addClickListener(final PicdoraActivity activity,
@@ -83,9 +85,10 @@ public class SlidingMenuHelper {
 				// isn't open if they come back. The close animation isn't
 				// instant, so we need to wait for onClose to get called in the
 				// listener before we can switch activities. Set the intent in
-				// the tag and the onClose listener will check for itr
-				drawerLayout.setTag(new Intent(activity, item
-						.getActivityToStart()));
+				// the tag and the onClose listener will check for it
+				Intent i = new Intent(activity, item.getActivityToStart());
+				i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+				drawerLayout.setTag(i);
 				drawerLayout.closeDrawers();
 			}
 		});
@@ -99,20 +102,21 @@ public class SlidingMenuHelper {
 	 */
 	private static void addDrawerListener(final PicdoraActivity activity,
 			final DrawerLayout drawerLayout, boolean showIcon) {
-		// interaction
-		// between the action bar and drawer. To do this, the actionbar
-		// needs a drawer ico
-		ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(activity,
-				drawerLayout, R.drawable.ic_drawer, R.string.drawer_open,
-				R.string.drawer_close) {
-			private String title = "Lyricoo";
+		// interaction between the action bar and drawer. To do this, the
+		// actionbar needs a drawer icon
+		final ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+				activity, drawerLayout, R.drawable.ic_navigation_drawer,
+				R.string.drawer_open, R.string.drawer_close) {
+			// the title to show on the action bar when the drawer opens
+			private String openTitle = "Lyricoo";
 
 			/**
 			 * Called when a drawer has settled in a completely closed state.
 			 */
+			@Override
 			public void onDrawerClosed(View view) {
-				// change title back to activity name
-				activity.getSupportActionBar().setTitle(title);
+				// change openTitle back to activity name
+				activity.setActionBarTitle(openTitle);
 
 				// if the drawer was closed because an option was selected,
 				// start that activity
@@ -127,34 +131,23 @@ public class SlidingMenuHelper {
 			}
 
 			/** Called when a drawer has settled in a completely open state. */
+			@Override
 			public void onDrawerOpened(View drawerView) {
 				// When the drawer is opened change the action bar text to
-				// the app name. Remember the old title so we can change it back
+				// the app name. Remember the old openTitle so we can change it back
 				// when the drawer closes
-				title = activity.getSupportActionBar().getTitle().toString();
-				activity.getSupportActionBar().setTitle("Lyricoo");
+				openTitle = activity.getSupportActionBar().getTitle().toString();
+				activity.setActionBarTitle("Picdora");
 
 				// Redraw action bar to hide contextual actions while drawer is
 				// open
 				activity.supportInvalidateOptionsMenu();
 			}
-
-			@Override
-			public void onDrawerSlide(View arg0, float arg1) {
-
-			}
-
-			@Override
-			public void onDrawerStateChanged(int arg0) {
-
-			}
-
 		};
 
 		toggle.setDrawerIndicatorEnabled(showIcon);
 
 		drawerLayout.setDrawerListener(toggle);
-
 		activity.setDrawerToggle(toggle);
 	}
 }
