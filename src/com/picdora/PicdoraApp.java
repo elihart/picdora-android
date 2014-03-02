@@ -25,43 +25,45 @@ public class PicdoraApp extends Application {
 		ImageLoader.init(this);
 
 		runMigrations();
-		
-		syncDb();		
+
+		syncDb();
 	}
 
 	private void syncDb() {
 		CategoryHelper.syncCategoriesWithServer(new OnResultListener() {
-			
+
 			@Override
 			public void onSuccess() {
 				Util.log("Category sync success");
-				mImageUpdater.getNewImages();				
+				mImageUpdater.getNewImages();
 			}
-			
+
 			@Override
 			public void onFailure() {
 				Util.log("Category sync failure");
-				mImageUpdater.getNewImages();				
+				mImageUpdater.getNewImages();
 			}
 		});
-		
-		
+
 	}
-
-
 
 	// Run db migrations with sprinkles
 	private void runMigrations() {
-		//Util.log("Delete : " + deleteDatabase("sprinkles.db"));
+		// Util.log("Delete : " + deleteDatabase("sprinkles.db"));
 		Sprinkles sprinkles = Sprinkles.getInstance(getApplicationContext());
 
 		// create models
-		Migration addModelsMigration = new Migration();	
+		Migration addModelsMigration = new Migration();
 		addModelsMigration.createTable(Image.class);
 		addModelsMigration.createTable(Category.class);
 		addModelsMigration.createTable(Channel.class);
 		sprinkles.addMigration(addModelsMigration);
-		
+
+	}
+
+	@Override
+	public void onLowMemory() {
+		// TODO: Contact system activities and tell them to cut back memory
 	}
 
 }

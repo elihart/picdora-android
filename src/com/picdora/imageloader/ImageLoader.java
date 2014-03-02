@@ -37,7 +37,7 @@ public class ImageLoader {
 	// the file
 
 	// maximum images to download at once
-	private static final int MAX_DOWNLOADS = 5;
+	private static final int MAX_DOWNLOADS = 3;
 	// the number of times to attempt a method that might fail due to an out of
 	// memory error
 	private static final int MAX_OOM_ATTEMPTS = 3;
@@ -146,25 +146,52 @@ public class ImageLoader {
 	 * <p>
 	 * If callbacks is null then this method checks if the image is already
 	 * cached, and downloads it if it isn't, but no callback is made on
-	 * completion; this essentially makes the method act as a preloader.
+	 * completion.
 	 * 
 	 * @param image
 	 * @param callbacks
 	 */
 	public synchronized void loadImage(final Image image,
 			final LoadCallbacks callbacks) {
-		// if the image has already been downloaded and cached, and there is no
-		// callback, then we are done
-		if (mCache.contains(image) && callbacks == null) {
-			return;
-		}
+		// first check if the image has already been saved
+		if (mCache.contains(image)) {
+			// on hit, retrieve and return the image only if there are callbacks
+			if (callbacks != null) {
+				getAndReturnImage(image, callbacks);
+			}
+		} else {
+			// on cache miss check if there is an existing download
+			Download download = mDownloads.get(image.getImgurId());
+			if (download != null) {
+				// update the start time
+				download.startTime = new Date().getTime();
 
+				// add the callback
+				download.listeners.add(callbacks);
+			}
+
+			// otherwise start a new download
+			else {
+				startDownload(image, callbacks);
+			}
+		}
+	}
+
+	/**
+	 * Retrieve and decode an image in the cache
+	 * 
+	 * @param image
+	 *            The image to get. Must not be null.
+	 * @param callbacks
+	 *            The callback methods to return the image to. Must not be null.
+	 */
+	private void getAndReturnImage(Image image, final LoadCallbacks callbacks) {
 		// query the cache in the background. On hit return the image, on miss
 		// download it
-		new AsyncTask<Void, Void, Drawable>() {
+		new AsyncTask<Image, Void, Drawable>() {
 
 			@Override
-			protected Drawable doInBackground(Void... params) {
+			protected Drawable doInBackground(Image... images) {
 				// try to get the image from cache and create a drawable out of
 				// it. Both the cache access and the drawable creation can cause
 				// out of memory errors so we need to catch those and possibly
@@ -179,10 +206,10 @@ public class ImageLoader {
 						// if we are retrying due to OOM the data may already be
 						// loaded. In that case we don't need to get it again
 						if (data == null) {
-							data = mCache.get(image);
+							data = mCache.get(images[0]);
 						}
 
-						// if there was a cache hit then attempt a drawable
+						// if there was a cache hit then create a drawable
 						if (data != null) {
 							return createDrawable(data);
 						} else {
@@ -205,56 +232,43 @@ public class ImageLoader {
 			protected void onPostExecute(Drawable d) {
 				// on cache hit return the result
 				if (d != null) {
-					if (callbacks != null) {
-						callbacks.onSuccess(d);
-					}
-					return;
-				}
-
-				// on cache miss check if there is an existing download
-				Download download = mDownloads.get(image.getImgurId());
-				if (download != null) {
-					// update the start time
-					download.startTime = new Date().getTime();
-
-					// add the callback
-					download.listeners.add(callbacks);
-				}
-
-				// otherwise start a new download
-				else {
-					startDownload(image, callbacks);
+					callbacks.onSuccess(d);
+				} else {
+					callbacks.onError(LoadError.FAILED_DECODE);
 				}
 			}
-		}.execute();
+		}.execute(image);
+
 	}
 
 	/**
-	 * Start downloading and caching the given image in anticipation of needing
-	 * it soon
+	 * Add the images to the front of the queue to be next to download. They are
+	 * added in the order they are in the list, with index 0 at the front of the
+	 * queue
 	 * 
 	 * @param image
 	 */
-	public void preloadImage(Image image) {
-		// if it's in the cache we're already done
-		if (mCache.contains(image)) {
-			return;
-		}
+	public void preloadImages(List<Image> images) {
+		for (int i = images.size() - 1; i >= 0; i--) {
+			Image image = images.get(i);
 
-		// check if it's already downloading
-		if (mDownloads.containsKey(image.getImgurId())) {
-			return;
-		}
+			// if it's in the cache we're already done
+			if (mCache.contains(image)) {
+				break;
+			}
 
-		// otherwise remove it from any queue it's in now and start it if room
-		// or add it to the queue
-		clearFromQueue(image);
+			// check if it's already downloading
+			if (mDownloads.containsKey(image.getImgurId())) {
+				break;
+			}
 
-		if (isDownloadsFull()) {
+			// otherwise move it to the front of the queue
+			clearFromQueue(image);
 			mUpcomingImages.addFirst(image);
-		} else {
-			loadImage(image, null);
 		}
+
+		// try to load them
+		tryDownloadNextImageInQueue();
 	}
 
 	/**
@@ -316,21 +330,26 @@ public class ImageLoader {
 		download.handle = handle;
 
 		addDownload(download);
-
-		Util.log("Download list: " + mDownloads.size());
 	}
 
 	protected void downloadFinished(Download download) {
 		removeDownload(download);
+		tryDownloadNextImageInQueue();
+	}
 
-		// preload an upcoming image, or restart a canceled image if there is
-		// room
-		if (isDownloadsFull()) {
-			return;
-		} else if (!mUpcomingImages.isEmpty()) {
-			loadImage(mUpcomingImages.removeFirst(), null);
-		} else if (!mCanceledImages.isEmpty()) {
-			loadImage(mCanceledImages.removeFirst(), null);
+	private void tryDownloadNextImageInQueue() {
+		// while there is room for more download dequeue images and start them,
+		// with priority to upcoming images
+		while (!isDownloadsFull()) {
+			if (!mUpcomingImages.isEmpty()) {
+				loadImage(mUpcomingImages.removeFirst(), null);
+				continue;
+			} else if (!mCanceledImages.isEmpty()) {
+				loadImage(mCanceledImages.removeFirst(), null);
+				continue;
+			} else {
+				break;
+			}
 		}
 	}
 
@@ -382,19 +401,15 @@ public class ImageLoader {
 	 * @param binaryData
 	 */
 	protected void handleSuccess(Download download, byte[] binaryData) {
-		download.data = binaryData;
-
 		// cache data
-		new CacheDownloadsAsync().execute(download);
+		new CacheDownloadsAsync().execute(new ImageToCache(download.image, binaryData));
 
-		// if there are no listeners waiting for the result then there is no
-		// point in decoding the image
-		if (download.listeners == null || download.listeners.isEmpty()) {
-			return;
-		}
-
-		// decode data and pass it to listeners.
-		new CreateDrawableFromDownloadAsync().execute(download);
+		// only decode image if there are listeners waiting for the image
+		if (!download.listeners.isEmpty()) {
+			// decode data and pass it to listeners.
+			new CreateDrawableFromDownloadAsync().execute(new CreateDrawableHelper(
+					binaryData, null, null, download));
+		}		
 	}
 
 	/**
@@ -565,10 +580,6 @@ public class ImageLoader {
 		public RequestHandle handle;
 		public Image image;
 
-		// the resulting data and decoded drawable of the download. These can be
-		// set manually once they are available
-		public Drawable drawable;
-		public byte[] data;
 		// An error that caused this download to fail
 		public LoadError error;
 
@@ -586,65 +597,101 @@ public class ImageLoader {
 
 	}
 
-	private class CacheDownloadsAsync extends AsyncTask<Download, Void, Void> {
-		protected Void doInBackground(Download... downloads) {
-			int count = downloads.length;
+	private class CacheDownloadsAsync extends AsyncTask<ImageToCache, Void, Void> {
+		protected Void doInBackground(ImageToCache... images) {
+			int count = images.length;
 			for (int i = 0; i < count; i++) {
-				Download d = downloads[i];
+				ImageToCache d = images[i];
 				mCache.put(d.image, d.data);
+				// clear data
+				d.image = null;
+				d.data = null;
 			}
 			return null;
 		}
 	}
 
-	private class CreateDrawableFromDownloadAsync extends
-			AsyncTask<Download, Void, Download> {
+	private class ImageToCache {
+		public Image image;
+		public byte[] data;
 
-		protected Download doInBackground(Download... downloads) {
-			Download download = downloads[0];
+		public ImageToCache(Image image, byte[] data) {
+			this.image = image;
+			this.data = data;
+		}
+	}
+
+	private class CreateDrawableFromDownloadAsync extends
+			AsyncTask<CreateDrawableHelper, Void, CreateDrawableHelper> {
+
+		protected CreateDrawableHelper doInBackground(
+				CreateDrawableHelper... helpers) {
+			CreateDrawableHelper helper = helpers[0];
 
 			int attempts = 0;
 
 			while (attempts < MAX_OOM_ATTEMPTS) {
 				// reset the error message and try to decode the download
-				download.error = null;
+				helper.error = null;
 
 				try {
-					download.drawable = createDrawable(download.data);
-					if (download.drawable == null) {
-						download.error = LoadError.FAILED_DECODE;
+					helper.drawable = createDrawable(helper.data);
+					if (helper.drawable == null) {
+						helper.error = LoadError.FAILED_DECODE;
 					}
 					break;
 				} catch (OutOfMemoryError e) {
 					// attempt a garbage collection to clean up memory and
 					// then wait briefly before trying again
 					// TODO: app wide memory management system
-					download.error = LoadError.OUT_OF_MEMORY;
+					helper.error = LoadError.OUT_OF_MEMORY;
 					attempts++;
 					System.gc();
 					SystemClock.sleep(100);
 				}
 			}
-
-			return download;
+			return helper;
 		}
 
-		protected void onPostExecute(Download result) {
-			if (result.error != null) {
-				handleFailure(result, result.error);
+		protected void onPostExecute(CreateDrawableHelper helper) {
+			if (helper.error != null) {
+				handleFailure(helper.download, helper.error);
 			} else {
 				// pass drawable to listeners
-				if (result.listeners != null) {
-					for (LoadCallbacks listener : result.listeners) {
+				if (helper.download.listeners != null) {
+					for (LoadCallbacks listener : helper.download.listeners) {
 						if (listener != null) {
-							listener.onSuccess(result.drawable);
+							listener.onSuccess(helper.drawable);
 						}
 					}
 				}
 			}
 
-			// passed the drawable on, don't need it anymore
-			result.drawable = null;
+			// clear out the data now that we're done with it
+			helper.drawable = null;
+			helper.data = null;
+		}
+	}
+
+	/**
+	 * Class to help pass data to and from the background thread for creating a
+	 * drawable from download byte data
+	 * 
+	 * @author eli
+	 * 
+	 */
+	private class CreateDrawableHelper {
+		public byte[] data;
+		public LoadError error;
+		public Drawable drawable;
+		public Download download;
+
+		public CreateDrawableHelper(byte[] data, LoadError error,
+				Drawable drawable, Download download) {
+			this.data = data;
+			this.error = error;
+			this.drawable = drawable;
+			this.download = download;
 		}
 	}
 }

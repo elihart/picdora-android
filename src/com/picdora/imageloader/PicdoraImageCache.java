@@ -239,6 +239,7 @@ public class PicdoraImageCache {
 				return false;
 			} else {
 				snapshot.close();
+				// TODO: load data to mem cache
 				return true;
 			}
 		} catch (IOException e) {

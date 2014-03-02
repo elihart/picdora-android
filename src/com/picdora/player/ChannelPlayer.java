@@ -120,7 +120,10 @@ public class ChannelPlayer {
 
 		CursorList<Image> list = Query.many(Image.class, query, null).get();
 		int resultCount = list.size();
-		images.addAll(list.asList());
+		for(Image image : list.asList()){
+			image.markView();
+			mImages.add(image);
+		}
 		list.close();
 
 		return resultCount;

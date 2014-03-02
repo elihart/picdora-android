@@ -1,5 +1,8 @@
 package com.picdora.player;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EActivity;
@@ -106,7 +109,7 @@ public class ChannelViewActivity extends FragmentActivity {
 		// Instantiate a ViewPager and a PagerAdapter
 		mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
 		pager.setAdapter(mPagerAdapter);
-		
+
 		preloadImages(0, NUM_IMAGES_TO_PRELOAD - 1);
 
 		pager.setOnPageChangeListener(new OnPageChangeListener() {
@@ -132,22 +135,29 @@ public class ChannelViewActivity extends FragmentActivity {
 	}
 
 	/**
-	 * Tell the imageloader to preload the images with positions
-	 * between start and end, inclusive
+	 * Tell the imageloader to preload the images with positions between start
+	 * and end, inclusive
 	 * 
-	 * @param startPos Load the images in the range starting with this position
-	 * @param endPos The end of the image range, inclusive. Must be greater than start pos or nothing is done
+	 * @param startPos
+	 *            Load the images in the range starting with this position
+	 * @param endPos
+	 *            The end of the image range, inclusive. Must be greater than
+	 *            start pos or nothing is done
 	 */
 	protected void preloadImages(int startPos, int endPos) {
-		if(endPos < startPos){
+		if (endPos < startPos) {
 			return;
 		}
-		
-		for(int i = endPos; i >= startPos; i--){
-			Image image = mChannelPlayer.getImage(i);
-			ImageLoader.instance().preloadImage(image);
+
+		List<Image> images = new ArrayList<Image>();
+
+		// add the images to the list with the earlier images at the front so
+		// that they will be loaded first
+		for (int i = startPos; i <= endPos; i++) {
+			images.add(mChannelPlayer.getImage(i));
 		}
 
+		ImageLoader.instance().preloadImages(images);
 	}
 
 	@Override
@@ -187,11 +197,11 @@ public class ChannelViewActivity extends FragmentActivity {
 
 		busyDialog = null;
 	}
-	
+
 	@Override
-	public void onDestroy(){
+	public void onDestroy() {
 		super.onDestroy();
-		
+
 		ImageLoader.instance().clearDownloads();
 	}
 
@@ -206,7 +216,6 @@ public class ChannelViewActivity extends FragmentActivity {
 			ImageSwipeFragment frag = new ImageSwipeFragment_();
 
 			Image image = mChannelPlayer.getImage(position);
-			image.markView();
 
 			Bundle args = new Bundle();
 			args.putString("imageJson", Util.toJson(image));
