@@ -30,6 +30,11 @@ public class ImageSwipeFragment extends Fragment implements ImageLoader.LoadCall
 	TextView mProgressText;
 	
 	protected Image mImage;
+	
+	// the number of times we have tried to load the image unsuccessfully
+	private int mLoadAttempts;
+	// number of times to retry before giving up
+	private static final int MAX_LOAD_ATTEMPTS = 2;
 
 	@AfterViews
 	void addImage() {
@@ -50,27 +55,12 @@ public class ImageSwipeFragment extends Fragment implements ImageLoader.LoadCall
 	}
 	
 	private void loadImage(){
-		ImageLoader.instance().loadImage(mImage, this);
-	}
-
-	/**
-	 * Called when the image loader hits an out of memory error. If try again is
-	 * true we'll attempt to load the image again with lower settings. Otherwise
-	 * we'll give up and show an error
-	 * 
-	 * @param image
-	 * @param tryAgain
-	 */
-	private void handleOutOfMemory(Image image, boolean tryAgain) {
-		Util.log("Handling out of memory");
-
-		if (tryAgain) {
-			// retry with lower bitmap display
-
-		} else {
-			// TODO: Display error or something.
+		if(mImage == null){
+			Util.log("Trying to load null image!");			
+			return;
 		}
 
+		ImageLoader.instance().loadImage(mImage, this);
 	}
 
 	@Override
@@ -82,6 +72,16 @@ public class ImageSwipeFragment extends Fragment implements ImageLoader.LoadCall
 		mPhotoView.setImageDrawable(null);
 
 		mPhotoView = null;	
+	}
+	
+	@Override
+	public void setUserVisibleHint(boolean isVisibleToUser) {
+	    super.setUserVisibleHint(isVisibleToUser);
+	    
+	    if(isVisibleToUser){
+	    	// make sure we are loading this image as a priority
+	    	loadImage();
+	    }
 	}
 
 
@@ -104,7 +104,25 @@ public class ImageSwipeFragment extends Fragment implements ImageLoader.LoadCall
 
 	@Override
 	public void onError(LoadError error) {
-		Util.log("Image load error : " + error);	
-		// TODO: Handle error
+		mLoadAttempts++;
+		
+		switch(error){
+		case DOWNLOAD_CANCELED:			
+			break;
+		case DOWNLOAD_FAILURE:			
+			break;
+		case FAILED_DECODE:			
+			break;
+		case OUT_OF_MEMORY:
+			// TODO: request memory cleanup
+			break;			
+		case UNKOWN:
+		}
+		
+		if(mLoadAttempts < MAX_LOAD_ATTEMPTS){
+			loadImage();
+		} else {
+			// TODO: Load error image
+		}
 	}
 }

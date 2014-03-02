@@ -166,8 +166,10 @@ public class ImageLoader {
 				// update the start time
 				download.startTime = new Date().getTime();
 
-				// add the callback
-				download.listeners.add(callbacks);
+				// add the callback if it hasn't already been attached
+				if (!download.listeners.contains(callbacks)) {
+					download.listeners.add(callbacks);
+				}
 			}
 
 			// otherwise start a new download
@@ -402,14 +404,16 @@ public class ImageLoader {
 	 */
 	protected void handleSuccess(Download download, byte[] binaryData) {
 		// cache data
-		new CacheDownloadsAsync().execute(new ImageToCache(download.image, binaryData));
+		new CacheDownloadsAsync().execute(new ImageToCache(download.image,
+				binaryData));
 
 		// only decode image if there are listeners waiting for the image
 		if (!download.listeners.isEmpty()) {
 			// decode data and pass it to listeners.
-			new CreateDrawableFromDownloadAsync().execute(new CreateDrawableHelper(
-					binaryData, null, null, download));
-		}		
+			new CreateDrawableFromDownloadAsync()
+					.execute(new CreateDrawableHelper(binaryData, null, null,
+							download));
+		}
 	}
 
 	/**
@@ -597,7 +601,8 @@ public class ImageLoader {
 
 	}
 
-	private class CacheDownloadsAsync extends AsyncTask<ImageToCache, Void, Void> {
+	private class CacheDownloadsAsync extends
+			AsyncTask<ImageToCache, Void, Void> {
 		protected Void doInBackground(ImageToCache... images) {
 			int count = images.length;
 			for (int i = 0; i < count; i++) {
