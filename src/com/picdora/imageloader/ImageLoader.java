@@ -31,6 +31,11 @@ public class ImageLoader {
 	// TODO: Optimize preloading and max connections based on internet speed and
 	// speed that the user is going through the pictures
 
+	// TODO: Large gifs take up too much space and cause problems. Maybe we can
+	// check the size of current downloads and reduce the amount of downloads
+	// when they exceed that. Or maybe we can download to file and then retrieve
+	// the file
+
 	// maximum images to download at once
 	private static final int MAX_DOWNLOADS = 5;
 	// the number of times to attempt a method that might fail due to an out of
@@ -312,12 +317,14 @@ public class ImageLoader {
 
 		addDownload(download);
 
+		Util.log("Download list: " + mDownloads.size());
 	}
 
 	protected void downloadFinished(Download download) {
 		removeDownload(download);
 
-		// preload an upcoming image, or restart a canceled image if there is room
+		// preload an upcoming image, or restart a canceled image if there is
+		// room
 		if (isDownloadsFull()) {
 			return;
 		} else if (!mUpcomingImages.isEmpty()) {

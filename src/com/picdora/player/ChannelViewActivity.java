@@ -145,6 +145,7 @@ public class ChannelViewActivity extends FragmentActivity {
 		
 		for(int i = endPos; i >= startPos; i--){
 			Image image = mChannelPlayer.getImage(i);
+			ImageLoader.instance().preloadImage(image);
 		}
 
 	}
