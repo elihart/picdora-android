@@ -1,7 +1,9 @@
 package com.picdora.player;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EBean;
@@ -16,10 +18,13 @@ import com.picdora.models.Image;
 
 @EBean
 public class ChannelPlayer {
+	// keep track of the last channel so we don't have to reload it 
+	protected static ChannelPlayer lastChannelPlayer;
 
 	private Channel mChannel;
 	private List<Image> mImages;
-	private OnReadyListener mListener;
+	private Queue<Image> mUpcomingImages;
+	private GetPlayerListener mListener;
 
 	// the number of images to load from the database when we ne
 	private static final int DB_BATCH_SIZE = 15;
@@ -30,25 +35,36 @@ public class ChannelPlayer {
 		// empty constructor for enhanced class
 	}
 
+	public static void getPlayer(Channel channel, GetPlayerListener listener) {
+		if (channel.equals(lastChannelPlayer)) {
+			listener.onSuccess(lastChannelPlayer);
+		} else {
+			lastChannelPlayer = new ChannelPlayer();
+			lastChannelPlayer.loadChannel(channel, listener);
+		}
+	}
+
 	@Background
-	public void loadChannel(Channel channel, OnReadyListener listener) {
+	protected void loadChannel(Channel channel, GetPlayerListener listener) {
 		mListener = listener;
 		mChannel = channel;
 		mImages = new ArrayList<Image>();
+		mUpcomingImages = new LinkedList<Image>();
 		loadImageBatch(STARTING_BATCH_SIZE, mImages);
-		loadChannelCompleted();		
+
+		loadChannelCompleted();
 	}
-	
+
 	@UiThread
-	public void loadChannelCompleted(){
+	public void loadChannelCompleted() {
 		if (mListener == null) {
 			return;
 		}
 
 		if (mImages.isEmpty()) {
-			mListener.onError(ChannelError.NO_IMAGES);
+			mListener.onFailure(ChannelError.NO_IMAGES);
 		} else {
-			mListener.onReady();
+			mListener.onSuccess(this);
 		}
 	}
 
@@ -60,11 +76,11 @@ public class ChannelPlayer {
 		} else {
 			// check if we should proactively load more images before they are
 			// needed
-			
+
 			// TODO: Load images in background. Right now though images are
 			// loaded according to view count, and loading in background will
 			// load duplicates
-			
+
 			// loadMoreImagesIfNeeded(index);
 		}
 
@@ -120,7 +136,7 @@ public class ChannelPlayer {
 
 		CursorList<Image> list = Query.many(Image.class, query, null).get();
 		int resultCount = list.size();
-		for(Image image : list.asList()){
+		for (Image image : list.asList()) {
 			image.markView();
 			mImages.add(image);
 		}
@@ -135,10 +151,10 @@ public class ChannelPlayer {
 	 * @author Eli
 	 * 
 	 */
-	public interface OnReadyListener {
-		public void onReady();
+	public interface GetPlayerListener {
+		public void onSuccess(ChannelPlayer player);
 
-		public void onError(ChannelError error);
+		public void onFailure(ChannelError error);
 	}
 
 	public enum ChannelError {

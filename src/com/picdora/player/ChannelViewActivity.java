@@ -28,7 +28,7 @@ import com.picdora.imageloader.ImageLoader;
 import com.picdora.models.Channel;
 import com.picdora.models.Image;
 import com.picdora.player.ChannelPlayer.ChannelError;
-import com.picdora.player.ChannelPlayer.OnReadyListener;
+import com.picdora.player.ChannelPlayer.GetPlayerListener;
 
 @Fullscreen
 @EActivity(R.layout.activity_channel_view)
@@ -37,10 +37,8 @@ public class ChannelViewActivity extends FragmentActivity {
 
 	@ViewById
 	PicdoraViewPager pager;
-	@Bean
-	ChannelPlayer mChannelPlayer;
 
-	private DataFragment dataFragment;
+	private ChannelPlayer mChannelPlayer;
 
 	/**
 	 * The pager adapter, which provides the pages to the view pager widget.
@@ -52,44 +50,27 @@ public class ChannelViewActivity extends FragmentActivity {
 
 	@AfterViews
 	void initChannel() {
+		// show loading screen
+		showBusyDialog("Loading Channel...");
 
-		FragmentManager fm = getSupportFragmentManager();
-		dataFragment = (DataFragment) fm.findFragmentByTag("data");
+		// Load channel and play when ready
+		String json = getIntent().getStringExtra("channel");
+		Channel channel = Util.fromJson(json, Channel.class);
 
-		// create the fragment and data the first time
-		if (dataFragment == null) {
-			// show loading screen
-			showBusyDialog("Loading Channel...");
+		ChannelPlayer.getPlayer(channel, new GetPlayerListener() {
 
-			// add the fragment
-			dataFragment = new DataFragment();
-			fm.beginTransaction().add(dataFragment, "data").commit();
+			@Override
+			public void onSuccess(ChannelPlayer player) {
+				mChannelPlayer = player;
+				dismissBusyDialog();
+				startChannel();
+			}
 
-			dataFragment.setData(mChannelPlayer);
-
-			// Load channel and play when ready
-			String json = getIntent().getStringExtra("channel");
-			Channel channel = Util.fromJson(json, Channel.class);
-
-			mChannelPlayer.loadChannel(channel, new OnReadyListener() {
-
-				@Override
-				public void onReady() {
-					dismissBusyDialog();
-					startChannel();
-				}
-
-				@Override
-				public void onError(ChannelError error) {
-					handleChannelLoadError(error);
-				}
-			});
-
-		} else {
-			mChannelPlayer = dataFragment.getData();
-			startChannel();
-		}
-
+			@Override
+			public void onFailure(ChannelError error) {
+				handleChannelLoadError(error);
+			}
+		});
 	}
 
 	protected void handleChannelLoadError(ChannelError error) {

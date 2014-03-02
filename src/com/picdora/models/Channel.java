@@ -3,6 +3,7 @@ package com.picdora.models;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import se.emilsjolander.sprinkles.Model;
 import se.emilsjolander.sprinkles.annotations.AutoIncrementPrimaryKey;
@@ -93,5 +94,23 @@ public class Channel extends Model {
 		}.getType();
 		mCategories = new Gson().fromJson(mCategoriesAsJson, type);
 	}
+	
+	@Override
+	public int hashCode() {
+        return (int) mId;
+    }
+	
+	@Override
+    public boolean equals(Object obj) {
+        if (obj == null)
+            return false;
+        if (obj == this)
+            return true;
+        if (!(obj instanceof Channel))
+            return false;
+
+        Channel ch = (Channel) obj;
+        return ch.getId() == mId;
+    }
 
 }
