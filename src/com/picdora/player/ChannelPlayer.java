@@ -1,9 +1,9 @@
 package com.picdora.player;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.Vector;
 
 import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EBean;
@@ -12,9 +12,8 @@ import org.androidannotations.annotations.UiThread;
 import se.emilsjolander.sprinkles.CursorList;
 import se.emilsjolander.sprinkles.Query;
 
-import android.os.Looper;
-
 import com.picdora.ChannelHelper;
+import com.picdora.Util;
 import com.picdora.models.Channel;
 import com.picdora.models.Image;
 
@@ -24,14 +23,16 @@ public class ChannelPlayer {
 	protected static ChannelPlayer lastChannelPlayer;
 
 	private Channel mChannel;
-	private List<Image> mImages;
-	private Queue<Image> mUpcomingImages;
+	// use a thread safe list for adding images in the background
+	private Vector<Image> mImages;
 	private OnLoadListener mListener;
 
-	// the number of images to load from the database when we ne
+	// the number of images to load from the database at a time
 	private static final int DB_BATCH_SIZE = 15;
-	// the number of images to load at the beginning
-	private static final int STARTING_BATCH_SIZE = 30;
+	// the threshold for when we start loading more images in the background
+	private static final int NUM_IMAGES_LEFT_THRESHOLD = 10;
+	// whether we are currently loading images in the background
+	private boolean loadingImagesInBackground;
 
 	protected ChannelPlayer() {
 		// empty constructor for enhanced class
@@ -56,12 +57,11 @@ public class ChannelPlayer {
 
 	@Background
 	public void loadChannel(Channel channel, OnLoadListener listener) {
+		loadingImagesInBackground = false;
 		mListener = listener;
 		mChannel = channel;
-		mImages = new ArrayList<Image>();
-		mUpcomingImages = new LinkedList<Image>();
-		loadImageBatch(STARTING_BATCH_SIZE, mImages);
-		
+		mImages = new Vector<Image>();
+		loadImageBatch(DB_BATCH_SIZE, mImages);
 
 		loadChannelCompleted();
 	}
@@ -88,16 +88,17 @@ public class ChannelPlayer {
 		// if we are requesting a higher image index than has been loaded, load
 		// enough images to meet the index
 		if (index >= mImages.size()) {
-			loadImageBatch(index - mImages.size() + 1 + DB_BATCH_SIZE, mImages);
-		} else {
-			// check if we should proactively load more images before they are
-			// needed
-
-			// TODO: Load images in background. Right now though images are
-			// loaded according to view count, and loading in background will
-			// load duplicates
-
-			// loadMoreImagesIfNeeded(index);
+			int imagesNeeded = index - mImages.size() + 1;
+			// get the amount needed to reach the index, plus grab another batch
+			// while we're at it
+			loadImageBatch(imagesNeeded + DB_BATCH_SIZE, mImages);
+		}
+		// if we're getting low on images do a background load
+		else if (mImages.size() - index < NUM_IMAGES_LEFT_THRESHOLD) {
+			// don't start another load if one is already going
+			if (!loadingImagesInBackground) {
+				loadImageBatchAsync(DB_BATCH_SIZE, mImages);
+			}
 		}
 
 		// if for some reason we still don't have enough images then wrap the
@@ -109,26 +110,18 @@ public class ChannelPlayer {
 		return mImages.get(index);
 	}
 
-	/**
-	 * If the given index is close to the number of images that we have loaded
-	 * we should proactively load more images in anticipation of needing them
-	 * soon
-	 * 
-	 * @param index
-	 *            The image index that is being accessed
-	 */
 	@Background(serial = "loadImagesInBackground")
-	void loadMoreImagesIfNeeded(int index) {
-		if (index - mImages.size() > DB_BATCH_SIZE) {
-			loadImageBatch(index - mImages.size() + 1 + DB_BATCH_SIZE, mImages);
-		}
+	void loadImageBatchAsync(int count, Collection<Image> images) {
+		loadingImagesInBackground = true;
+		loadImageBatch(count, images);
+		loadingImagesInBackground = false;
 	}
 
 	/**
 	 * Get the specified number of images from the database and load them into
 	 * the given list
 	 */
-	private int loadImageBatch(int count, List<Image> images) {
+	private synchronized int loadImageBatch(int count, Collection<Image> images) {
 		// build the query. Start by only selecting images from categories that
 		// this channel includes
 		String query = "SELECT * FROM Images WHERE categoryId IN "
@@ -153,6 +146,10 @@ public class ChannelPlayer {
 		CursorList<Image> list = Query.many(Image.class, query, null).get();
 		int resultCount = list.size();
 		for (Image image : list.asList()) {
+			// TODO: Figure out a better way to do this. We have to mark them as
+			// viewed right now because otherwise we will pull them from the
+			// database again. Maybe supply these ids to the db to avoid
+			// instead, or keep a list of unviewed images
 			image.markView();
 			mImages.add(image);
 		}
