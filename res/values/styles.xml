@@ -44,7 +44,7 @@
 
     <!-- action bar title text -->
     <style name="TitleTextStyle" parent="@style/TextAppearance.AppCompat.Widget.ActionBar.Title">
-        <item name="android:textColor">@color/white</item>
+        <item name="android:textColor">@color/actionBarText</item>
     </style>
 
 </resources>
