@@ -31,7 +31,7 @@ public class PicdoraActivity extends ActionBarActivity {
 		try {
 			String title = text != null ? text : getTitle().toString();
 			getSupportActionBar().setTitle(
-					FontHelper.styleString(title, FontHelper.STYLE.BOLD));
+					FontHelper.styleString(title, FontHelper.STYLE.MEDIUM));
 		} catch (Exception e) {
 			e.printStackTrace();
 			Util.log("Error setting title font");

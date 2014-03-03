@@ -4,6 +4,10 @@
      <color name="black">#000000</color>
      <color name="translucent_black">#44000000</color>
      <color name="white">#ffffff</color>
-     <color name="actionBar">#f2f2f2</color>
+     <color name="action_bar_background">#f2f2f2</color>
      <color name="actionBarText">#4c4c4c</color>
+     <color name="activityBackground">#ffffff</color>
+     <color name="drawerBackground">#f2f2f2</color>
+     <color name="drawerDivider">#a8a8a8</color>
+     <color name="drawerText">#000000</color>
 </resources>

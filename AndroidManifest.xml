@@ -18,7 +18,6 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/PicdoraActionBarTheme" >
-
         <activity
             android:name="com.picdora.ChannelSelectionActivity_"
             android:label="@string/title_activity_channel_selection" >
@@ -31,7 +30,7 @@
         <activity
             android:name="com.picdora.player.ChannelViewActivity_"
             android:label="@string/app_name"
-            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen">
+            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" >
         </activity>
         <activity
             android:name="com.picdora.ChannelCreationActivity_"
@@ -40,6 +39,22 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="om.picdora.ChannelSelectionActivity_" />
+        </activity>
+        <activity
+            android:name="com.picdora.player.ResumeActivity_"
+            android:label="@string/title_activity_resume" >
+        </activity>
+        <activity
+            android:name="com.picdora.settings.SettingsActivity"
+            android:label="@string/title_activity_settings" >
+        </activity>
+        <activity
+            android:name="com.picdora.FavoritesActivity_"
+            android:label="@string/title_activity_favorites" >
+        </activity>
+        <activity
+            android:name="com.picdora.LikesActivity_"
+            android:label="@string/title_activity_likes" >
         </activity>
     </application>
 

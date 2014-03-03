@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ListView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="240dp"
+    android:paddingLeft="15dp"
+    android:paddingRight="15dp"
     android:layout_height="match_parent"
     android:layout_gravity="start"
-    android:background="#111"
+    android:background="@color/drawerBackground"
+    android:divider="@color/drawerDivider"
+    android:dividerHeight="1dp"
     android:choiceMode="singleChoice" />

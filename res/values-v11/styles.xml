@@ -14,7 +14,7 @@
 
 	<!-- ActionBar styles -->
 	<style name="PicdoraActionBar" parent="@style/Widget.AppCompat.Light.ActionBar.Solid.Inverse">
-		<item name="android:background">@color/actionBar</item>
+		<item name="android:background">@color/action_bar_background</item>
 		 <item name="android:titleTextStyle">@style/TitleTextStyle</item>
 	</style>
 

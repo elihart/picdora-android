@@ -15,6 +15,10 @@ import com.picdora.ChannelSelectionActivity;
 import com.picdora.ChannelSelectionActivity_;
 import com.picdora.PicdoraActivity;
 import com.picdora.R;
+import com.picdora.favorites.FavoritesActivity_;
+import com.picdora.likes.LikesActivity_;
+import com.picdora.player.ResumeActivity_;
+import com.picdora.settings.SettingsActivity;
 
 
 public class SlidingMenuHelper {
@@ -31,8 +35,16 @@ public class SlidingMenuHelper {
 	private static ArrayList<SlidingMenuItem> getMenuEntries() {
 		ArrayList<SlidingMenuItem> items = new ArrayList<SlidingMenuItem>();
 
-		items.add(new SlidingMenuItem(R.drawable.ic_launcher, "Channels",
+		items.add(new SlidingMenuItem(R.drawable.ic_action_play_over_video, "Resume",
+				ResumeActivity_.class));
+		items.add(new SlidingMenuItem(R.drawable.ic_action_channels, "Channels",
 				ChannelSelectionActivity_.class));
+		items.add(new SlidingMenuItem(R.drawable.ic_action_like, "Likes",
+				LikesActivity_.class));
+		items.add(new SlidingMenuItem(R.drawable.ic_action_favorite, "Favorites",
+				FavoritesActivity_.class));
+		items.add(new SlidingMenuItem(R.drawable.ic_action_settings, "Settings",
+				SettingsActivity.class));
 
 
 		return items;
