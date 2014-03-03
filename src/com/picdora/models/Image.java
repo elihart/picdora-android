@@ -25,13 +25,15 @@ public class Image extends Model {
 	@Column("categoryId")
 	private int mCategoryId;
 
+	// TODO: Handle deleted case. This isn't stored in the db yet
+	private boolean mDeleted;
 
 	@Column("nsfw")
 	private boolean mNsfw;
 
-	// TODO: Can take this out
+	// TODO: Can take this out, it's just based on the category setting
 	@Column("porn")
-	private boolean mPorn;	
+	private boolean mPorn;
 
 	@Column("gif")
 	private boolean mGif;
@@ -43,9 +45,9 @@ public class Image extends Model {
 	private long mLastViewed = 0;
 
 	/****************************************************/
-	
-	public Image(){
-		
+
+	public Image() {
+
 	}
 
 	/**
@@ -101,7 +103,7 @@ public class Image extends Model {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		mNsfw = false;
 		try {
 			mNsfw = obj.getBoolean("nsfw");
@@ -109,7 +111,7 @@ public class Image extends Model {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		mGif = false;
 		try {
 			mGif = obj.getBoolean("gif");
@@ -158,10 +160,18 @@ public class Image extends Model {
 	}
 
 	/***************** Setters **********************/
-	
+
 	public void setGif(boolean gif) {
 		mGif = true;
 		save();
+	}
+
+	public boolean isDeleted() {
+		return mDeleted;
+	}
+
+	public void setDeleted(boolean mDeleted) {
+		this.mDeleted = mDeleted;
 	}
 
 	public void markView() {
@@ -178,26 +188,25 @@ public class Image extends Model {
 	 * @return
 	 */
 	public String getUrl() {
-			return "http://imgur.com/" + mImgurId + ".jpg";		
+		return "http://i.imgur.com/" + mImgurId + ".jpg";
 	}
-	
+
 	@Override
 	public int hashCode() {
-        return mImgurId.toLowerCase(Locale.US).hashCode();
-    }
-	
+		return mImgurId.toLowerCase(Locale.US).hashCode();
+	}
+
 	@Override
-    public boolean equals(Object obj) {
-        if (obj == null)
-            return false;
-        if (obj == this)
-            return true;
-        if (!(obj instanceof Image))
-            return false;
+	public boolean equals(Object obj) {
+		if (obj == null)
+			return false;
+		if (obj == this)
+			return true;
+		if (!(obj instanceof Image))
+			return false;
 
-        Image img = (Image) obj;
-        return img.getImgurId().equalsIgnoreCase(mImgurId);
-    }
+		Image img = (Image) obj;
+		return img.getImgurId().equalsIgnoreCase(mImgurId);
+	}
 
-	
 }

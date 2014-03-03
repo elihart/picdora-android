@@ -21,7 +21,6 @@ import android.os.AsyncTask;
 import android.os.SystemClock;
 import android.util.DisplayMetrics;
 
-import com.picdora.Util;
 import com.picdora.loopj.AsyncHttpClient;
 import com.picdora.loopj.BinaryHttpResponseHandler;
 import com.picdora.loopj.RequestHandle;
@@ -89,6 +88,38 @@ public class ImageLoader {
 		client.getHttpClient().getParams()
 				.setParameter(ClientPNames.ALLOW_CIRCULAR_REDIRECTS, true);
 		client.setMaxConnections(MAX_DOWNLOADS);
+		// TODO: This should catch redirects due to removed images, but I dunno
+		// if it normal images might be redirected and caught as well... Need to
+		// get the redirect handler below working
+		client.setEnableRedirects(false);
+
+		// Listener for redirects. If we are redirected to the removed image
+		// page then tell it not to redirect and instead go to failure
+		// TODO: This redirect code seems broken, perhaps because of old, buggy
+		// httpclient code. If loopj async updates to use okhttp in the future
+		// maybe we can come back to this.
+		// ((DefaultHttpClient) client.getHttpClient())
+		// .setRedirectHandler(new DefaultRedirectHandler() {
+		//
+		// @Override
+		// public boolean isRedirectRequested(HttpResponse response,
+		// HttpContext context) {
+		// String redirectTo = "";
+		//
+		// try {
+		// redirectTo = getLocationURI(response, context)
+		// .toString();
+		// } catch (ProtocolException e) {
+		// }
+		//
+		// if (redirectTo.contains("removed.png")) {
+		// return false;
+		// } else {
+		// return true;
+		// }
+		// }
+		// });
+
 	}
 
 	public static ImageLoader instance() {
@@ -105,7 +136,7 @@ public class ImageLoader {
 	}
 
 	public enum LoadError {
-		UNKOWN, OUT_OF_MEMORY, DOWNLOAD_FAILURE, DOWNLOAD_CANCELED, FAILED_DECODE
+		UNKOWN, OUT_OF_MEMORY, DOWNLOAD_FAILURE, DOWNLOAD_CANCELED, FAILED_DECODE, IMAGE_DELETED
 	}
 
 	/**
@@ -320,7 +351,6 @@ public class ImageLoader {
 							byte[] binaryData) {
 						handleSuccess(download, binaryData);
 						downloadFinished(download);
-
 					}
 
 					@Override
@@ -370,8 +400,16 @@ public class ImageLoader {
 	 * @return
 	 */
 	protected LoadError reasonForDownloadFailure(int statusCode, Throwable error) {
-		// TODO: Specific reasons for download failure
-		return LoadError.DOWNLOAD_FAILURE;
+		String code = Integer.toString(statusCode);
+		// our redirect handler only fails on redirect if we are redirected due
+		// to a removed image
+		if (code.startsWith("3")) {
+			return LoadError.IMAGE_DELETED;
+		}
+		// TODO: Check for more cases
+		else {
+			return LoadError.DOWNLOAD_FAILURE;
+		}
 	}
 
 	/**
