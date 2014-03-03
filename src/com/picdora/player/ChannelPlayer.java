@@ -119,7 +119,9 @@ public class ChannelPlayer {
 
 	/**
 	 * Get the specified number of images from the database and load them into
-	 * the given list
+	 * the given list.
+	 * 
+	 * @return resultCount The number of images successfully loaded
 	 */
 	private synchronized int loadImageBatch(int count, Collection<Image> images) {
 		// build the query. Start by only selecting images from categories that
@@ -138,20 +140,27 @@ public class ChannelPlayer {
 			query += " AND gif=1";
 			break;
 		}
+		
+		// TODO: Add nsfw setting
 
 		// set ordering and add limit
 		query += " ORDER BY viewCount ASC, redditScore DESC LIMIT "
 				+ Integer.toString(count);
 
 		CursorList<Image> list = Query.many(Image.class, query, null).get();
-		int resultCount = list.size();
+		int resultCount = 0;
 		for (Image image : list.asList()) {
 			// TODO: Figure out a better way to do this. We have to mark them as
 			// viewed right now because otherwise we will pull them from the
 			// database again. Maybe supply these ids to the db to avoid
 			// instead, or keep a list of unviewed images
 			image.markView();
-			mImages.add(image);
+			// don't add a duplicate image
+			// TODO: Better way to manage duplicates in the db before we retrieve them
+			if (!mImages.contains(image)) {
+				mImages.add(image);
+				resultCount++;
+			}
 		}
 		list.close();
 

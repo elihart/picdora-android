@@ -1,4 +1,4 @@
-package com.picdora;
+package com.picdora.channelSelection;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Bean;
@@ -12,6 +12,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ListView;
 
+import com.picdora.ChannelCreationActivity_;
+import com.picdora.ChannelHelper;
+import com.picdora.PicdoraActivity;
+import com.picdora.R;
+import com.picdora.R.id;
+import com.picdora.R.layout;
+import com.picdora.R.menu;
 import com.picdora.models.Channel;
 import com.picdora.ui.SlidingMenuHelper;
 

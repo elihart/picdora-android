@@ -7,8 +7,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 
-import com.picdora.ChannelSelectionActivity_;
 import com.picdora.R;
+import com.picdora.channelSelection.ChannelSelectionActivity_;
 
 @EActivity
 public class ResumeActivity extends Activity {

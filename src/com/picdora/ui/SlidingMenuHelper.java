@@ -5,16 +5,14 @@ import java.util.ArrayList;
 import android.content.Intent;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.widget.DrawerLayout;
-import android.view.Gravity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
-import com.picdora.ChannelSelectionActivity;
-import com.picdora.ChannelSelectionActivity_;
 import com.picdora.PicdoraActivity;
 import com.picdora.R;
+import com.picdora.channelSelection.ChannelSelectionActivity_;
 import com.picdora.favorites.FavoritesActivity_;
 import com.picdora.likes.LikesActivity_;
 import com.picdora.player.ResumeActivity_;

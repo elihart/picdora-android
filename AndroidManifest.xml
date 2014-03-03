@@ -19,7 +19,7 @@
         android:label="@string/app_name"
         android:theme="@style/PicdoraActionBarTheme" >
         <activity
-            android:name="com.picdora.ChannelSelectionActivity_"
+            android:name="com.picdora.channelSelection.ChannelSelectionActivity_"
             android:label="@string/title_activity_channel_selection" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

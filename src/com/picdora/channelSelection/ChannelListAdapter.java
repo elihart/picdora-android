@@ -1,4 +1,4 @@
-package com.picdora;
+package com.picdora.channelSelection;
 
 import java.util.List;
 
@@ -11,6 +11,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
+import com.picdora.channelSelection.ChannelItemView_;
+import com.picdora.Util;
 import com.picdora.models.Channel;
 
 @EBean
