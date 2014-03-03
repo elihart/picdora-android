@@ -49,11 +49,11 @@
             android:label="@string/title_activity_settings" >
         </activity>
         <activity
-            android:name="com.picdora.FavoritesActivity_"
+            android:name="com.picdora.favorites.FavoritesActivity_"
             android:label="@string/title_activity_favorites" >
         </activity>
         <activity
-            android:name="com.picdora.LikesActivity_"
+            android:name="com.picdora.likes.LikesActivity_"
             android:label="@string/title_activity_likes" >
         </activity>
     </application>

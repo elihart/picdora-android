@@ -2,13 +2,13 @@ package com.picdora.player;
 
 import org.androidannotations.annotations.EActivity;
 
-import com.picdora.R;
-import com.picdora.R.layout;
-import com.picdora.R.menu;
-
-import android.os.Bundle;
 import android.app.Activity;
+import android.content.Intent;
+import android.os.Bundle;
 import android.view.Menu;
+
+import com.picdora.ChannelSelectionActivity_;
+import com.picdora.R;
 
 @EActivity
 public class ResumeActivity extends Activity {
@@ -16,7 +16,10 @@ public class ResumeActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_resume);
+		
+		// TODO: Implement resume
+		startActivity(new Intent(this, ChannelSelectionActivity_.class));
+		finish();
 	}
 
 	@Override

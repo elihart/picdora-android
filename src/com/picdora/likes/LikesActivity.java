@@ -1,22 +1,23 @@
 package com.picdora.likes;
 
+import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EActivity;
 
-import com.picdora.R;
-import com.picdora.R.layout;
-import com.picdora.R.menu;
-
-import android.os.Bundle;
-import android.app.Activity;
 import android.view.Menu;
 
-@EActivity
-public class LikesActivity extends Activity {
+import com.picdora.PicdoraActivity;
+import com.picdora.R;
+import com.picdora.ui.SlidingMenuHelper;
 
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_likes);
+@EActivity(R.layout.activity_likes)
+public class LikesActivity extends PicdoraActivity {
+
+	@AfterViews
+	void initViews() {
+		SlidingMenuHelper.addMenuToActivity(this, true);
+		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+		getSupportActionBar().setHomeButtonEnabled(true);
+
 	}
 
 	@Override

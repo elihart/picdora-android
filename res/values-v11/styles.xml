@@ -8,12 +8,12 @@
         <!-- API 11 theme customizations can go here. -->
     </style>
     
-    <style name="PicdoraActionBarTheme" parent="@style/Theme.AppCompat.Light.DarkActionBar">
+    <style name="PicdoraActionBarTheme" parent="@style/Theme.AppCompat.Light">
             <item name="android:actionBarStyle">@style/PicdoraActionBar</item>
 	</style>	
 
 	<!-- ActionBar styles -->
-	<style name="PicdoraActionBar" parent="@style/Widget.AppCompat.Light.ActionBar.Solid.Inverse">
+	<style name="PicdoraActionBar" parent="@style/Widget.AppCompat.Light.ActionBar">
 		<item name="android:background">@color/action_bar_background</item>
 		 <item name="android:titleTextStyle">@style/TitleTextStyle</item>
 	</style>
