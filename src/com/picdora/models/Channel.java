@@ -19,7 +19,7 @@ public class Channel extends Model {
 	public enum GifSetting {
 		NONE, ALLOWED, ONLY
 	}
-	
+
 	/********** DB Fields ***********************/
 	@AutoIncrementPrimaryKey
 	@Column("id")
@@ -30,29 +30,31 @@ public class Channel extends Model {
 
 	@Column("nsfw")
 	private String mNsfw;
-	
-	// TODO: Add this field to the db and update on channel creation, and favoriting
+
+	// TODO: Add this field to the db and update on channel creation, and
+	// favoriting
 	private String mPreviewImage = "Z9kkH2r";
 
 	@Column("categories")
 	private String mCategoriesAsJson;
 	private List<Category> mCategories;
-	
+
 	@Column("gifSetting")
 	private int mGifSetting;
-	
+
 	public Channel(String name, List<Category> categories, GifSetting gifSetting) {
 		mName = name;
 		mCategories = categories;
 		mGifSetting = gifSetting.ordinal();
-		
+
+		// TODO: Validate non null/empty values. Unique name.
+
 		// TODO: Set nsfw based on categories
 	}
 
 	public Channel() {
 		// empty constructor for Sprinkles model creation
 	}
-	
 
 	public long getId() {
 		return mId;
@@ -65,8 +67,8 @@ public class Channel extends Model {
 	public String getNsfw() {
 		return mNsfw;
 	}
-	
-	public GifSetting getGifSetting(){
+
+	public GifSetting getGifSetting() {
 		return GifSetting.values()[mGifSetting];
 	}
 
@@ -77,15 +79,13 @@ public class Channel extends Model {
 		return mCategories;
 	}
 
-	
-
 	@Override
 	protected void beforeSave() {
 		// create a json string to represent the categories in the database
 		if (mCategories == null) {
 			mCategories = new ArrayList<Category>();
 		}
-		
+
 		mCategoriesAsJson = new Gson().toJson(mCategories);
 	}
 
@@ -97,24 +97,32 @@ public class Channel extends Model {
 		}.getType();
 		mCategories = new Gson().fromJson(mCategoriesAsJson, type);
 	}
-	
+
 	@Override
 	public int hashCode() {
-        return (int) mId;
-    }
-	
-	@Override
-    public boolean equals(Object obj) {
-        if (obj == null)
-            return false;
-        if (obj == this)
-            return true;
-        if (!(obj instanceof Channel))
-            return false;
+		return (int) mId;
+	}
 
-        Channel ch = (Channel) obj;
-        return ch.getId() == mId;
-    }
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null)
+			return false;
+		if (obj == this)
+			return true;
+		if (!(obj instanceof Channel))
+			return false;
+
+		Channel ch = (Channel) obj;
+
+		// If either channel wasn't taken out of the database it won't have an
+		// id, so compare names instead
+
+		if (ch.getId() == 0 && mId == 0) {
+			return ch.getName().equals(mName);
+		} else {
+			return ch.getId() == mId;
+		}
+	}
 
 	public String getPreviewUrl() {
 		return "http://i.imgur.com/" + mPreviewImage + "b.jpg";

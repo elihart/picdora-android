@@ -20,6 +20,7 @@ import com.picdora.models.Image;
 @EBean
 public class ChannelPlayer {
 	// keep track of the last channel so we don't have to reload it
+	// TODO: Also remember position
 	protected static ChannelPlayer lastChannelPlayer;
 
 	private Channel mChannel;

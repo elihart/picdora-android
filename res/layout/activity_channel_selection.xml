@@ -1,22 +1,16 @@
 <android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" 
-    android:background="@color/activityBackground">
+    android:layout_height="match_parent"
+    android:background="@color/activityBackground" >
 
     <!-- The main content view -->
 
-        <GridView
-        android:id="@+id/channelList"
+    <fragment
+        android:id="@+id/channelFragment"
+        android:name="com.picdora.channelSelection.ChannelGridFragment_"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/white"
-        android:columnWidth="@dimen/channel_grid_column_width"
-        android:horizontalSpacing="1dp"
-        android:verticalSpacing="1dp"
-        android:gravity="center"
-        android:numColumns="auto_fit"
-        android:stretchMode="columnWidth" />
+        android:layout_height="match_parent" />
 
     <!-- The navigation drawer -->
 

@@ -1,5 +1,6 @@
 package com.picdora.channelSelection;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.androidannotations.annotations.AfterInject;
@@ -11,27 +12,19 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
-import com.picdora.channelSelection.ChannelItemView_;
-import com.picdora.Util;
 import com.picdora.models.Channel;
 
 @EBean
 public class ChannelListAdapter extends BaseAdapter {
-List<Channel> channels;
-    
-    @RootContext
-    Context context;
+	List<Channel> channels;
 
-    @AfterInject
-    void initAdapter() {
-        channels = Util.all(Channel.class);
-    }
-    
-    public void refresh(){
-    	channels = Util.all(Channel.class);
-    	notifyDataSetChanged();
-    }
+	@RootContext
+	Context context;
 
+	@AfterInject
+	void initAdapter() {
+		channels = new ArrayList<Channel>();
+	}
 
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
@@ -47,20 +40,25 @@ List<Channel> channels;
 
 		return channelView;
 	}
-	
+
 	@Override
-    public int getCount() {
-        return channels.size();
-    }
+	public int getCount() {
+		return channels.size();
+	}
 
-    @Override
-    public Channel getItem(int position) {
-        return channels.get(position);
-    }
+	@Override
+	public Channel getItem(int position) {
+		return channels.get(position);
+	}
 
-    @Override
-    public long getItemId(int position) {
-        return getItem(position).getId();
-    }
+	@Override
+	public long getItemId(int position) {
+		return getItem(position).getId();
+	}
+
+	public void setChannels(List<Channel> channels) {
+		this.channels = channels;
+		notifyDataSetChanged();
+	}
 
 }
