@@ -10,8 +10,11 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.GridView;
 import android.widget.ListView;
 
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.assist.PauseOnScrollListener;
 import com.picdora.ChannelCreationActivity_;
 import com.picdora.ChannelHelper;
 import com.picdora.PicdoraActivity;
@@ -25,7 +28,7 @@ import com.picdora.ui.SlidingMenuHelper;
 @EActivity(R.layout.activity_channel_selection)
 public class ChannelSelectionActivity extends PicdoraActivity {
 	@ViewById
-	ListView channelList;
+	GridView channelList;
 
 	@Bean
 	ChannelListAdapter adapter;
@@ -38,6 +41,11 @@ public class ChannelSelectionActivity extends PicdoraActivity {
 
 		// TODO: Load list in background and show loading icon
 		channelList.setAdapter(adapter);
+		
+		boolean pauseOnScroll = false;
+		boolean pauseOnFling = true;
+		PauseOnScrollListener listener = new PauseOnScrollListener(ImageLoader.getInstance(), pauseOnScroll, pauseOnFling);
+		channelList.setOnScrollListener(listener);
 	}
 	
 	@Override

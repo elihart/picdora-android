@@ -7,8 +7,14 @@ import se.emilsjolander.sprinkles.Migration;
 import se.emilsjolander.sprinkles.Sprinkles;
 import android.app.Application;
 
+import android.graphics.Bitmap;
+import com.nostra13.universalimageloader.cache.disc.naming.Md5FileNameGenerator;
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
+import com.nostra13.universalimageloader.core.assist.QueueProcessingType;
 import com.picdora.ImageManager.OnResultListener;
-import com.picdora.imageloader.ImageLoader;
+import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.models.Category;
 import com.picdora.models.Channel;
 import com.picdora.models.Image;
@@ -22,14 +28,31 @@ public class PicdoraApp extends Application {
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		
+
 		FontHelper.init(getApplicationContext());
 
-		ImageLoader.init(this);
+		PicdoraImageLoader.init(this);
+
+		initUniversalImageLoader();
 
 		runMigrations();
 
 		syncDb();
+	}
+
+	private void initUniversalImageLoader() {
+		DisplayImageOptions options = new DisplayImageOptions.Builder()
+        .cacheInMemory(true) 
+        .cacheOnDisc(true)
+        .bitmapConfig(Bitmap.Config.RGB_565) 
+        .build();
+		
+		ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(getApplicationContext())
+        .defaultDisplayImageOptions(options) 
+        .build();
+		
+    ImageLoader.getInstance().init(config);
+		
 	}
 
 	private void syncDb() {

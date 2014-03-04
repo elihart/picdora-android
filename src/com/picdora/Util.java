@@ -2,13 +2,12 @@ package com.picdora;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import se.emilsjolander.sprinkles.CursorList;
 import se.emilsjolander.sprinkles.Model;
 import se.emilsjolander.sprinkles.Query;
-
 import se.emilsjolander.sprinkles.annotations.Table;
-
 import android.content.Context;
 import android.widget.Toast;
 
@@ -96,5 +95,33 @@ public class Util {
 
 		return models;
 	}
+	
+	public static String capitalize(String str) {		
+        if (str == null || str.length() == 0) {
+            return str;
+        }
+        
+        str = str.toLowerCase();
+        
+        int strLen = str.length();
+        StringBuffer buffer = new StringBuffer(strLen);
 
+        boolean capitalizeNext = true;
+        for (int i = 0; i < strLen; i++) {
+            char ch = str.charAt(i);
+
+            boolean isDelimiter = Character.isWhitespace(ch);
+
+            if (isDelimiter) {
+                buffer.append(ch);
+                capitalizeNext = true;
+            } else if (capitalizeNext) {
+                buffer.append(Character.toTitleCase(ch));
+                capitalizeNext = false;
+            } else {
+                buffer.append(ch);
+            }
+        }
+        return buffer.toString();
+    }
 }

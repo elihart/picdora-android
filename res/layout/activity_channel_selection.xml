@@ -1,23 +1,22 @@
 <android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" >
+    android:layout_height="match_parent" 
+    android:background="@color/activityBackground">
 
     <!-- The main content view -->
 
-    <RelativeLayout
+        <GridView
+        android:id="@+id/channelList"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" >
-
-        <ListView
-            android:id="@+id/channelList"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:divider="@color/black"
-            android:dividerHeight="1dp" >
-        </ListView>
-
-    </RelativeLayout>
+        android:layout_height="match_parent"
+        android:background="@color/white"
+        android:columnWidth="@dimen/channel_grid_column_width"
+        android:horizontalSpacing="1dp"
+        android:verticalSpacing="1dp"
+        android:gravity="center"
+        android:numColumns="auto_fit"
+        android:stretchMode="columnWidth" />
 
     <!-- The navigation drawer -->
 

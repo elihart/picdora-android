@@ -15,13 +15,13 @@ import android.widget.TextView;
 
 import com.picdora.R;
 import com.picdora.Util;
-import com.picdora.imageloader.ImageLoader;
-import com.picdora.imageloader.ImageLoader.LoadError;
+import com.picdora.imageloader.PicdoraImageLoader;
+import com.picdora.imageloader.PicdoraImageLoader.LoadError;
 import com.picdora.models.Image;
 
 @EFragment(R.layout.fragment_swipable_image)
 public class ImageSwipeFragment extends Fragment implements
-		ImageLoader.LoadCallbacks {
+		PicdoraImageLoader.LoadCallbacks {
 
 	@ViewById(R.id.image)
 	PhotoView mPhotoView;
@@ -64,14 +64,14 @@ public class ImageSwipeFragment extends Fragment implements
 			return;
 		}
 
-		ImageLoader.instance().loadImage(mImage, this);
+		PicdoraImageLoader.instance().loadImage(mImage, this);
 	}
 
 	@Override
 	public void onDestroyView() {
 		super.onDestroyView();
 
-		ImageLoader.instance().unregisterCallbacks(mImage.getImgurId(), this);
+		PicdoraImageLoader.instance().unregisterCallbacks(mImage.getImgurId(), this);
 
 		mPhotoView.setImageDrawable(null);
 

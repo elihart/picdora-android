@@ -30,6 +30,9 @@ public class Channel extends Model {
 
 	@Column("nsfw")
 	private String mNsfw;
+	
+	// TODO: Add this field to the db and update on channel creation, and favoriting
+	private String mPreviewImage = "Z9kkH2r";
 
 	@Column("categories")
 	private String mCategoriesAsJson;
@@ -112,5 +115,9 @@ public class Channel extends Model {
         Channel ch = (Channel) obj;
         return ch.getId() == mId;
     }
+
+	public String getPreviewUrl() {
+		return "http://i.imgur.com/" + mPreviewImage + "b.jpg";
+	}
 
 }

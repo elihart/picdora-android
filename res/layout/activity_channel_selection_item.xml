@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <com.picdora.channelSelection.ChannelGridImage
+        android:id="@+id/channelImage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/transparent"
+        android:scaleType="centerCrop"
+        android:src="@drawable/channel_selection_item_loading_background"
+        android:tint="@color/channel_grid_item_text_background"/>
+
+    <TextView
+        android:id="@+id/channelName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:gravity="center"
+        android:padding="8dp"
+        android:textColor="@color/channel_grid_item_text_color"
+        android:textSize="@dimen/channel_grid_item_font_size" />
+
+    <!--
+    <TextView
+        android:id="@+id/channelName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:paddingLeft="@dimen/channel_grid_item_padding_left"
+        android:paddingRight="@dimen/channel_grid_item_padding_right"
+        android:paddingBottom="@dimen/channel_grid_item_padding_bottom"
+        android:paddingTop="@dimen/channel_grid_item_padding_top"
+        android:textSize="@dimen/channel_grid_item_font_size"
+        android:textColor="@color/white" 
+        android:background="@drawable/inner_shadow"/>  
+    -->
+
+</RelativeLayout>

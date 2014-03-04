@@ -26,7 +26,7 @@ import com.picdora.loopj.BinaryHttpResponseHandler;
 import com.picdora.loopj.RequestHandle;
 import com.picdora.models.Image;
 
-public class ImageLoader {
+public class PicdoraImageLoader {
 	// TODO: Optimize preloading and max connections based on internet speed and
 	// speed that the user is going through the pictures
 
@@ -41,7 +41,7 @@ public class ImageLoader {
 	// memory error
 	private static final int MAX_OOM_ATTEMPTS = 3;
 	// the inititalized loader
-	private static ImageLoader mLoader;
+	private static PicdoraImageLoader mLoader;
 
 	private Map<String, Download> mDownloads;
 	private AsyncHttpClient client;
@@ -61,7 +61,7 @@ public class ImageLoader {
 
 	private PicdoraImageCache mCache;
 
-	private ImageLoader(Context context) {
+	private PicdoraImageLoader(Context context) {
 		mContext = context;
 
 		// init cache
@@ -122,7 +122,7 @@ public class ImageLoader {
 
 	}
 
-	public static ImageLoader instance() {
+	public static PicdoraImageLoader instance() {
 		return mLoader;
 	}
 
@@ -148,7 +148,7 @@ public class ImageLoader {
 	public static void init(Context context) {
 		// only init once
 		if (mLoader == null) {
-			mLoader = new ImageLoader(context);
+			mLoader = new PicdoraImageLoader(context);
 		}
 	}
 

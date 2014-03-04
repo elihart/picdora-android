@@ -24,7 +24,7 @@ import android.widget.TextView;
 
 import com.picdora.R;
 import com.picdora.Util;
-import com.picdora.imageloader.ImageLoader;
+import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.models.Channel;
 import com.picdora.models.Image;
 import com.picdora.player.ChannelPlayer.ChannelError;
@@ -145,7 +145,7 @@ public class ChannelViewActivity extends FragmentActivity {
 			images.add(mChannelPlayer.getImage(i));
 		}
 
-		ImageLoader.instance().preloadImages(images);
+		PicdoraImageLoader.instance().preloadImages(images);
 	}
 
 	@Override
@@ -190,7 +190,7 @@ public class ChannelViewActivity extends FragmentActivity {
 	public void onDestroy() {
 		super.onDestroy();
 
-		ImageLoader.instance().clearDownloads();
+		PicdoraImageLoader.instance().clearDownloads();
 	}
 
 	private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
