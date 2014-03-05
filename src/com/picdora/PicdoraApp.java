@@ -6,13 +6,11 @@ import org.androidannotations.annotations.EApplication;
 import se.emilsjolander.sprinkles.Migration;
 import se.emilsjolander.sprinkles.Sprinkles;
 import android.app.Application;
-
 import android.graphics.Bitmap;
-import com.nostra13.universalimageloader.cache.disc.naming.Md5FileNameGenerator;
+
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
-import com.nostra13.universalimageloader.core.assist.QueueProcessingType;
 import com.picdora.ImageManager.OnResultListener;
 import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.models.Category;

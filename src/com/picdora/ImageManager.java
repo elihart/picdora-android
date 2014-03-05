@@ -159,10 +159,15 @@ public abstract class ImageManager {
 						// network or server failure
 						listener.onFailure();
 					}
+
+					@Override
+					public void onFailure(int statusCode, Header[] headers,
+							Throwable throwable, JSONObject errorResponse) {
+						listener.onFailure();
+					}
+
 				});
 	}
-
-	
 
 	/**
 	 * Get a list of image ids as strings for use in telling the server which
@@ -234,8 +239,6 @@ public abstract class ImageManager {
 
 		return success;
 	}
-
-	
 
 	public interface OnResultListener {
 		public void onSuccess();

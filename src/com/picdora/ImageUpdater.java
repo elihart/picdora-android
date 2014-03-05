@@ -13,7 +13,6 @@ import org.json.JSONObject;
 import se.emilsjolander.sprinkles.Sprinkles;
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteStatement;
 
 import com.picdora.ImageManager.OnImageUpdateListener;
 

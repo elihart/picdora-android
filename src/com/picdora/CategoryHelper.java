@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 import se.emilsjolander.sprinkles.Query;
 import se.emilsjolander.sprinkles.Transaction;
@@ -45,7 +46,12 @@ public abstract class CategoryHelper {
 			public void onFailure(int statusCode,
 					org.apache.http.Header[] headers,
 					java.lang.String responseBody, java.lang.Throwable e) {
-				Util.log("Get categories failed");
+				listener.onFailure();
+			}
+
+			@Override
+			public void onFailure(int statusCode, Header[] headers,
+					Throwable throwable, JSONObject errorResponse) {
 				listener.onFailure();
 			}
 		});

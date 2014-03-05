@@ -3,8 +3,12 @@ package com.picdora.channelCreation;
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.ViewById;
+import org.androidannotations.annotations.sharedpreferences.Pref;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
@@ -13,15 +17,20 @@ import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 
 import com.picdora.PicdoraActivity;
+import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
 
 @EActivity(R.layout.activity_channel_creation)
-public class ChannelCreationActivity extends PicdoraActivity {
+public class ChannelCreationActivity extends PicdoraActivity implements
+		OnSharedPreferenceChangeListener {
 	@ViewById
 	ViewPager pager;
+	@Pref
+	PicdoraPreferences_ prefs;
 
 	private PagerAdapter pagerAdapter;
-	private boolean includeNsfw = false;
+	private boolean showNsfw = false;
+	private OnNsfwChangeListener nsfwChangeListener;
 
 	@AfterViews
 	void initViews() {
@@ -57,6 +66,36 @@ public class ChannelCreationActivity extends PicdoraActivity {
 		});
 	}
 
+	@Override
+	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
+			String key) {
+		if (key.equals(prefs.showNsfw().key())) {
+			checkNsfw();
+		}
+	}
+
+	private void checkNsfw() {
+		showNsfw = prefs.showNsfw().get();
+		if(nsfwChangeListener != null){
+			nsfwChangeListener.onNsfwChange(showNsfw);
+		}
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+		.registerOnSharedPreferenceChangeListener(this);
+		checkNsfw();
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+				.unregisterOnSharedPreferenceChangeListener(this);
+	}
+
 	private class ChannelCreationPagerAdapter extends FragmentStatePagerAdapter {
 		public ChannelCreationPagerAdapter(FragmentManager fm) {
 			super(fm);
@@ -68,7 +107,7 @@ public class ChannelCreationActivity extends PicdoraActivity {
 				return new ChannelInfoFragment_();
 			} else {
 				CategorySelectFragment frag = new CategorySelectFragment_();
-				
+
 				return frag;
 			}
 		}
@@ -106,8 +145,20 @@ public class ChannelCreationActivity extends PicdoraActivity {
 	}
 
 	public void onNsfwSettingChanged(boolean showNsfw) {
-		includeNsfw = showNsfw;
+		this.showNsfw = showNsfw;
 		// TODO: update category list
+	}
+	
+	public interface OnNsfwChangeListener {
+		public void onNsfwChange(boolean showNsfw);
+	}
+	
+	public void setOnNsfwChangeListener(OnNsfwChangeListener listener){
+		nsfwChangeListener = listener;
+	}
+
+	public boolean showNsfw() {
+		return showNsfw;
 	}
 
 }

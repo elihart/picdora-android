@@ -7,6 +7,7 @@ import org.androidannotations.annotations.ViewById;
 
 import android.content.Context;
 import android.support.v4.app.Fragment;
+import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -17,12 +18,14 @@ import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.TextView;
 
 import com.picdora.R;
+import com.picdora.channelCreation.ChannelCreationActivity.OnNsfwChangeListener;
 import com.picdora.models.Channel.GifSetting;
 import com.picdora.ui.FontHelper;
 import com.picdora.ui.FontHelper.STYLE;
 
 @EFragment(R.layout.fragment_channel_info)
-public class ChannelInfoFragment extends Fragment {
+public class ChannelInfoFragment extends Fragment implements
+		OnNsfwChangeListener {
 	@ViewById
 	RadioGroup gifSetting;
 	@ViewById
@@ -81,6 +84,10 @@ public class ChannelInfoFragment extends Fragment {
 				activity.onNsfwSettingChanged(nsfw_yes.isChecked());
 			}
 		});
+
+		activity.setOnNsfwChangeListener(this);
+
+		setNsfwOptionVisibility(activity.showNsfw());
 	}
 
 	protected void hideKeyboard() {
@@ -124,5 +131,44 @@ public class ChannelInfoFragment extends Fragment {
 		// TODO: Validate channel name
 		activity.next();
 		hideKeyboard();
+	}
+
+	@Override
+	public void onNsfwChange(boolean showNsfw) {
+		setNsfwOptionVisibility(showNsfw);
+
+	}
+
+	private void setNsfwOptionVisibility(boolean showNsfw) {
+		if (nsfwSetting == null) {
+			return;
+		}
+		
+		setNsfwSelection(showNsfw);
+
+		if (showNsfw) {
+			nsfwLabel.setVisibility(View.VISIBLE);
+			nsfwSetting.setVisibility(View.VISIBLE);
+		} else {
+			nsfwSetting.setVisibility(View.GONE);
+			nsfwLabel.setVisibility(View.GONE);
+		}
+	}
+
+	private void setNsfwSelection(boolean includeNsfw) {
+		if (nsfwSetting == null) {
+			return;
+		}
+		
+		if (includeNsfw) {
+			nsfwSetting.check(nsfw_yes.getId());
+		} else {
+			nsfwSetting.check(nsfw_no.getId());
+		}
+		
+	}
+	
+	public interface OnNsfwSelectionListener{
+		public void onNsfwSelection(boolean includeNsfw);
 	}
 }

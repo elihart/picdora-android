@@ -3,7 +3,7 @@
 
     <CheckBoxPreference
         android:defaultValue="true"
-        android:key="pref_nsfw"
+        android:key="showNsfw"
         android:summary="Show nsfw content"
         android:title="NSFW" />
 
