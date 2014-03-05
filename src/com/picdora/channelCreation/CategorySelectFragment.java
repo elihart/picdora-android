@@ -1,6 +1,7 @@
 package com.picdora.channelCreation;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.androidannotations.annotations.AfterViews;
@@ -8,16 +9,23 @@ import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.ViewById;
 
+import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.GridView;
+import android.widget.RelativeLayout;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.PauseOnScrollListener;
+import com.picdora.CategoryHelper;
 import com.picdora.R;
+import com.picdora.Util;
+import com.picdora.channelCreation.ChannelCreationActivity.NsfwSetting;
+import com.picdora.channelCreation.ChannelCreationActivity.OnFilterCategoriesListener;
 import com.picdora.models.Category;
+import com.picdora.ui.SquareImage;
 
 @EFragment(R.layout.fragment_selection_grid)
 public class CategorySelectFragment extends Fragment {
@@ -26,8 +34,12 @@ public class CategorySelectFragment extends Fragment {
 	@Bean
 	CategoryListAdapter adapter;
 
-	private OnCategoryClickListener listener;
 	private List<Category> selectedCategories;
+	private List<Category> allCategories;
+	private List<Category> nsfwCategories;
+	private List<Category> sfwCategories;
+	private ChannelCreationActivity activity;
+	private NsfwSetting nsfwFilter;
 
 	@AfterViews
 	void initViews() {
@@ -37,7 +49,13 @@ public class CategorySelectFragment extends Fragment {
 		// which images to highlight
 		selectedCategories = new ArrayList<Category>();
 		adapter.setSelectedCategories(selectedCategories);
-		
+
+		setupCategoryLists();
+
+		nsfwFilter = NsfwSetting.NONE;
+
+		adapter.setCategoryList(sfwCategories);
+
 		grid.setAdapter(adapter);
 
 		// tell the image loader to pause on fling scrolling
@@ -47,7 +65,8 @@ public class CategorySelectFragment extends Fragment {
 				ImageLoader.getInstance(), pauseOnScroll, pauseOnFling);
 		grid.setOnScrollListener(listener);
 
-		// setup click listener that selects/deselects image and reports click to listener
+		// setup click listener that selects/deselects image and reports click
+		// to listener
 		grid.setOnItemClickListener(new OnItemClickListener() {
 
 			@Override
@@ -58,23 +77,82 @@ public class CategorySelectFragment extends Fragment {
 		});
 	}
 
-	private void categoryClicked(View v, Category category) {
-		// don't alert the listener of the click until after we have updated the
-		// list
-		if (selectedCategories.contains(category)) {
-			selectedCategories.remove(category);
-			// highlight
-		} else {
-			selectedCategories.add(category);
-		}
+	private void setupCategoryLists() {
+		allCategories = Util.all(Category.class);
+		CategoryHelper.sortCategoryListAlphabetically(allCategories);
+		nsfwCategories = new ArrayList<Category>();
+		sfwCategories = new ArrayList<Category>();
 
-		if (listener != null) {
-			listener.onCategoryClick(category);
+		for (Category c : allCategories) {
+			if (c.getNsfw()) {
+				nsfwCategories.add(c);
+			} else {
+				sfwCategories.add(c);
+			}
 		}
 	}
 
-	public void setOnCategoryClickListener(OnCategoryClickListener listener) {
-		this.listener = listener;
+	@Override
+	public void onActivityCreated(Bundle state) {
+		super.onActivityCreated(state);
+		activity = (ChannelCreationActivity) getActivity();
+
+		activity.setOnFilterCategoriesListener(new OnFilterCategoriesListener() {
+
+			@Override
+			public void onFilterCategories(NsfwSetting setting) {
+				filterCategories(setting);
+			}
+		});
+	}
+
+	private void filterCategories(NsfwSetting setting) {
+		// if the filter hasn't changed then we don't have to update the adapter
+		if (setting == nsfwFilter || adapter == null) {
+			return;
+		}
+
+		nsfwFilter = setting;
+
+		List<Category> newList;
+
+		switch (activity.getCategoryFilter()) {
+		case ALLOWED:
+			newList = allCategories;
+			break;
+		case NONE:
+			newList = sfwCategories;
+			break;
+		case ONLY:
+			newList = nsfwCategories;
+			break;
+		default:
+			newList = sfwCategories;
+		}
+
+		// remove selected categories that aren't in the new list
+		Iterator<Category> it = selectedCategories.iterator();
+		for (; it.hasNext();) {
+			if (!newList.contains(it.next())) {
+				it.remove();
+			}
+		}
+
+		adapter.setCategoryList(newList);
+	}
+
+	private void categoryClicked(View v, Category category) {
+		RelativeLayout root = (RelativeLayout) v;
+		SquareImage img = (SquareImage) root.findViewById(R.id.image);
+
+		// highlight/unhighlight category image and add/remove to the list
+		if (selectedCategories.contains(category)) {
+			selectedCategories.remove(category);
+			Util.setImageHighlight(activity, img, false);
+		} else {
+			selectedCategories.add(category);
+			Util.setImageHighlight(activity, img, true);
+		}
 	}
 
 	public void clearSelectedCategories() {
@@ -82,11 +160,4 @@ public class CategorySelectFragment extends Fragment {
 		adapter.notifyDataSetChanged();
 	}
 
-	public List<Category> getSelectedCategories() {
-		return selectedCategories;
-	}
-
-	public interface OnCategoryClickListener {
-		public void onCategoryClick(Category category);
-	}
 }

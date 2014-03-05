@@ -6,8 +6,11 @@ import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.ViewById;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.View;
+import android.view.View.OnFocusChangeListener;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -18,14 +21,16 @@ import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.TextView;
 
 import com.picdora.R;
-import com.picdora.channelCreation.ChannelCreationActivity.OnNsfwChangeListener;
+import com.picdora.Util;
+import com.picdora.channelCreation.ChannelCreationActivity.NsfwSetting;
+import com.picdora.channelCreation.ChannelCreationActivity.OnNsfwPreferenceChangeListener;
 import com.picdora.models.Channel.GifSetting;
 import com.picdora.ui.FontHelper;
 import com.picdora.ui.FontHelper.STYLE;
 
 @EFragment(R.layout.fragment_channel_info)
 public class ChannelInfoFragment extends Fragment implements
-		OnNsfwChangeListener {
+		OnNsfwPreferenceChangeListener, OnCheckedChangeListener {
 	@ViewById
 	RadioGroup gifSetting;
 	@ViewById
@@ -45,13 +50,16 @@ public class ChannelInfoFragment extends Fragment implements
 	@ViewById
 	RadioButton gif_only;
 	@ViewById
-	RadioButton nsfw_yes;
+	RadioButton nsfw_allowed;
 	@ViewById
-	RadioButton nsfw_no;
+	RadioButton nsfw_none;
+	@ViewById
+	RadioButton nsfw_only;
 	@ViewById
 	Button nextButton;
 
 	private ChannelCreationActivity activity;
+	private ChannelCreationInfo info;
 
 	@AfterViews
 	void initViews() {
@@ -62,32 +70,54 @@ public class ChannelInfoFragment extends Fragment implements
 		FontHelper.setTypeFace(gif_none, STYLE.REGULAR);
 		FontHelper.setTypeFace(gif_allowed, STYLE.REGULAR);
 		FontHelper.setTypeFace(gif_only, STYLE.REGULAR);
-		FontHelper.setTypeFace(nsfw_yes, STYLE.REGULAR);
-		FontHelper.setTypeFace(nsfw_no, STYLE.REGULAR);
+		FontHelper.setTypeFace(nsfw_allowed, STYLE.REGULAR);
+		FontHelper.setTypeFace(nsfw_none, STYLE.REGULAR);
+		FontHelper.setTypeFace(nsfw_only, STYLE.REGULAR);
 		FontHelper.setTypeFace(nextButton, STYLE.MEDIUM);
 
+		channelName.setOnFocusChangeListener(new OnFocusChangeListener() {
+
+			@Override
+			public void onFocusChange(View v, boolean hasFocus) {
+				if (channelName != null) {
+					if(!hasFocus){
+						validateChannelName(channelName.getText().toString());
+						hideKeyboard();
+					}
+				}
+			}
+		});
+
+		nsfwSetting.setOnCheckedChangeListener(this);
+		gifSetting.setOnCheckedChangeListener(this);
+
+		setChannelInfo();
+	}
+
+	private void setChannelInfo() {
+		info = new ChannelCreationInfo(getGifSetting(), getNsfwSetting(),
+				channelName.getText().toString());
+	}
+
+	@Override
+	public void onActivityCreated(Bundle state) {
+		super.onActivityCreated(state);
 		activity = (ChannelCreationActivity) getActivity();
 
-		gifSetting.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-
-			@Override
-			public void onCheckedChanged(RadioGroup group, int checkedId) {
-				hideKeyboard();
-			}
-		});
-
-		gifSetting.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-
-			@Override
-			public void onCheckedChanged(RadioGroup group, int checkedId) {
-				hideKeyboard();
-				activity.onNsfwSettingChanged(nsfw_yes.isChecked());
-			}
-		});
-
 		activity.setOnNsfwChangeListener(this);
+		setNsfwOptionVisibility(activity.getNsfwPreference());
+	}
 
-		setNsfwOptionVisibility(activity.showNsfw());
+	@Override
+	public void onCheckedChanged(RadioGroup group, int checkedId) {	
+		if(!Util.isStringBlank(channelName.getText().toString())){
+			hideKeyboard();
+		}
+
+		if (group.equals(nsfwSetting)) {
+			info.nsfwSetting = getNsfwSetting();
+			activity.setCategoryFilter(info.nsfwSetting);
+		}
 	}
 
 	protected void hideKeyboard() {
@@ -108,6 +138,14 @@ public class ChannelInfoFragment extends Fragment implements
 		channelName.setError(null);
 	}
 
+	private boolean validateChannelName(String name) {
+		if (Util.isStringBlank(name)) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+
 	/**
 	 * Get the gif setting the user has chosen in the gifSetting radio group
 	 * 
@@ -126,15 +164,50 @@ public class ChannelInfoFragment extends Fragment implements
 		}
 	}
 
+	private NsfwSetting getNsfwSetting() {
+		switch (nsfwSetting.getCheckedRadioButtonId()) {
+		case R.id.nsfw_none:
+			return NsfwSetting.NONE;
+		case R.id.nsfw_allowed:
+			return NsfwSetting.ALLOWED;
+		case R.id.nsfw_only:
+			return NsfwSetting.ONLY;
+		default:
+			return NsfwSetting.NONE;
+		}
+	}
+
 	@Click
 	void nextButtonClicked() {
-		// TODO: Validate channel name
-		activity.next();
-		hideKeyboard();
+		// TODO: Validate in background, put a progress bar, disable further
+		// input, then come back here
+		setChannelInfo();
+		if (!validateChannelName(info.channelName)) {
+			channelName.setError("You have to give your channel a name!");
+			return;
+		} else {
+			activity.submitChannelInfo(info);
+			hideKeyboard();
+		}
+	}
+
+	/**
+	 * Disable controls during validation
+	 * @param enable
+	 * @param vg
+	 */
+	private void disableEnableControls(boolean enable, ViewGroup vg) {
+		for (int i = 0; i < vg.getChildCount(); i++) {
+			View child = vg.getChildAt(i);
+			child.setEnabled(enable);
+			if (child instanceof ViewGroup) {
+				disableEnableControls(enable, (ViewGroup) child);
+			}
+		}
 	}
 
 	@Override
-	public void onNsfwChange(boolean showNsfw) {
+	public void onNsfwPreferenceChange(boolean showNsfw) {
 		setNsfwOptionVisibility(showNsfw);
 
 	}
@@ -143,7 +216,7 @@ public class ChannelInfoFragment extends Fragment implements
 		if (nsfwSetting == null) {
 			return;
 		}
-		
+
 		setNsfwSelection(showNsfw);
 
 		if (showNsfw) {
@@ -159,16 +232,15 @@ public class ChannelInfoFragment extends Fragment implements
 		if (nsfwSetting == null) {
 			return;
 		}
-		
+
 		if (includeNsfw) {
-			nsfwSetting.check(nsfw_yes.getId());
+			nsfwSetting.check(nsfw_allowed.getId());
 		} else {
-			nsfwSetting.check(nsfw_no.getId());
+			nsfwSetting.check(nsfw_none.getId());
 		}
-		
 	}
-	
-	public interface OnNsfwSelectionListener{
+
+	public interface OnNsfwSelectionListener {
 		public void onNsfwSelection(boolean includeNsfw);
 	}
 }

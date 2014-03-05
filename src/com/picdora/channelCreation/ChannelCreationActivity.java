@@ -5,15 +5,13 @@ import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.ViewById;
 import org.androidannotations.annotations.sharedpreferences.Pref;
 
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 
 import com.picdora.PicdoraActivity;
@@ -24,13 +22,30 @@ import com.picdora.R;
 public class ChannelCreationActivity extends PicdoraActivity implements
 		OnSharedPreferenceChangeListener {
 	@ViewById
-	ViewPager pager;
+	ChannelCreationViewPager pager;
 	@Pref
 	PicdoraPreferences_ prefs;
 
 	private PagerAdapter pagerAdapter;
-	private boolean showNsfw = false;
-	private OnNsfwChangeListener nsfwChangeListener;
+
+	private OnFilterCategoriesListener categoryFilterListener;
+	private NsfwSetting categoryFilter = NsfwSetting.NONE;
+
+	// Whether the user has opted to show nsfw images in the settings, and a
+	// listener to listen for this setting to change. If nsfw is turned off in
+	// settings then we won't show the nsfw radio group
+	private boolean allowNsfwPreference = false;
+	private OnNsfwPreferenceChangeListener nsfwPreferenceChangeListener;
+
+	// whether nsfw categories should be displayed. Don't include them, include
+	// them and sfw, show only nsfw. If Allow nsfwPreference is false then this
+	// will be NONE
+	public enum NsfwSetting {
+		NONE, ALLOWED, ONLY
+	}
+
+	// keep track of the info reported by the info fragment
+	private ChannelCreationInfo channelInfo;
 
 	@AfterViews
 	void initViews() {
@@ -38,6 +53,11 @@ public class ChannelCreationActivity extends PicdoraActivity implements
 		pagerAdapter = new ChannelCreationPagerAdapter(
 				getSupportFragmentManager());
 		pager.setAdapter(pagerAdapter);
+
+		// disable paging on the first screen, info, so the button has to be
+		// pressed to continue. Enable it on the second screen, choosing
+		// categories, so they can swipe to go back
+		pager.setPagingEnabled(false);
 
 		// listen for fragment page changes
 		pager.setOnPageChangeListener(new OnPageChangeListener() {
@@ -47,20 +67,20 @@ public class ChannelCreationActivity extends PicdoraActivity implements
 				// change title to this category
 				if (position == 0) {
 					setActionBarTitle("New Channel");
+					pager.setPagingEnabled(false);
 				} else {
 					setActionBarTitle("Choose Categories");
+					pager.setPagingEnabled(true);
 				}
 			}
 
 			@Override
 			public void onPageScrolled(int arg0, float arg1, int arg2) {
-				// TODO Auto-generated method stub
 
 			}
 
 			@Override
 			public void onPageScrollStateChanged(int arg0) {
-				// TODO Auto-generated method stub
 
 			}
 		});
@@ -70,14 +90,22 @@ public class ChannelCreationActivity extends PicdoraActivity implements
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
 			String key) {
 		if (key.equals(prefs.showNsfw().key())) {
-			checkNsfw();
+			checkNsfwPreference();
 		}
 	}
 
-	private void checkNsfw() {
-		showNsfw = prefs.showNsfw().get();
-		if(nsfwChangeListener != null){
-			nsfwChangeListener.onNsfwChange(showNsfw);
+	private void checkNsfwPreference() {
+		allowNsfwPreference = prefs.showNsfw().get();
+		if (nsfwPreferenceChangeListener != null) {
+			nsfwPreferenceChangeListener
+					.onNsfwPreferenceChange(allowNsfwPreference);
+		}
+
+		if (!allowNsfwPreference) {
+			categoryFilter = NsfwSetting.NONE;
+			if(categoryFilterListener != null){
+				categoryFilterListener.onFilterCategories(categoryFilter);
+			}
 		}
 	}
 
@@ -85,8 +113,8 @@ public class ChannelCreationActivity extends PicdoraActivity implements
 	protected void onResume() {
 		super.onResume();
 		PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
-		.registerOnSharedPreferenceChangeListener(this);
-		checkNsfw();
+				.registerOnSharedPreferenceChangeListener(this);
+		checkNsfwPreference();
 	}
 
 	@Override
@@ -96,32 +124,23 @@ public class ChannelCreationActivity extends PicdoraActivity implements
 				.unregisterOnSharedPreferenceChangeListener(this);
 	}
 
-	private class ChannelCreationPagerAdapter extends FragmentStatePagerAdapter {
+	private class ChannelCreationPagerAdapter extends FragmentPagerAdapter {
+		Fragment[] frags = { new ChannelInfoFragment_(),
+				new CategorySelectFragment_() };
+
 		public ChannelCreationPagerAdapter(FragmentManager fm) {
 			super(fm);
 		}
 
 		@Override
 		public Fragment getItem(int position) {
-			if (position == 0) {
-				return new ChannelInfoFragment_();
-			} else {
-				CategorySelectFragment frag = new CategorySelectFragment_();
-
-				return frag;
-			}
+			return frags[position];
 		}
 
 		@Override
 		public int getCount() {
-			return 2;
+			return frags.length;
 		}
-	}
-
-	@Override
-	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		// call super so that the fragments get the result
-		super.onActivityResult(requestCode, resultCode, data);
 	}
 
 	@Override
@@ -138,27 +157,51 @@ public class ChannelCreationActivity extends PicdoraActivity implements
 		}
 	}
 
-	public void next() {
-		// TODO: Validate channel name
-
+	public void submitChannelInfo(ChannelCreationInfo info) {
+		channelInfo = info;
+		categoryFilterListener.onFilterCategories(info.nsfwSetting);
 		pager.setCurrentItem(1, true);
 	}
 
 	public void onNsfwSettingChanged(boolean showNsfw) {
-		this.showNsfw = showNsfw;
+		this.allowNsfwPreference = showNsfw;
 		// TODO: update category list
 	}
-	
-	public interface OnNsfwChangeListener {
-		public void onNsfwChange(boolean showNsfw);
-	}
-	
-	public void setOnNsfwChangeListener(OnNsfwChangeListener listener){
-		nsfwChangeListener = listener;
+
+	// Listeners and methods to send nsfw settings info back and forth with the
+	// info fragment
+
+	public interface OnNsfwPreferenceChangeListener {
+		public void onNsfwPreferenceChange(boolean showNsfw);
 	}
 
-	public boolean showNsfw() {
-		return showNsfw;
+	public void setOnNsfwChangeListener(OnNsfwPreferenceChangeListener listener) {
+		nsfwPreferenceChangeListener = listener;
+	}
+
+	public boolean getNsfwPreference() {
+		return allowNsfwPreference;
+	}
+
+	public void setCategoryFilter(NsfwSetting setting) {
+		categoryFilter = setting;
+		if (categoryFilterListener != null) {
+			categoryFilterListener.onFilterCategories(setting);
+		}
+	}
+
+	// set up interface for activity to tell us how to filter categories
+	public interface OnFilterCategoriesListener {
+		public void onFilterCategories(NsfwSetting setting);
+	}
+
+	public void setOnFilterCategoriesListener(
+			OnFilterCategoriesListener listener) {
+		categoryFilterListener = listener;
+	}
+
+	public NsfwSetting getCategoryFilter() {
+		return categoryFilter;
 	}
 
 }

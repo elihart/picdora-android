@@ -13,7 +13,8 @@
      <color name="drawerBackground">#f2f2f2</color>
      <color name="drawerDivider">#a8a8a8</color>
      <color name="drawerText">#000000</color>
-     <color name="channel_grid_item_text_background">#60000000</color>
+     <color name="channel_grid_item_tint">#60000000</color>
+     <color name="channel_grid_item_tint_selected">#600000ff</color>
      <color name="channel_grid_item_text_color">#ffffff</color>
      
 </resources>

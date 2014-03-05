@@ -89,45 +89,53 @@ public class Util {
 
 	public static <T extends Model> List<T> all(Class<T> clazz) {
 		List<T> models = new ArrayList<T>();
-		String query = "SELECT * FROM " + clazz.getAnnotation(Table.class).value();
+		String query = "SELECT * FROM "
+				+ clazz.getAnnotation(Table.class).value();
 		CursorList<T> list = Query.many(clazz, query, null).get();
 		models.addAll(list.asList());
 		list.close();
 
 		return models;
 	}
-	
-	public static String capitalize(String str) {		
-        if (str == null || str.length() == 0) {
-            return str;
-        }
-        
-        str = str.toLowerCase();
-        
-        int strLen = str.length();
-        StringBuffer buffer = new StringBuffer(strLen);
 
-        boolean capitalizeNext = true;
-        for (int i = 0; i < strLen; i++) {
-            char ch = str.charAt(i);
+	public static String capitalize(String str) {
+		if (str == null || str.length() == 0) {
+			return str;
+		}
 
-            boolean isDelimiter = Character.isWhitespace(ch);
+		str = str.toLowerCase();
 
-            if (isDelimiter) {
-                buffer.append(ch);
-                capitalizeNext = true;
-            } else if (capitalizeNext) {
-                buffer.append(Character.toTitleCase(ch));
-                capitalizeNext = false;
-            } else {
-                buffer.append(ch);
-            }
-        }
-        return buffer.toString();
-    }
+		int strLen = str.length();
+		StringBuffer buffer = new StringBuffer(strLen);
 
-	public static void setImageHighlight(ImageView image, boolean highlight) {
-		// TODO Auto-generated method stub
-		
+		boolean capitalizeNext = true;
+		for (int i = 0; i < strLen; i++) {
+			char ch = str.charAt(i);
+
+			boolean isDelimiter = Character.isWhitespace(ch);
+
+			if (isDelimiter) {
+				buffer.append(ch);
+				capitalizeNext = true;
+			} else if (capitalizeNext) {
+				buffer.append(Character.toTitleCase(ch));
+				capitalizeNext = false;
+			} else {
+				buffer.append(ch);
+			}
+		}
+		return buffer.toString();
+	}
+
+	public static void setImageHighlight(Context context, ImageView image,
+			boolean highlight) {
+		if (highlight) {
+			image.setColorFilter(context.getResources().getColor(
+					R.color.channel_grid_item_tint_selected));
+		} else {
+			image.setColorFilter(context.getResources().getColor(
+					R.color.channel_grid_item_tint));
+		}
+
 	}
 }

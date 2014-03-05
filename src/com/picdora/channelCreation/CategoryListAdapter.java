@@ -1,5 +1,6 @@
 package com.picdora.channelCreation;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.androidannotations.annotations.AfterInject;
@@ -24,12 +25,12 @@ public class CategoryListAdapter extends BaseAdapter {
 
 	@AfterInject
 	void initAdapter() {
-		refreshCategories();
+		selectedCategories = new ArrayList<Category>();
+		categories = new ArrayList<Category>();
 	}
 	
-	public void refreshCategories(){
-		// TODO: Check nsfw preference
-		categories = Util.all(Category.class);
+	public void setCategoryList(List<Category> categories){
+		this.categories = categories;
 		notifyDataSetChanged();
 	}
 	

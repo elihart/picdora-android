@@ -10,7 +10,7 @@
         android:background="@color/transparent"
         android:scaleType="centerCrop"
         android:src="@drawable/channel_selection_item_loading_background"
-        android:tint="@color/channel_grid_item_text_background"/>
+        android:tint="@color/channel_grid_item_tint"/>
 
     <TextView
         android:id="@+id/text"

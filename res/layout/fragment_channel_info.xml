@@ -31,7 +31,10 @@
             android:ems="10"
             android:hint="My New Channel"
             android:imeOptions="actionDone"
-            android:singleLine="true" />
+            android:singleLine="true" >
+
+            <requestFocus />
+        </EditText>
 
         <RelativeLayout
             android:id="@+id/radioGroups"
@@ -75,7 +78,7 @@
                     android:id="@+id/gif_only"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Exclusively!" />
+                    android:text="Exclusively" />
             </RadioGroup>
 
             <TextView
@@ -95,20 +98,26 @@
                 android:layout_alignParentLeft="true"
                 android:layout_below="@+id/nsfwLabel"
                 android:layout_marginLeft="20dp"
-                android:checkedButton="@+id/nsfw_no"
+                android:checkedButton="@+id/nsfw_none"
                 android:orientation="horizontal" >
 
                 <RadioButton
-                    android:id="@+id/nsfw_yes"
+                    android:id="@+id/nsfw_none"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="No" />
+
+                <RadioButton
+                    android:id="@+id/nsfw_allowed"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Yes" />
 
                 <RadioButton
-                    android:id="@+id/nsfw_no"
+                    android:id="@+id/nsfw_only"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="No" />
+                    android:text="Exclusively" />
             </RadioGroup>
         </RelativeLayout>
 

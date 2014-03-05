@@ -33,7 +33,7 @@ public class CategoryItemView extends RelativeLayout{
 		this.text.setText(text);
 		FontHelper.setTypeFace(this.text, STYLE.MEDIUM);
 		
-		Util.setImageHighlight(image, highlight);
+		Util.setImageHighlight(getContext(), image, highlight);
 
 		tryLoadUrl(url);
     }	

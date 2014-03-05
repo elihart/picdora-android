@@ -1,10 +1,10 @@
 package com.picdora;
 
 import java.util.Collections;
-import org.apache.http.Header;
 import java.util.Comparator;
 import java.util.List;
 
+import org.apache.http.Header;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -72,6 +72,21 @@ public abstract class CategoryHelper {
 			t.setSuccessful(false);
 		} finally {
 			t.finish();
+		}
+	}
+	
+	public static void sortCategoryListAlphabetically(List<Category> categories){
+		Collections.sort(categories, new CategoryAlphabeticalComparator());
+	}
+	
+    /**
+	 * Basic comparator to sort friends list alphabetically by username
+	 * 
+	 */
+	private static class CategoryAlphabeticalComparator implements Comparator<Category> {
+		public int compare(Category left, Category right) {
+			return left.getName().toLowerCase()
+					.compareTo(right.getName().toLowerCase());
 		}
 	}
 
