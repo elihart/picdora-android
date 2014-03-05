@@ -14,8 +14,10 @@ import android.support.v4.app.Fragment;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.Button;
 import android.widget.GridView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.PauseOnScrollListener;
@@ -25,14 +27,22 @@ import com.picdora.Util;
 import com.picdora.channelCreation.ChannelCreationActivity.NsfwSetting;
 import com.picdora.channelCreation.ChannelCreationActivity.OnFilterCategoriesListener;
 import com.picdora.models.Category;
+import com.picdora.ui.FontHelper;
+import com.picdora.ui.FontHelper.STYLE;
 import com.picdora.ui.SquareImage;
 
-@EFragment(R.layout.fragment_selection_grid)
+@EFragment(R.layout.fragment_category_selection)
 public class CategorySelectFragment extends Fragment {
 	@ViewById
 	GridView grid;
 	@Bean
 	CategoryListAdapter adapter;
+	@ViewById
+	Button previewButton;
+	@ViewById
+	Button createButton;
+	@ViewById
+	TextView numImages;
 
 	private List<Category> selectedCategories;
 	private List<Category> allCategories;
@@ -75,6 +85,11 @@ public class CategorySelectFragment extends Fragment {
 				categoryClicked(view, adapter.getItem(pos));
 			}
 		});
+		
+		// set fonts
+		FontHelper.setTypeFace(previewButton, STYLE.MEDIUM);
+		FontHelper.setTypeFace(createButton, STYLE.MEDIUM);
+		FontHelper.setTypeFace(numImages, STYLE.REGULAR);
 	}
 
 	private void setupCategoryLists() {

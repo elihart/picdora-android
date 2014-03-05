@@ -19,7 +19,7 @@ import com.nostra13.universalimageloader.core.assist.PauseOnScrollListener;
 import com.picdora.R;
 import com.picdora.models.Channel;
 
-@EFragment(R.layout.fragment_selection_grid)
+@EFragment(R.layout.fragment_channel_selection)
 public class ChannelGridFragment extends Fragment {
 	@ViewById
 	GridView grid;

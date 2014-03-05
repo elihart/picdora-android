@@ -7,6 +7,8 @@
      <color name="white">#ffffff</color>
      <color name="buttonLightBlue">#1cb0f6</color>
      <color name="buttonDarkBlue">#0c82b9</color>
+     <color name="buttonDarkOrange">#8B4C03</color>
+     <color name="buttonLightOrange">#FF9111</color>
      <color name="action_bar_background">#f2f2f2</color>
      <color name="actionBarText">#4c4c4c</color>
      <color name="activityBackground">#ffffff</color>

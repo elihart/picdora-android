@@ -127,7 +127,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/radioGroups"
             android:layout_margin="20dp"
-            android:background="@drawable/next_button"
+            android:background="@drawable/blue_button_rounded"
             android:gravity="center"
             android:padding="10dp"
             android:text="Choose Categories"
