@@ -1,12 +1,9 @@
 package com.picdora.channelCreation;
 
 import org.androidannotations.annotations.AfterViews;
-import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EActivity;
-import org.androidannotations.annotations.RootContext;
 import org.androidannotations.annotations.ViewById;
 
-import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -24,11 +21,13 @@ public class ChannelCreationActivity extends PicdoraActivity {
 	ViewPager pager;
 
 	private PagerAdapter pagerAdapter;
-	
+	private boolean includeNsfw = false;
+
 	@AfterViews
 	void initViews() {
 
-		pagerAdapter = new ChannelCreationPagerAdapter(getSupportFragmentManager());
+		pagerAdapter = new ChannelCreationPagerAdapter(
+				getSupportFragmentManager());
 		pager.setAdapter(pagerAdapter);
 
 		// listen for fragment page changes
@@ -68,7 +67,9 @@ public class ChannelCreationActivity extends PicdoraActivity {
 			if (position == 0) {
 				return new ChannelInfoFragment_();
 			} else {
-				return new CategorySelectFragment_();
+				CategorySelectFragment frag = new CategorySelectFragment_();
+				
+				return frag;
 			}
 		}
 
@@ -98,31 +99,15 @@ public class ChannelCreationActivity extends PicdoraActivity {
 		}
 	}
 
-	@Click
-	void createButtonClicked() {
-		// GifSetting gif = getGifSetting();
-		//
-		// String name = channelName.getText().toString();
-		//
-		// List<Category> categories =
-		// categoryListAdapter.getSelectedCategories();
-		//
-		// if (categories.isEmpty()) {
-		// Util.makeBasicToast(this, "You must select at least one category!");
-		// return;
-		// } else if (Util.isStringBlank(name)) {
-		// channelName.setError("You have to give this channel a name!");
-		// return;
-		// }
-		//
-		// Channel channel = new Channel(name, categories, gif);
-		// boolean success = channel.save();
-		// Util.log("Create channel success? " + success);
-		//
-		// if (success) {
-		// ChannelHelper.playChannel(channel, this);
-		// finish();
-		// }
+	public void next() {
+		// TODO: Validate channel name
+
+		pager.setCurrentItem(1, true);
+	}
+
+	public void onNsfwSettingChanged(boolean showNsfw) {
+		includeNsfw = showNsfw;
+		// TODO: update category list
 	}
 
 }

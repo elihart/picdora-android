@@ -1,68 +1,122 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" >
+    android:layout_height="wrap_content" >
 
-    <TextView
-        android:id="@+id/nameLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:layout_marginLeft="10dp"
-        android:layout_marginTop="10dp"
-        android:text="Channel Name"
-        android:textSize="20sp" />
-
-    <EditText
-        android:id="@+id/channelName"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/nameLabel"
-        android:layout_marginLeft="20dp"
-        android:ems="10"
-        android:hint="My New Channel"
-        android:imeOptions="actionDone"
-        android:singleLine="true" />
-
-    <TextView
-        android:id="@+id/gifLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/channelName"
-        android:layout_margin="10dp"
-        android:text="Show Gifs?"
-        android:textSize="20sp" />
-
-    <RadioGroup
-        android:id="@+id/gifSetting"
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/gifLabel"
-        android:layout_marginLeft="20dp"
-        android:checkedButton="@+id/gif_allowed"
-        android:orientation="horizontal" >
+        android:background="@color/white"
+        android:paddingBottom="10dp" >
 
-        <RadioButton
-            android:id="@+id/gif_none"
+        <TextView
+            android:id="@+id/nameLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="No" />
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="10dp"
+            android:text="Channel Name"
+            android:textSize="20sp" />
 
-        <RadioButton
-            android:id="@+id/gif_allowed"
+        <EditText
+            android:id="@+id/channelName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_below="@+id/nameLabel"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:ems="10"
+            android:hint="My New Channel"
+            android:imeOptions="actionDone"
+            android:singleLine="true" />
+
+        <TextView
+            android:id="@+id/gifLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Yes" />
+            android:layout_alignParentLeft="true"
+            android:layout_below="@+id/channelName"
+            android:layout_margin="10dp"
+            android:text="Show Gifs?"
+            android:textSize="20sp" />
 
-        <RadioButton
-            android:id="@+id/gif_only"
+        <RadioGroup
+            android:id="@+id/gifSetting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_below="@+id/gifLabel"
+            android:layout_marginLeft="20dp"
+            android:checkedButton="@+id/gif_allowed"
+            android:orientation="horizontal" >
+
+            <RadioButton
+                android:id="@+id/gif_none"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="No" />
+
+            <RadioButton
+                android:id="@+id/gif_allowed"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Yes" />
+
+            <RadioButton
+                android:id="@+id/gif_only"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Exclusively!" />
+        </RadioGroup>
+
+        <TextView
+            android:id="@+id/nsfwLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Exclusively!" />
-    </RadioGroup>
+            android:layout_alignParentLeft="true"
+            android:layout_below="@+id/gifSetting"
+            android:layout_margin="10dp"
+            android:text="Show NSFW?"
+            android:textSize="20sp" />
 
-</RelativeLayout>
+        <RadioGroup
+            android:id="@+id/nsfwSetting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_below="@+id/nsfwLabel"
+            android:layout_marginLeft="20dp"
+            android:checkedButton="@+id/nsfw_no"
+            android:orientation="horizontal" >
+
+            <RadioButton
+                android:id="@+id/nsfw_yes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Yes" />
+
+            <RadioButton
+                android:id="@+id/nsfw_no"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="No" />
+        </RadioGroup>
+
+        <Button
+            android:id="@+id/nextButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/nsfwSetting"
+            android:background="@drawable/next_button"
+            android:layout_margin="20dp"
+            android:padding="10dp"
+            android:gravity="center"
+            android:textSize="20sp"
+            android:textColor="@color/white"
+            android:text="Choose Categories" />
+    </RelativeLayout>
+
+</ScrollView>

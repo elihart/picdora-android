@@ -5,7 +5,6 @@ import android.graphics.Typeface;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.util.SparseArray;
-import android.widget.Button;
 import android.widget.TextView;
 
 /**
@@ -93,16 +92,6 @@ public class FontHelper {
 			text.setTypeface(getTypeface(style));
 			return true;
 		} catch (Exception e) {
-			return false;
-		}
-	}
-
-	public static boolean setTypeFace(Button button, STYLE style) {
-		try {
-			button.setTypeface(getTypeface(style));
-			return true;
-		} catch (Exception e) {
-			e.printStackTrace();
 			return false;
 		}
 	}
