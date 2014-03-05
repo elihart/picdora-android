@@ -1,19 +1,19 @@
-package com.picdora.channelSelection;
+package com.picdora.ui;
 
 import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.ImageView;
 
-public class ChannelGridImage extends ImageView {
-	public ChannelGridImage(Context context) {
+public class SquareImage extends ImageView {
+	public SquareImage(Context context) {
 		super(context);
 	}
 
-	public ChannelGridImage(Context context, AttributeSet attrs) {
+	public SquareImage(Context context, AttributeSet attrs) {
 		super(context, attrs);
 	}
 
-	public ChannelGridImage(Context context, AttributeSet attrs, int defStyle) {
+	public SquareImage(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
 	}
 

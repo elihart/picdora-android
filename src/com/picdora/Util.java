@@ -9,6 +9,7 @@ import se.emilsjolander.sprinkles.Model;
 import se.emilsjolander.sprinkles.Query;
 import se.emilsjolander.sprinkles.annotations.Table;
 import android.content.Context;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
@@ -124,4 +125,9 @@ public class Util {
         }
         return buffer.toString();
     }
+
+	public static void setImageHighlight(ImageView image, boolean highlight) {
+		// TODO Auto-generated method stub
+		
+	}
 }

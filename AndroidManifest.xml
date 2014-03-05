@@ -33,7 +33,7 @@
             android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" >
         </activity>
         <activity
-            android:name="com.picdora.ChannelCreationActivity_"
+            android:name="com.picdora.channelCreation.ChannelCreationActivity_"
             android:label="@string/title_activity_channel_creation"
             android:parentActivityName="com.picdora.ChannelSelectionActivity_" >
             <meta-data

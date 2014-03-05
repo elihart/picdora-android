@@ -19,10 +19,10 @@ import com.nostra13.universalimageloader.core.assist.PauseOnScrollListener;
 import com.picdora.R;
 import com.picdora.models.Channel;
 
-@EFragment(R.layout.fragment_channel_grid)
+@EFragment(R.layout.fragment_selection_grid)
 public class ChannelGridFragment extends Fragment {
 	@ViewById
-	GridView channelList;
+	GridView grid;
 
 	@Bean
 	ChannelListAdapter adapter;
@@ -34,15 +34,15 @@ public class ChannelGridFragment extends Fragment {
 	@AfterViews
 	void initViews() {
 		// TODO: Load list in background and show loading icon
-		channelList.setAdapter(adapter);
+		grid.setAdapter(adapter);
 
 		boolean pauseOnScroll = false;
 		boolean pauseOnFling = true;
 		PauseOnScrollListener listener = new PauseOnScrollListener(
 				ImageLoader.getInstance(), pauseOnScroll, pauseOnFling);
-		channelList.setOnScrollListener(listener);
+		grid.setOnScrollListener(listener);
 
-		channelList.setOnItemClickListener(new OnItemClickListener() {
+		grid.setOnItemClickListener(new OnItemClickListener() {
 
 			@Override
 			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,

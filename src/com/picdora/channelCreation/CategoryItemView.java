@@ -1,4 +1,4 @@
-package com.picdora.channelSelection;
+package com.picdora.channelCreation;
 
 import org.androidannotations.annotations.EViewGroup;
 import org.androidannotations.annotations.ViewById;
@@ -15,29 +15,29 @@ import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.assist.ImageLoadingListener;
 import com.picdora.R;
 import com.picdora.Util;
-import com.picdora.models.Channel;
 import com.picdora.ui.FontHelper;
 import com.picdora.ui.FontHelper.STYLE;
 
 @EViewGroup(R.layout.grid_item_image_and_text)
-public class ChannelItemView extends RelativeLayout {
+public class CategoryItemView extends RelativeLayout{
 	@ViewById
 	TextView text;
 	@ViewById
 	ImageView image;
-
-	public ChannelItemView(Context context) {
+	
+	public CategoryItemView(Context context) {
 		super(context);
 	}
+	
+	public void bind(String text, String url, boolean highlight) {
+		this.text.setText(text);
+		FontHelper.setTypeFace(this.text, STYLE.MEDIUM);
+		
+		Util.setImageHighlight(image, highlight);
 
-	public void bind(Channel channel) {
-		text.setText(channel.getName());
-		FontHelper.setTypeFace(text, STYLE.MEDIUM);
-
-		tryLoadUrl(channel.getPreviewUrl());
-
-	}
-
+		tryLoadUrl(url);
+    }	
+	
 	private int numAttempts = 0;
 	private static final int MAX_ATTEMPTS = 3;
 
@@ -79,5 +79,6 @@ public class ChannelItemView extends RelativeLayout {
 			}
 		}
 	}
+
 
 }

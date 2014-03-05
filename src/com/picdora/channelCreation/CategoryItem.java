@@ -1,4 +1,4 @@
-package com.picdora;
+package com.picdora.channelCreation;
 
 import com.picdora.models.Category;
 

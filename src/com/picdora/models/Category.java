@@ -23,6 +23,10 @@ public class Category extends Model {
 
 	@Column("porn")
 	private boolean mPorn;
+	
+	// TODO: Add this field to the db and update on channel creation, and
+		// favoriting
+		private String mPreviewImage = "Z9kkH2r";
 
 	public Category(int id, String name, boolean porn, boolean nsfw) {
 		super();
@@ -103,5 +107,9 @@ public class Category extends Model {
     public int hashCode() {
         return mId;
     }
+
+    public String getPreviewUrl() {
+		return "http://i.imgur.com/" + mPreviewImage + "b.jpg";
+	}
 
 }

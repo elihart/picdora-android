@@ -38,6 +38,7 @@ public class PicdoraApp extends Application {
 		runMigrations();
 
 		syncDb();
+		// TODO: Sync uses lots of memory and can interfere with image loading on small heaps
 	}
 
 	private void initUniversalImageLoader() {

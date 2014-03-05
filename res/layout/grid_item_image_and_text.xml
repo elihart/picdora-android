@@ -3,8 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-    <com.picdora.channelSelection.ChannelGridImage
-        android:id="@+id/channelImage"
+    <com.picdora.ui.SquareImage
+        android:id="@+id/image"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/transparent"
@@ -13,7 +13,7 @@
         android:tint="@color/channel_grid_item_text_background"/>
 
     <TextView
-        android:id="@+id/channelName"
+        android:id="@+id/text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"

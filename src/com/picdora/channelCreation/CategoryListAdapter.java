@@ -1,6 +1,5 @@
-package com.picdora;
+package com.picdora.channelCreation;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.androidannotations.annotations.AfterInject;
@@ -12,23 +11,30 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
+import com.picdora.Util;
 import com.picdora.models.Category;
 
 @EBean
 public class CategoryListAdapter extends BaseAdapter {
-	List<CategoryItem> categoryItems;
+	List<Category> categories;
+	private List<Category> selectedCategories;
 
 	@RootContext
 	Context context;
 
 	@AfterInject
 	void initAdapter() {
-		categoryItems = new ArrayList<CategoryItem>();
-		List<Category> categories = Util.all(Category.class);
-		CategoryHelper.sortByName(categories);
-		for(Category cat : categories){
-			categoryItems.add(new CategoryItem(cat, false));
-		}
+		refreshCategories();
+	}
+	
+	public void refreshCategories(){
+		// TODO: Check nsfw preference
+		categories = Util.all(Category.class);
+		notifyDataSetChanged();
+	}
+	
+	public void setSelectedCategories(List<Category> categories){
+		selectedCategories = categories;
 	}
 
 	@Override
@@ -41,35 +47,30 @@ public class CategoryListAdapter extends BaseAdapter {
 			categoryView = (CategoryItemView) convertView;
 		}
 
-		categoryView.bind(getItem(position));
+		Category c = getItem(position);
+		
+		boolean highlight = false;
+		if(selectedCategories != null){
+			highlight = selectedCategories.contains(c); 
+		}
+		
+		categoryView.bind(c.getName(), c.getPreviewUrl(), highlight);
 
 		return categoryView;
 	}
 
 	@Override
 	public int getCount() {
-		return categoryItems.size();
+		return categories.size();
 	}
 
 	@Override
-	public CategoryItem getItem(int position) {
-		return categoryItems.get(position);
+	public Category getItem(int position) {
+		return categories.get(position);
 	}
 
 	@Override
 	public long getItemId(int position) {
-		return getItem(position).category.getId();
+		return getItem(position).getId();
 	}
-
-	public List<Category> getSelectedCategories() {
-		List<Category> selectedCategories = new ArrayList<Category>();
-		for(CategoryItem item : categoryItems){
-			if(item.selected){
-				selectedCategories.add(item.category);
-			}
-		}
-		
-		return selectedCategories;
-	}
-
 }

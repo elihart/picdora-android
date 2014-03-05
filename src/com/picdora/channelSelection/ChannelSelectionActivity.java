@@ -8,11 +8,11 @@ import android.content.Intent;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.picdora.ChannelCreationActivity_;
 import com.picdora.ChannelHelper;
 import com.picdora.PicdoraActivity;
 import com.picdora.R;
 import com.picdora.Util;
+import com.picdora.channelCreation.ChannelCreationActivity_;
 import com.picdora.channelSelection.ChannelGridFragment.OnChannelClickListener;
 import com.picdora.models.Channel;
 import com.picdora.ui.SlidingMenuHelper;

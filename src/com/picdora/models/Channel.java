@@ -3,12 +3,10 @@ package com.picdora.models;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import se.emilsjolander.sprinkles.Model;
 import se.emilsjolander.sprinkles.annotations.AutoIncrementPrimaryKey;
 import se.emilsjolander.sprinkles.annotations.Column;
-import se.emilsjolander.sprinkles.annotations.PrimaryKey;
 import se.emilsjolander.sprinkles.annotations.Table;
 
 import com.google.gson.Gson;
