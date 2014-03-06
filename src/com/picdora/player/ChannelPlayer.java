@@ -1,8 +1,6 @@
 package com.picdora.player;
 
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.Vector;
 
 import org.androidannotations.annotations.Background;
@@ -13,7 +11,6 @@ import se.emilsjolander.sprinkles.CursorList;
 import se.emilsjolander.sprinkles.Query;
 
 import com.picdora.ChannelHelper;
-import com.picdora.Util;
 import com.picdora.models.Channel;
 import com.picdora.models.Image;
 
@@ -22,6 +19,9 @@ public class ChannelPlayer {
 	// keep track of the last channel so we don't have to reload it
 	// TODO: Also remember position
 	protected static ChannelPlayer lastChannelPlayer;
+
+	// TODO: On channels with low image counts there is lag as it tries to fetch
+	// more images (that we don't have). Maybe get the image count on launch
 
 	private Channel mChannel;
 	// use a thread safe list for adding images in the background
@@ -141,7 +141,7 @@ public class ChannelPlayer {
 			query += " AND gif=1";
 			break;
 		}
-		
+
 		// TODO: Add nsfw setting
 
 		// set ordering and add limit
@@ -157,7 +157,8 @@ public class ChannelPlayer {
 			// instead, or keep a list of unviewed images
 			image.markView();
 			// don't add a duplicate image
-			// TODO: Better way to manage duplicates in the db before we retrieve them
+			// TODO: Better way to manage duplicates in the db before we
+			// retrieve them
 			if (!mImages.contains(image)) {
 				mImages.add(image);
 				resultCount++;
@@ -191,6 +192,16 @@ public class ChannelPlayer {
 		// set listener to null so any background threads that end won't do
 		// their callbacks
 		mListener = null;
+	}
+
+	public static void clearCachedPlayer() {
+		if (lastChannelPlayer != null) {
+			lastChannelPlayer.mChannel = null;
+			lastChannelPlayer.mImages = null;
+			lastChannelPlayer.mListener = null;
+		}
+
+		lastChannelPlayer = null;
 	}
 
 }

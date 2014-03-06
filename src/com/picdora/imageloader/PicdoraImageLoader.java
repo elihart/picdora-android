@@ -35,6 +35,9 @@ public class PicdoraImageLoader {
 	// when they exceed that. Or maybe we can download to file and then retrieve
 	// the file
 
+	// TODO: I think I saw a case where an image had two download spots. The
+	// progress percent kept changing back and forth
+
 	// maximum images to download at once
 	private static final int MAX_DOWNLOADS = 3;
 	// the number of times to attempt a method that might fail due to an out of

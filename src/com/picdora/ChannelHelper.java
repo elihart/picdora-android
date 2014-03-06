@@ -11,6 +11,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteDoneException;
 import android.database.sqlite.SQLiteStatement;
 import android.text.TextUtils;
 
@@ -77,6 +78,24 @@ public class ChannelHelper {
 		}
 
 		return ("(" + TextUtils.join(",", ids) + ")");
+	}
+
+	/**
+	 * Check if a channel name is in use, case insensitive
+	 * @param name
+	 * @return
+	 */
+	public static boolean isNameTaken(String name) {
+		SQLiteDatabase db = Sprinkles.getDatabase();
+		String query = "SELECT count(*) FROM Channels WHERE name = '" + name + "'  COLLATE NOCASE";
+
+		SQLiteStatement s = db.compileStatement(query);
+
+		try {
+			return s.simpleQueryForLong() > 0;
+		} catch (SQLiteDoneException e) {
+			return false;
+		}
 	}
 
 }

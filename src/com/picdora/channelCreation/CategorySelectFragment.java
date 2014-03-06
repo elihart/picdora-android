@@ -13,12 +13,12 @@ import org.androidannotations.annotations.ViewById;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
 import android.widget.GridView;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.PauseOnScrollListener;
@@ -27,13 +27,15 @@ import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.channelCreation.ChannelCreationActivity.NsfwSetting;
 import com.picdora.channelCreation.ChannelCreationActivity.OnFilterCategoriesListener;
+import com.picdora.channelCreation.ChannelCreationActivity.OnLoadingListener;
 import com.picdora.models.Category;
 import com.picdora.ui.FontHelper;
 import com.picdora.ui.FontHelper.STYLE;
 import com.picdora.ui.SquareImage;
 
 @EFragment(R.layout.fragment_category_selection)
-public class CategorySelectFragment extends Fragment {
+public class CategorySelectFragment extends Fragment implements
+		OnLoadingListener {
 	@ViewById
 	GridView grid;
 	@Bean
@@ -44,6 +46,8 @@ public class CategorySelectFragment extends Fragment {
 	Button createButton;
 	@ViewById
 	Button clearButton;
+	@ViewById
+	RelativeLayout rootView;
 
 	private List<Category> selectedCategories;
 	private List<Category> allCategories;
@@ -56,16 +60,22 @@ public class CategorySelectFragment extends Fragment {
 	void initViews() {
 		// TODO: Load list in background and show loading icon
 
+		// check if there is state to restore
+		List<Category> selectedState = ChannelCreationActivity
+				.getSelectedCategoriesState();
+		if (selectedState != null) {
+			selectedCategories = new ArrayList<Category>(selectedState);
+		} else {
+			selectedCategories = new ArrayList<Category>();
+		}
+
 		// share the selected categories with the adapter so the adapter knows
 		// which images to highlight
-		selectedCategories = new ArrayList<Category>();
 		adapter.setSelectedCategories(selectedCategories);
 
 		setupCategoryLists();
-
-		nsfwFilter = NsfwSetting.NONE;
-
-		adapter.setCategoryList(sfwCategories);
+		
+		filterCategories(ChannelCreationActivity.getNsfwFilter());
 
 		grid.setAdapter(adapter);
 
@@ -86,13 +96,11 @@ public class CategorySelectFragment extends Fragment {
 				categoryClicked(view, adapter.getItem(pos));
 			}
 		});
-		
+
 		// set fonts
 		FontHelper.setTypeFace(previewButton, STYLE.MEDIUM);
 		FontHelper.setTypeFace(createButton, STYLE.MEDIUM);
 		FontHelper.setTypeFace(clearButton, STYLE.MEDIUM);
-		
-		setCreateButtonEnabled(false);
 	}
 
 	private void setupCategoryLists() {
@@ -122,6 +130,42 @@ public class CategorySelectFragment extends Fragment {
 				filterCategories(setting);
 			}
 		});
+
+		activity.registerLoadingListener(this);
+
+	}
+
+	private boolean loading;
+
+	@Override
+	public void onLoading(boolean loading) {
+		if (loading == this.loading) {
+			return;
+		} else {
+			this.loading = loading;
+		}
+
+		if (loading) {
+			disableEnableControls(false, rootView);
+		} else {
+			disableEnableControls(true, rootView);
+		}
+	}
+
+	/**
+	 * Disable controls during validation
+	 * 
+	 * @param enable
+	 * @param vg
+	 */
+	private void disableEnableControls(boolean enable, ViewGroup vg) {
+		for (int i = 0; i < vg.getChildCount(); i++) {
+			View child = vg.getChildAt(i);
+			child.setEnabled(enable);
+			if (child instanceof ViewGroup) {
+				disableEnableControls(enable, (ViewGroup) child);
+			}
+		}
 	}
 
 	private void filterCategories(NsfwSetting setting) {
@@ -134,7 +178,7 @@ public class CategorySelectFragment extends Fragment {
 
 		List<Category> newList;
 
-		switch (activity.getCategoryFilter()) {
+		switch (nsfwFilter) {
 		case ALLOWED:
 			newList = allCategories;
 			break;
@@ -157,6 +201,8 @@ public class CategorySelectFragment extends Fragment {
 		}
 
 		adapter.setCategoryList(newList);
+		
+		setCreateButtonEnabled(!selectedCategories.isEmpty());
 	}
 
 	private void categoryClicked(View v, Category category) {
@@ -171,7 +217,7 @@ public class CategorySelectFragment extends Fragment {
 			selectedCategories.add(category);
 			Util.setImageHighlight(activity, img, true);
 		}
-		
+
 		setCreateButtonEnabled(!selectedCategories.isEmpty());
 	}
 
@@ -180,25 +226,25 @@ public class CategorySelectFragment extends Fragment {
 		adapter.notifyDataSetChanged();
 		setCreateButtonEnabled(false);
 	}
-	
-	private void setCreateButtonEnabled(boolean enabled){
+
+	private void setCreateButtonEnabled(boolean enabled) {
 		createButton.setEnabled(enabled);
 		previewButton.setEnabled(enabled);
 		clearButton.setEnabled(enabled);
 	}
-	
+
 	@Click
-	void clearButtonClicked(){
+	void clearButtonClicked() {
 		clearSelectedCategories();
 	}
-	
+
 	@Click
-	void previewButtonClicked(){
+	void previewButtonClicked() {
 		activity.setChannelCategories(selectedCategories, true);
 	}
-	
+
 	@Click
-	void createButtonClicked(){
+	void createButtonClicked() {
 		activity.setChannelCategories(selectedCategories, false);
 	}
 

@@ -22,6 +22,7 @@ import android.widget.RadioGroup;
 import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.TextView;
 
+import com.picdora.ChannelHelper;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.channelCreation.ChannelCreationActivity.NsfwSetting;
@@ -129,7 +130,7 @@ public class ChannelInfoFragment extends Fragment implements
 		activity = (ChannelCreationActivity) getActivity();
 
 		activity.setOnNsfwChangeListener(this);
-		setNsfwOptionVisibility(activity.getNsfwPreference());
+		onNsfwPreferenceChange(activity.getNsfwPreference());
 		
 		channelName.requestFocus();
 	}
@@ -139,11 +140,8 @@ public class ChannelInfoFragment extends Fragment implements
 		if(!Util.isStringBlank(channelName.getText().toString())){
 			hideKeyboard();
 		}
-
-		if (group.equals(nsfwSetting)) {
-			info.nsfwSetting = getNsfwSetting();
-			activity.setCategoryFilter(info.nsfwSetting);
-		}
+		
+		setChannelInfo();
 	}
 
 	protected void hideKeyboard() {
@@ -166,6 +164,10 @@ public class ChannelInfoFragment extends Fragment implements
 
 	private boolean validateChannelName(String name) {
 		if (Util.isStringBlank(name)) {
+			channelName.setError("You have to give your channel a name!");
+			return false;
+		} else if(ChannelHelper.isNameTaken(name)){
+			channelName.setError("You've already used that name!");
 			return false;
 		} else {
 			return true;
@@ -209,9 +211,9 @@ public class ChannelInfoFragment extends Fragment implements
 		// input, then come back here
 		setChannelInfo();
 		if (!validateChannelName(info.channelName)) {
-			channelName.setError("You have to give your channel a name!");
 			return;
 		} else {
+			
 			activity.submitChannelInfo(info);
 			hideKeyboard();
 		}
@@ -234,16 +236,10 @@ public class ChannelInfoFragment extends Fragment implements
 
 	@Override
 	public void onNsfwPreferenceChange(boolean showNsfw) {
-		setNsfwOptionVisibility(showNsfw);
-
-	}
-
-	private void setNsfwOptionVisibility(boolean showNsfw) {
 		if (nsfwSetting == null) {
 			return;
 		}
 
-		setNsfwSelection(showNsfw);
 
 		if (showNsfw) {
 			nsfwLabel.setVisibility(View.VISIBLE);
@@ -251,19 +247,10 @@ public class ChannelInfoFragment extends Fragment implements
 		} else {
 			nsfwSetting.setVisibility(View.GONE);
 			nsfwLabel.setVisibility(View.GONE);
-		}
-	}
-
-	private void setNsfwSelection(boolean includeNsfw) {
-		if (nsfwSetting == null) {
-			return;
-		}
-
-		if (includeNsfw) {
-			nsfwSetting.check(nsfw_allowed.getId());
-		} else {
+			// set no nsfw categories to be shown
 			nsfwSetting.check(nsfw_none.getId());
 		}
+
 	}
 
 	public interface OnNsfwSelectionListener {

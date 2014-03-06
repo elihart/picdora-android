@@ -1,14 +1,23 @@
 package com.picdora.channelCreation;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EActivity;
+import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
 import org.androidannotations.annotations.sharedpreferences.Pref;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnCancelListener;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -16,6 +25,7 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 import com.picdora.ChannelHelper;
 import com.picdora.PicdoraActivity;
@@ -23,6 +33,7 @@ import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
 import com.picdora.models.Category;
 import com.picdora.models.Channel;
+import com.picdora.player.ChannelPlayer;
 
 @EActivity(R.layout.activity_channel_creation)
 public class ChannelCreationActivity extends PicdoraActivity implements
@@ -36,8 +47,17 @@ public class ChannelCreationActivity extends PicdoraActivity implements
 
 	private int mCurrentPage;
 
+	// store the selected categories so we can restore them after coming back
+	// from Preview if the activity was destroyed
+	private static List<Category> selectedCategoriesState;
+	// keep track of the info reported by the info fragment and make it static
+	// so we can save state
+	private static ChannelCreationInfo channelInfoState;
+
+	// Loading dialog to show while channel is created
+	private Dialog busyDialog;
+
 	private OnFilterCategoriesListener categoryFilterListener;
-	private NsfwSetting categoryFilter = NsfwSetting.NONE;
 
 	// Whether the user has opted to show nsfw images in the settings, and a
 	// listener to listen for this setting to change. If nsfw is turned off in
@@ -52,8 +72,31 @@ public class ChannelCreationActivity extends PicdoraActivity implements
 		NONE, ALLOWED, ONLY
 	}
 
-	// keep track of the info reported by the info fragment
-	private ChannelCreationInfo channelInfo;
+	// keep track of when we are loading the created channel so we don't allow
+	// duplicates
+	private boolean loadingChannel = false;
+
+	@Override
+	public void onCreate(Bundle state) {
+		super.onCreate(state);
+
+		if (state == null) {
+			clearSavedState();
+		}
+	}
+
+	private void clearSavedState() {
+		selectedCategoriesState = null;
+		channelInfoState = null;
+	}
+
+	private void saveState(ChannelCreationInfo info) {
+		channelInfoState = info;
+	}
+
+	private void saveState(List<Category> categories) {
+		selectedCategoriesState = categories;
+	}
 
 	@AfterViews
 	void initViews() {
@@ -72,13 +115,12 @@ public class ChannelCreationActivity extends PicdoraActivity implements
 
 			@Override
 			public void onPageSelected(int position) {
+				setLoadingStatus(false);
 				mCurrentPage = position;
 				// change title to this category
 				if (position == 0) {
-					setActionBarTitle("New Channel");
 					pager.setPagingEnabled(false);
 				} else {
-					setActionBarTitle("Choose Categories");
 					pager.setPagingEnabled(true);
 				}
 			}
@@ -111,17 +153,10 @@ public class ChannelCreationActivity extends PicdoraActivity implements
 			nsfwPreferenceChangeListener
 					.onNsfwPreferenceChange(allowNsfwPreference);
 		}
-
-		if (!allowNsfwPreference) {
-			categoryFilter = NsfwSetting.NONE;
-			if (categoryFilterListener != null) {
-				categoryFilterListener.onFilterCategories(categoryFilter);
-			}
-		}
 	}
 
 	@Override
-	protected void onResume() {
+	protected void onStart() {
 		super.onResume();
 		PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
 				.registerOnSharedPreferenceChangeListener(this);
@@ -129,7 +164,7 @@ public class ChannelCreationActivity extends PicdoraActivity implements
 	}
 
 	@Override
-	protected void onPause() {
+	protected void onStop() {
 		super.onPause();
 		PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
 				.unregisterOnSharedPreferenceChangeListener(this);
@@ -156,11 +191,13 @@ public class ChannelCreationActivity extends PicdoraActivity implements
 
 	@Override
 	public void onBackPressed() {
-		if (pager.getCurrentItem() == 0) {
-			// If the user is currently looking at the first step, allow the
-			// system to handle the
-			// Back button. This calls finish() on this activity and pops the
-			// back stack.
+		// cancel loading
+		if (loadingChannel) {
+			setLoadingStatus(false);
+		} else if (pager.getCurrentItem() == 0) {
+			// clear state since we're leaving the activity
+			clearSavedState();
+			// leave the activity if we're on the first page
 			super.onBackPressed();
 		} else {
 			// Otherwise, select the previous step.
@@ -169,14 +206,16 @@ public class ChannelCreationActivity extends PicdoraActivity implements
 	}
 
 	public void submitChannelInfo(ChannelCreationInfo info) {
-		channelInfo = info;
+		saveState(info);
+
+		// if the settings preference is no NSFW then let's override this, just
+		// in case...
+		if (!allowNsfwPreference) {
+			channelInfoState.nsfwSetting = NsfwSetting.NONE;
+		}
+
 		categoryFilterListener.onFilterCategories(info.nsfwSetting);
 		pager.setCurrentItem(1, true);
-	}
-
-	public void onNsfwSettingChanged(boolean showNsfw) {
-		this.allowNsfwPreference = showNsfw;
-		// TODO: update category list
 	}
 
 	// Listeners and methods to send nsfw settings info back and forth with the
@@ -194,13 +233,6 @@ public class ChannelCreationActivity extends PicdoraActivity implements
 		return allowNsfwPreference;
 	}
 
-	public void setCategoryFilter(NsfwSetting setting) {
-		categoryFilter = setting;
-		if (categoryFilterListener != null) {
-			categoryFilterListener.onFilterCategories(setting);
-		}
-	}
-
 	// set up interface for activity to tell us how to filter categories
 	public interface OnFilterCategoriesListener {
 		public void onFilterCategories(NsfwSetting setting);
@@ -211,54 +243,197 @@ public class ChannelCreationActivity extends PicdoraActivity implements
 		categoryFilterListener = listener;
 	}
 
-	public NsfwSetting getCategoryFilter() {
-		return categoryFilter;
-	}
-
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case android.R.id.home:
+			// cancel loading
+			setLoadingStatus(false);
+
 			// if we're on the second page, return to the first page on up
 			// pressed. Otherwise let it do the default (return to parent)
 			if (mCurrentPage == 1) {
 				pager.setCurrentItem(0, true);
 				return true;
+			} else {
+				// clear state since we're leaving the activity
+				clearSavedState();
 			}
 		}
 
 		return super.onOptionsItemSelected(item);
 	}
-	
-	public void setChannelCategories(List<Category> categories, boolean preview){
-		if(categories == null){
+
+	@Background
+	public void setChannelCategories(List<Category> categories, boolean preview) {
+		// if we're already loading, don't load again
+		if (loadingChannel) {
 			return;
-		}else if(categories.isEmpty()){
-			// TODO: Dialog error
-			return;
-		} 
-		
-		Channel channel = new Channel(channelInfo.channelName, categories, channelInfo.gifSetting);
-		
-		
-		// TODO: Do this in background
-		long count = ChannelHelper.getImageCount(channel, false);
-		if(count < 100){
-			// TODO: Show warning
-		}	
-		
-		launchChannel(channel, preview);
-	}
-	
-	private void launchChannel(Channel channel, boolean preview){
-		ChannelHelper.playChannel(channel, this);
-		
-		if(preview){
-			// TODO: Save activity state
 		} else {
-			channel.save();
-			finish();
-		}		
+			setLoadingStatus(true);
+		}
+
+		if (categories == null || categories.isEmpty()) {
+			setLoadingStatus(false);
+			return;
+		} else {
+			saveState(categories);
+		}
+
+		// the player might have the same name as the cached player if the user
+		// if previewing several. We don't want the old one!
+		ChannelPlayer.clearCachedPlayer();
+
+		Channel channel = new Channel(channelInfoState.channelName, categories,
+				channelInfoState.gifSetting);
+
+		long count = ChannelHelper.getImageCount(channel, false);
+		if (count == 0) {
+			showNoImagesDialog();
+		} else if (count < 100) {
+			showLowImageCountDialog(count, channel, preview);
+		} else {
+			// TODO: Maybe a confirmation dialog with settings reviewed
+			launchChannel(channel, preview);
+		}
 	}
 
+	public static List<Category> getSelectedCategoriesState() {
+		return selectedCategoriesState;
+	}
+
+	@UiThread
+	protected void showNoImagesDialog() {
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setMessage(
+				"The categories and settings you chose don't match any images! Try changing the gif setting or choosing more categories.")
+				.setTitle("Warning!")
+				.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int id) {
+						setLoadingStatus(false);
+					}
+				});
+
+		builder.create().show();
+
+	}
+
+	@UiThread
+	protected void showLowImageCountDialog(long count, final Channel channel,
+			final boolean preview) {
+		String positive = "";
+		if (preview) {
+			positive = "Preview anyway";
+		} else {
+			positive = "Create anyway";
+		}
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setMessage(
+				"The categories and settings you chose only match " + count
+						+ " images!")
+				.setTitle("Warning!")
+				.setPositiveButton(positive,
+						new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog, int id) {
+								launchChannel(channel, preview);
+							}
+						})
+				.setNegativeButton("Change settings",
+						new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog, int id) {
+								setLoadingStatus(false);
+							}
+						});
+
+		builder.create().show();
+	}
+
+	@UiThread
+	protected void launchChannel(Channel channel, boolean preview) {
+		// if the loading was canceled then don't keep going
+		if (!loadingChannel) {
+			return;
+		}
+
+		ChannelHelper.playChannel(channel, this);
+
+		if (!preview) {
+			clearSavedState();
+			channel.save();
+			finish();
+		}
+
+		setLoadingStatus(false);
+		
+	}
+
+	public interface OnLoadingListener {
+		public void onLoading(boolean loading);
+	}
+
+	private Set<OnLoadingListener> loadingListeners = new HashSet<OnLoadingListener>();
+
+	public void registerLoadingListener(OnLoadingListener listener) {
+		loadingListeners.add(listener);
+	}
+
+	public void unregisterLoadingListener(OnLoadingListener listener) {
+		loadingListeners.remove(listener);
+	}
+
+	@UiThread
+	protected void setLoadingStatus(boolean loading) {
+		loadingChannel = loading;
+		// pager.setPagingEnabled(!loading);
+
+		if (loading) {
+			// show loading screen
+			showBusyDialog("Creating Channel...");
+		} else {
+			dismissBusyDialog();
+		}
+
+		for (OnLoadingListener l : loadingListeners) {
+			l.onLoading(loading);
+		}
+	}
+
+	public void showBusyDialog(String message) {
+		busyDialog = new Dialog(this, R.style.lightbox_dialog);
+		busyDialog.setContentView(R.layout.lightbox_dialog);
+		((TextView) busyDialog.findViewById(R.id.dialogText)).setText(message);
+
+		// if the user presses back while the loading dialog is up we want to
+		// cancel the whole activity and go back. Otherwise just the dialog will
+		// be canceled and they'll be left with a blank screen
+		busyDialog.setOnCancelListener(new OnCancelListener() {
+
+			@Override
+			public void onCancel(DialogInterface dialog) {
+				dialog.dismiss();
+				finish();
+			}
+		});
+
+		busyDialog.show();
+	}
+
+	public void dismissBusyDialog() {
+		if (busyDialog != null)
+			try {
+				busyDialog.dismiss();
+			} catch (IllegalArgumentException e) {
+				// catch the "View not attached to Window Manager" errors
+			}
+
+		busyDialog = null;
+	}
+
+	public static NsfwSetting getNsfwFilter() {
+		if(channelInfoState == null){
+			return NsfwSetting.NONE;
+		} else {
+			return channelInfoState.nsfwSetting;
+		}
+	}
 }
