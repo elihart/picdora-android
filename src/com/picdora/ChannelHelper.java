@@ -37,7 +37,7 @@ public class ChannelHelper {
 	 * @param unseen
 	 *            Whether or not to just count images where view count is 0
 	 */
-	public static long getLocalImageCount(Channel channel, boolean unseen) {
+	public static long getImageCount(Channel channel, boolean unseen) {
 		SQLiteDatabase db = Sprinkles.getDatabase();
 		String query = "SELECT count(*) FROM Images WHERE categoryId IN "
 				+ ChannelHelper.getCategoryIdsString(channel);

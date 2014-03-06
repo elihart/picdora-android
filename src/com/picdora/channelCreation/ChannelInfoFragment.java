@@ -130,6 +130,8 @@ public class ChannelInfoFragment extends Fragment implements
 
 		activity.setOnNsfwChangeListener(this);
 		setNsfwOptionVisibility(activity.getNsfwPreference());
+		
+		channelName.requestFocus();
 	}
 
 	@Override

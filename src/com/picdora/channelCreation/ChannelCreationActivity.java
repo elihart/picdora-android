@@ -1,5 +1,7 @@
 package com.picdora.channelCreation;
 
+import java.util.List;
+
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.ViewById;
@@ -13,10 +15,14 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
+import android.view.MenuItem;
 
+import com.picdora.ChannelHelper;
 import com.picdora.PicdoraActivity;
 import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
+import com.picdora.models.Category;
+import com.picdora.models.Channel;
 
 @EActivity(R.layout.activity_channel_creation)
 public class ChannelCreationActivity extends PicdoraActivity implements
@@ -27,6 +33,8 @@ public class ChannelCreationActivity extends PicdoraActivity implements
 	PicdoraPreferences_ prefs;
 
 	private PagerAdapter pagerAdapter;
+
+	private int mCurrentPage;
 
 	private OnFilterCategoriesListener categoryFilterListener;
 	private NsfwSetting categoryFilter = NsfwSetting.NONE;
@@ -64,6 +72,7 @@ public class ChannelCreationActivity extends PicdoraActivity implements
 
 			@Override
 			public void onPageSelected(int position) {
+				mCurrentPage = position;
 				// change title to this category
 				if (position == 0) {
 					setActionBarTitle("New Channel");
@@ -84,6 +93,8 @@ public class ChannelCreationActivity extends PicdoraActivity implements
 
 			}
 		});
+
+		mCurrentPage = 0;
 	}
 
 	@Override
@@ -103,7 +114,7 @@ public class ChannelCreationActivity extends PicdoraActivity implements
 
 		if (!allowNsfwPreference) {
 			categoryFilter = NsfwSetting.NONE;
-			if(categoryFilterListener != null){
+			if (categoryFilterListener != null) {
 				categoryFilterListener.onFilterCategories(categoryFilter);
 			}
 		}
@@ -202,6 +213,52 @@ public class ChannelCreationActivity extends PicdoraActivity implements
 
 	public NsfwSetting getCategoryFilter() {
 		return categoryFilter;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case android.R.id.home:
+			// if we're on the second page, return to the first page on up
+			// pressed. Otherwise let it do the default (return to parent)
+			if (mCurrentPage == 1) {
+				pager.setCurrentItem(0, true);
+				return true;
+			}
+		}
+
+		return super.onOptionsItemSelected(item);
+	}
+	
+	public void setChannelCategories(List<Category> categories, boolean preview){
+		if(categories == null){
+			return;
+		}else if(categories.isEmpty()){
+			// TODO: Dialog error
+			return;
+		} 
+		
+		Channel channel = new Channel(channelInfo.channelName, categories, channelInfo.gifSetting);
+		
+		
+		// TODO: Do this in background
+		long count = ChannelHelper.getImageCount(channel, false);
+		if(count < 100){
+			// TODO: Show warning
+		}	
+		
+		launchChannel(channel, preview);
+	}
+	
+	private void launchChannel(Channel channel, boolean preview){
+		ChannelHelper.playChannel(channel, this);
+		
+		if(preview){
+			// TODO: Save activity state
+		} else {
+			channel.save();
+			finish();
+		}		
 	}
 
 }

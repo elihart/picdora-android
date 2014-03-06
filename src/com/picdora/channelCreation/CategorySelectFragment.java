@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Bean;
+import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.ViewById;
 
@@ -42,7 +43,7 @@ public class CategorySelectFragment extends Fragment {
 	@ViewById
 	Button createButton;
 	@ViewById
-	TextView numImages;
+	Button clearButton;
 
 	private List<Category> selectedCategories;
 	private List<Category> allCategories;
@@ -89,7 +90,9 @@ public class CategorySelectFragment extends Fragment {
 		// set fonts
 		FontHelper.setTypeFace(previewButton, STYLE.MEDIUM);
 		FontHelper.setTypeFace(createButton, STYLE.MEDIUM);
-		FontHelper.setTypeFace(numImages, STYLE.REGULAR);
+		FontHelper.setTypeFace(clearButton, STYLE.MEDIUM);
+		
+		setCreateButtonEnabled(false);
 	}
 
 	private void setupCategoryLists() {
@@ -168,11 +171,35 @@ public class CategorySelectFragment extends Fragment {
 			selectedCategories.add(category);
 			Util.setImageHighlight(activity, img, true);
 		}
+		
+		setCreateButtonEnabled(!selectedCategories.isEmpty());
 	}
 
-	public void clearSelectedCategories() {
+	private void clearSelectedCategories() {
 		selectedCategories.clear();
 		adapter.notifyDataSetChanged();
+		setCreateButtonEnabled(false);
+	}
+	
+	private void setCreateButtonEnabled(boolean enabled){
+		createButton.setEnabled(enabled);
+		previewButton.setEnabled(enabled);
+		clearButton.setEnabled(enabled);
+	}
+	
+	@Click
+	void clearButtonClicked(){
+		clearSelectedCategories();
+	}
+	
+	@Click
+	void previewButtonClicked(){
+		activity.setChannelCategories(selectedCategories, true);
+	}
+	
+	@Click
+	void createButtonClicked(){
+		activity.setChannelCategories(selectedCategories, false);
 	}
 
 }
