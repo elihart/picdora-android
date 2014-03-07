@@ -13,7 +13,6 @@ import org.androidannotations.annotations.ViewById;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
@@ -27,15 +26,21 @@ import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.channelCreation.ChannelCreationActivity.NsfwSetting;
 import com.picdora.channelCreation.ChannelCreationActivity.OnFilterCategoriesListener;
-import com.picdora.channelCreation.ChannelCreationActivity.OnLoadingListener;
 import com.picdora.models.Category;
 import com.picdora.ui.FontHelper;
 import com.picdora.ui.FontHelper.STYLE;
 import com.picdora.ui.SquareImage;
 
+/**
+ * This fragment allows the user to select categories to use in the channel.
+ * They are filtered depending on the nsfw setting chosen in the info fragment.
+ * The user can choose to either preview or create the channel. Both launch the
+ * new channel, however, create will save it to the db and finish the Create
+ * Activity, whereas preview will return here
+ * 
+ */
 @EFragment(R.layout.fragment_category_selection)
-public class CategorySelectFragment extends Fragment implements
-		OnLoadingListener {
+public class CategorySelectFragment extends Fragment {
 	@ViewById
 	GridView grid;
 	@Bean
@@ -46,8 +51,6 @@ public class CategorySelectFragment extends Fragment implements
 	Button createButton;
 	@ViewById
 	Button clearButton;
-	@ViewById
-	RelativeLayout rootView;
 
 	private List<Category> selectedCategories;
 	private List<Category> allCategories;
@@ -74,7 +77,7 @@ public class CategorySelectFragment extends Fragment implements
 		adapter.setSelectedCategories(selectedCategories);
 
 		setupCategoryLists();
-		
+
 		filterCategories(ChannelCreationActivity.getNsfwFilter());
 
 		grid.setAdapter(adapter);
@@ -130,42 +133,6 @@ public class CategorySelectFragment extends Fragment implements
 				filterCategories(setting);
 			}
 		});
-
-		activity.registerLoadingListener(this);
-
-	}
-
-	private boolean loading;
-
-	@Override
-	public void onLoading(boolean loading) {
-		if (loading == this.loading) {
-			return;
-		} else {
-			this.loading = loading;
-		}
-
-		if (loading) {
-			disableEnableControls(false, rootView);
-		} else {
-			disableEnableControls(true, rootView);
-		}
-	}
-
-	/**
-	 * Disable controls during validation
-	 * 
-	 * @param enable
-	 * @param vg
-	 */
-	private void disableEnableControls(boolean enable, ViewGroup vg) {
-		for (int i = 0; i < vg.getChildCount(); i++) {
-			View child = vg.getChildAt(i);
-			child.setEnabled(enable);
-			if (child instanceof ViewGroup) {
-				disableEnableControls(enable, (ViewGroup) child);
-			}
-		}
 	}
 
 	private void filterCategories(NsfwSetting setting) {
@@ -201,7 +168,7 @@ public class CategorySelectFragment extends Fragment implements
 		}
 
 		adapter.setCategoryList(newList);
-		
+
 		setCreateButtonEnabled(!selectedCategories.isEmpty());
 	}
 
@@ -221,12 +188,6 @@ public class CategorySelectFragment extends Fragment implements
 		setCreateButtonEnabled(!selectedCategories.isEmpty());
 	}
 
-	private void clearSelectedCategories() {
-		selectedCategories.clear();
-		adapter.notifyDataSetChanged();
-		setCreateButtonEnabled(false);
-	}
-
 	private void setCreateButtonEnabled(boolean enabled) {
 		createButton.setEnabled(enabled);
 		previewButton.setEnabled(enabled);
@@ -235,17 +196,18 @@ public class CategorySelectFragment extends Fragment implements
 
 	@Click
 	void clearButtonClicked() {
-		clearSelectedCategories();
+		selectedCategories.clear();
+		adapter.notifyDataSetChanged();
+		setCreateButtonEnabled(false);
 	}
 
 	@Click
 	void previewButtonClicked() {
-		activity.setChannelCategories(selectedCategories, true);
+		activity.submitChannelCategories(selectedCategories, true);
 	}
 
 	@Click
 	void createButtonClicked() {
-		activity.setChannelCategories(selectedCategories, false);
+		activity.submitChannelCategories(selectedCategories, false);
 	}
-
 }

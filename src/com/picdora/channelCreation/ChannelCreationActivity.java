@@ -1,8 +1,6 @@
 package com.picdora.channelCreation;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Background;
@@ -15,10 +13,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -31,13 +26,22 @@ import com.picdora.ChannelHelper;
 import com.picdora.PicdoraActivity;
 import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
+import com.picdora.Util;
 import com.picdora.models.Category;
 import com.picdora.models.Channel;
 import com.picdora.player.ChannelPlayer;
 
+/**
+ * This activity guides the user through creating a new channel. It consists of
+ * a viewpager with two fragments. The first collections info about the channel
+ * - name, gif setting, and nsfw setting. The second allows the user to choose
+ * which categories to include
+ * 
+ * 
+ */
+
 @EActivity(R.layout.activity_channel_creation)
-public class ChannelCreationActivity extends PicdoraActivity implements
-		OnSharedPreferenceChangeListener {
+public class ChannelCreationActivity extends PicdoraActivity{
 	@ViewById
 	ChannelCreationViewPager pager;
 	@Pref
@@ -62,8 +66,7 @@ public class ChannelCreationActivity extends PicdoraActivity implements
 	// Whether the user has opted to show nsfw images in the settings, and a
 	// listener to listen for this setting to change. If nsfw is turned off in
 	// settings then we won't show the nsfw radio group
-	private boolean allowNsfwPreference = false;
-	private OnNsfwPreferenceChangeListener nsfwPreferenceChangeListener;
+	private boolean allowNsfwPreference;
 
 	// whether nsfw categories should be displayed. Don't include them, include
 	// them and sfw, show only nsfw. If Allow nsfwPreference is false then this
@@ -100,6 +103,7 @@ public class ChannelCreationActivity extends PicdoraActivity implements
 
 	@AfterViews
 	void initViews() {
+		allowNsfwPreference = prefs.showNsfw().get();
 
 		pagerAdapter = new ChannelCreationPagerAdapter(
 				getSupportFragmentManager());
@@ -137,37 +141,6 @@ public class ChannelCreationActivity extends PicdoraActivity implements
 		});
 
 		mCurrentPage = 0;
-	}
-
-	@Override
-	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
-			String key) {
-		if (key.equals(prefs.showNsfw().key())) {
-			checkNsfwPreference();
-		}
-	}
-
-	private void checkNsfwPreference() {
-		allowNsfwPreference = prefs.showNsfw().get();
-		if (nsfwPreferenceChangeListener != null) {
-			nsfwPreferenceChangeListener
-					.onNsfwPreferenceChange(allowNsfwPreference);
-		}
-	}
-
-	@Override
-	protected void onStart() {
-		super.onResume();
-		PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
-				.registerOnSharedPreferenceChangeListener(this);
-		checkNsfwPreference();
-	}
-
-	@Override
-	protected void onStop() {
-		super.onPause();
-		PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
-				.unregisterOnSharedPreferenceChangeListener(this);
 	}
 
 	private class ChannelCreationPagerAdapter extends FragmentPagerAdapter {
@@ -218,17 +191,6 @@ public class ChannelCreationActivity extends PicdoraActivity implements
 		pager.setCurrentItem(1, true);
 	}
 
-	// Listeners and methods to send nsfw settings info back and forth with the
-	// info fragment
-
-	public interface OnNsfwPreferenceChangeListener {
-		public void onNsfwPreferenceChange(boolean showNsfw);
-	}
-
-	public void setOnNsfwChangeListener(OnNsfwPreferenceChangeListener listener) {
-		nsfwPreferenceChangeListener = listener;
-	}
-
 	public boolean getNsfwPreference() {
 		return allowNsfwPreference;
 	}
@@ -265,7 +227,7 @@ public class ChannelCreationActivity extends PicdoraActivity implements
 	}
 
 	@Background
-	public void setChannelCategories(List<Category> categories, boolean preview) {
+	public void submitChannelCategories(List<Category> categories, boolean preview) {
 		// if we're already loading, don't load again
 		if (loadingChannel) {
 			return;
@@ -315,7 +277,6 @@ public class ChannelCreationActivity extends PicdoraActivity implements
 				});
 
 		builder.create().show();
-
 	}
 
 	@UiThread
@@ -364,21 +325,7 @@ public class ChannelCreationActivity extends PicdoraActivity implements
 		}
 
 		setLoadingStatus(false);
-		
-	}
 
-	public interface OnLoadingListener {
-		public void onLoading(boolean loading);
-	}
-
-	private Set<OnLoadingListener> loadingListeners = new HashSet<OnLoadingListener>();
-
-	public void registerLoadingListener(OnLoadingListener listener) {
-		loadingListeners.add(listener);
-	}
-
-	public void unregisterLoadingListener(OnLoadingListener listener) {
-		loadingListeners.remove(listener);
 	}
 
 	@UiThread
@@ -391,10 +338,6 @@ public class ChannelCreationActivity extends PicdoraActivity implements
 			showBusyDialog("Creating Channel...");
 		} else {
 			dismissBusyDialog();
-		}
-
-		for (OnLoadingListener l : loadingListeners) {
-			l.onLoading(loading);
 		}
 	}
 
@@ -430,7 +373,7 @@ public class ChannelCreationActivity extends PicdoraActivity implements
 	}
 
 	public static NsfwSetting getNsfwFilter() {
-		if(channelInfoState == null){
+		if (channelInfoState == null) {
 			return NsfwSetting.NONE;
 		} else {
 			return channelInfoState.nsfwSetting;

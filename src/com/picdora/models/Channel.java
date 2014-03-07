@@ -26,6 +26,7 @@ public class Channel extends Model {
 	@Column("name")
 	private String mName;
 
+	// TODO: Why is this a string?
 	@Column("nsfw")
 	private String mNsfw;
 
@@ -124,6 +125,15 @@ public class Channel extends Model {
 
 	public String getPreviewUrl() {
 		return "http://i.imgur.com/" + mPreviewImage + "b.jpg";
+	}
+	
+	@Override
+	public String toString(){
+		String result = mName + " gif: " + mGifSetting + " Categories: ";
+		for(Category c : getCategories()){
+			result += c.getName() + " ";
+		}
+		return result;
 	}
 
 }

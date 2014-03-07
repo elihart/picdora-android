@@ -1,6 +1,7 @@
 package com.picdora.channelCreation;
 
 import org.androidannotations.annotations.AfterViews;
+
 import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.ViewById;
@@ -26,14 +27,20 @@ import com.picdora.ChannelHelper;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.channelCreation.ChannelCreationActivity.NsfwSetting;
-import com.picdora.channelCreation.ChannelCreationActivity.OnNsfwPreferenceChangeListener;
 import com.picdora.models.Channel.GifSetting;
 import com.picdora.ui.FontHelper;
 import com.picdora.ui.FontHelper.STYLE;
 
+/**
+ * This fragment allows the user to enter a channel name, a gif setting, and a
+ * nsfw setting. On creation the fragment checks with the activity to see if the
+ * user has NSFW enabled, and if not it hides the nsfw setting and sets it to
+ * none.
+ * 
+ */
 @EFragment(R.layout.fragment_channel_info)
 public class ChannelInfoFragment extends Fragment implements
-		OnNsfwPreferenceChangeListener, OnCheckedChangeListener {
+		OnCheckedChangeListener {
 	@ViewById
 	RadioGroup gifSetting;
 	@ViewById
@@ -83,33 +90,34 @@ public class ChannelInfoFragment extends Fragment implements
 			@Override
 			public void onFocusChange(View v, boolean hasFocus) {
 				if (channelName != null) {
-					if(!hasFocus){
+					if (!hasFocus) {
 						validateChannelName(channelName.getText().toString());
 						hideKeyboard();
 					}
 				}
 			}
 		});
-		
+
 		channelName.addTextChangedListener(new TextWatcher() {
-			
+
 			@Override
-			public void onTextChanged(CharSequence s, int start, int before, int count) {
+			public void onTextChanged(CharSequence s, int start, int before,
+					int count) {
 				channelName.setError(null);
-				
+
 			}
-			
+
 			@Override
 			public void beforeTextChanged(CharSequence s, int start, int count,
 					int after) {
 				// TODO Auto-generated method stub
-				
+
 			}
-			
+
 			@Override
 			public void afterTextChanged(Editable s) {
 				// TODO Auto-generated method stub
-				
+
 			}
 		});
 
@@ -127,20 +135,19 @@ public class ChannelInfoFragment extends Fragment implements
 	@Override
 	public void onActivityCreated(Bundle state) {
 		super.onActivityCreated(state);
-		activity = (ChannelCreationActivity) getActivity();
 
-		activity.setOnNsfwChangeListener(this);
-		onNsfwPreferenceChange(activity.getNsfwPreference());
-		
+		activity = (ChannelCreationActivity) getActivity();
+		setNsfwGroupVisibility(activity.getNsfwPreference());
+
 		channelName.requestFocus();
 	}
 
 	@Override
-	public void onCheckedChanged(RadioGroup group, int checkedId) {	
-		if(!Util.isStringBlank(channelName.getText().toString())){
+	public void onCheckedChanged(RadioGroup group, int checkedId) {
+		if (!Util.isStringBlank(channelName.getText().toString())) {
 			hideKeyboard();
 		}
-		
+
 		setChannelInfo();
 	}
 
@@ -166,7 +173,7 @@ public class ChannelInfoFragment extends Fragment implements
 		if (Util.isStringBlank(name)) {
 			channelName.setError("You have to give your channel a name!");
 			return false;
-		} else if(ChannelHelper.isNameTaken(name)){
+		} else if (ChannelHelper.isNameTaken(name)) {
 			channelName.setError("You've already used that name!");
 			return false;
 		} else {
@@ -213,7 +220,7 @@ public class ChannelInfoFragment extends Fragment implements
 		if (!validateChannelName(info.channelName)) {
 			return;
 		} else {
-			
+
 			activity.submitChannelInfo(info);
 			hideKeyboard();
 		}
@@ -221,6 +228,7 @@ public class ChannelInfoFragment extends Fragment implements
 
 	/**
 	 * Disable controls during validation
+	 * 
 	 * @param enable
 	 * @param vg
 	 */
@@ -234,14 +242,12 @@ public class ChannelInfoFragment extends Fragment implements
 		}
 	}
 
-	@Override
-	public void onNsfwPreferenceChange(boolean showNsfw) {
+	private void setNsfwGroupVisibility(boolean visible) {
 		if (nsfwSetting == null) {
 			return;
 		}
 
-
-		if (showNsfw) {
+		if (visible) {
 			nsfwLabel.setVisibility(View.VISIBLE);
 			nsfwSetting.setVisibility(View.VISIBLE);
 		} else {
@@ -250,10 +256,5 @@ public class ChannelInfoFragment extends Fragment implements
 			// set no nsfw categories to be shown
 			nsfwSetting.check(nsfw_none.getId());
 		}
-
-	}
-
-	public interface OnNsfwSelectionListener {
-		public void onNsfwSelection(boolean includeNsfw);
 	}
 }
