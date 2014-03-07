@@ -13,6 +13,8 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
 import com.picdora.models.Channel;
+import com.picdora.ui.PicdoraGridItem;
+import com.picdora.ui.PicdoraGridItem_;
 
 @EBean
 public class ChannelListAdapter extends BaseAdapter {
@@ -29,14 +31,15 @@ public class ChannelListAdapter extends BaseAdapter {
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
 
-		ChannelItemView channelView;
+		PicdoraGridItem channelView;
 		if (convertView == null) {
-			channelView = ChannelItemView_.build(context);
+			channelView = PicdoraGridItem_.build(context);
 		} else {
-			channelView = (ChannelItemView) convertView;
+			channelView = (PicdoraGridItem) convertView;
 		}
 
-		channelView.bind(getItem(position));
+		Channel channel = getItem(position);
+		channelView.bind(channel.getName(), channel.getPreviewUrl(), false);
 
 		return channelView;
 	}

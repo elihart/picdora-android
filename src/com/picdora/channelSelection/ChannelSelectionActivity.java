@@ -1,8 +1,11 @@
 package com.picdora.channelSelection;
 
+import java.util.List;
+
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.FragmentById;
+import org.androidannotations.annotations.sharedpreferences.Pref;
 
 import android.content.Intent;
 import android.view.Menu;
@@ -10,8 +13,8 @@ import android.view.MenuItem;
 
 import com.picdora.ChannelHelper;
 import com.picdora.PicdoraActivity;
+import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
-import com.picdora.Util;
 import com.picdora.channelCreation.ChannelCreationActivity_;
 import com.picdora.channelSelection.ChannelGridFragment.OnChannelClickListener;
 import com.picdora.models.Channel;
@@ -21,6 +24,8 @@ import com.picdora.ui.SlidingMenuHelper;
 public class ChannelSelectionActivity extends PicdoraActivity {
 	@FragmentById
 	ChannelGridFragment channelFragment;
+	@Pref
+	PicdoraPreferences_ prefs;
 
 	@AfterViews
 	void initViews() {
@@ -52,7 +57,10 @@ public class ChannelSelectionActivity extends PicdoraActivity {
 	private void refreshChannels() {
 		if (channelFragment != null) {
 			// TODO: Filter out nsfw by preference
-			channelFragment.setChannels(Util.all(Channel.class));
+			List<Channel> channels = ChannelHelper.getAllChannels(prefs.showNsfw().get());
+			// TODO: Allow more sorting options
+			ChannelHelper.sortChannelsAlphabetically(channels);
+			channelFragment.setChannels(channels);
 		}
 	}
 

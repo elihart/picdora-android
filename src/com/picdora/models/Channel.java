@@ -33,6 +33,8 @@ public class Channel extends Model {
 	// TODO: Add this field to the db and update on channel creation, and
 	// favoriting
 	private String mPreviewImage = "Z9kkH2r";
+	
+	// TODO: Add created and last used fields
 
 	@Column("categories")
 	private String mCategoriesAsJson;

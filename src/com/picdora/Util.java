@@ -126,16 +126,4 @@ public class Util {
 		}
 		return buffer.toString();
 	}
-
-	public static void setImageHighlight(Context context, ImageView image,
-			boolean highlight) {
-		if (highlight) {
-			image.setColorFilter(context.getResources().getColor(
-					R.color.channel_grid_item_tint_selected));
-		} else {
-			image.setColorFilter(context.getResources().getColor(
-					R.color.channel_grid_item_tint));
-		}
-
-	}
 }

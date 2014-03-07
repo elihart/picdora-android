@@ -80,7 +80,7 @@ public abstract class CategoryHelper {
 	}
 	
     /**
-	 * Basic comparator to sort friends list alphabetically by username
+	 * Basic comparator to sort categories alphabetically by name
 	 * 
 	 */
 	private static class CategoryAlphabeticalComparator implements Comparator<Category> {

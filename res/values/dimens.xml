@@ -6,10 +6,6 @@
     
     <!-- Channel Selection Grid -->
     <dimen name="channel_grid_column_width">140dp</dimen>
-    <dimen name="channel_grid_item_padding_left">15dp</dimen>
-    <dimen name="channel_grid_item_padding_right">20dp</dimen>
-    <dimen name="channel_grid_item_padding_bottom">15dp</dimen>
-    <dimen name="channel_grid_item_padding_top">40dp</dimen>
-    <dimen name="channel_grid_item_font_size">25dp</dimen>
+
 
 </resources>

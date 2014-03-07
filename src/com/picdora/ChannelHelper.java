@@ -1,11 +1,15 @@
 package com.picdora;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.androidannotations.annotations.EBean;
 import org.androidannotations.annotations.RootContext;
 
+import se.emilsjolander.sprinkles.CursorList;
+import se.emilsjolander.sprinkles.Query;
 import se.emilsjolander.sprinkles.Sprinkles;
 import android.app.Activity;
 import android.content.Context;
@@ -82,12 +86,14 @@ public class ChannelHelper {
 
 	/**
 	 * Check if a channel name is in use, case insensitive
+	 * 
 	 * @param name
 	 * @return
 	 */
 	public static boolean isNameTaken(String name) {
 		SQLiteDatabase db = Sprinkles.getDatabase();
-		String query = "SELECT count(*) FROM Channels WHERE name = '" + name + "'  COLLATE NOCASE";
+		String query = "SELECT count(*) FROM Channels WHERE name = '" + name
+				+ "'  COLLATE NOCASE";
 
 		SQLiteStatement s = db.compileStatement(query);
 
@@ -95,6 +101,39 @@ public class ChannelHelper {
 			return s.simpleQueryForLong() > 0;
 		} catch (SQLiteDoneException e) {
 			return false;
+		}
+	}
+
+	public static List<Channel> getAllChannels(boolean includeNsfw) {
+		List<Channel> channels = new ArrayList<Channel>();
+		String query = "SELECT * FROM Channels";
+
+		// TODO: Set nsfw setting when created and switch to boolean
+		// if(!includeNsfw){
+		// query += " AND nsfw=0";
+		// }
+
+		CursorList<Channel> list = Query.many(Channel.class, query, null).get();
+		channels.addAll(list.asList());
+		list.close();
+
+		return channels;
+	}
+
+	public static void sortChannelsAlphabetically(List<Channel> channels) {
+		Collections.sort(channels, new ChannelAlphabeticalComparator());
+
+	}
+
+	/**
+	 * Basic comparator to sort channels alphabetically by name
+	 * 
+	 */
+	private static class ChannelAlphabeticalComparator implements
+			Comparator<Channel> {
+		public int compare(Channel left, Channel right) {
+			return left.getName().toLowerCase()
+					.compareTo(right.getName().toLowerCase());
 		}
 	}
 

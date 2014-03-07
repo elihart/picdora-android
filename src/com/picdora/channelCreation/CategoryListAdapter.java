@@ -14,6 +14,8 @@ import android.widget.BaseAdapter;
 
 import com.picdora.Util;
 import com.picdora.models.Category;
+import com.picdora.ui.PicdoraGridItem;
+import com.picdora.ui.PicdoraGridItem_;
 
 @EBean
 public class CategoryListAdapter extends BaseAdapter {
@@ -41,11 +43,11 @@ public class CategoryListAdapter extends BaseAdapter {
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
 
-		CategoryItemView categoryView;
+		PicdoraGridItem categoryView;
 		if (convertView == null) {
-			categoryView = CategoryItemView_.build(context);
+			categoryView = PicdoraGridItem_.build(context);
 		} else {
-			categoryView = (CategoryItemView) convertView;
+			categoryView = (PicdoraGridItem) convertView;
 		}
 
 		Category c = getItem(position);

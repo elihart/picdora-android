@@ -17,7 +17,6 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
 import android.widget.GridView;
-import android.widget.RelativeLayout;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.PauseOnScrollListener;
@@ -29,7 +28,7 @@ import com.picdora.channelCreation.ChannelCreationActivity.OnFilterCategoriesLis
 import com.picdora.models.Category;
 import com.picdora.ui.FontHelper;
 import com.picdora.ui.FontHelper.STYLE;
-import com.picdora.ui.SquareImage;
+import com.picdora.ui.PicdoraGridItem;
 
 /**
  * This fragment allows the user to select categories to use in the channel.
@@ -173,16 +172,15 @@ public class CategorySelectFragment extends Fragment {
 	}
 
 	private void categoryClicked(View v, Category category) {
-		RelativeLayout root = (RelativeLayout) v;
-		SquareImage img = (SquareImage) root.findViewById(R.id.image);
+		PicdoraGridItem item = (PicdoraGridItem) v;
 
 		// highlight/unhighlight category image and add/remove to the list
 		if (selectedCategories.contains(category)) {
 			selectedCategories.remove(category);
-			Util.setImageHighlight(activity, img, false);
+			item.setHighlighted(false);
 		} else {
 			selectedCategories.add(category);
-			Util.setImageHighlight(activity, img, true);
+			item.setHighlighted(true);
 		}
 
 		setCreateButtonEnabled(!selectedCategories.isEmpty());
