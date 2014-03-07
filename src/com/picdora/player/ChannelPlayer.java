@@ -1,6 +1,7 @@
 package com.picdora.player;
 
 import java.util.Collection;
+import java.util.Queue;
 import java.util.Vector;
 
 import org.androidannotations.annotations.Background;
@@ -11,6 +12,7 @@ import se.emilsjolander.sprinkles.CursorList;
 import se.emilsjolander.sprinkles.Query;
 
 import com.picdora.ChannelHelper;
+import com.picdora.Util;
 import com.picdora.models.Channel;
 import com.picdora.models.Image;
 
@@ -25,6 +27,9 @@ public class ChannelPlayer {
 
 	private Channel mChannel;
 	// use a thread safe list for adding images in the background
+	// TODO: With synchronized methods I'm not sure if we really need a
+	// threadsafe list -> might want to test how much it degrades performance
+	// and then decide on using it
 	private Vector<Image> mImages;
 	private OnLoadListener mListener;
 
@@ -34,6 +39,18 @@ public class ChannelPlayer {
 	private static final int NUM_IMAGES_LEFT_THRESHOLD = 10;
 	// whether we are currently loading images in the background
 	private boolean loadingImagesInBackground;
+	// the maximum number of unique images in the db that can be used for this
+	// channel
+	private long channelImageCount;
+	// a reserve of images used to replace deleted ones
+	private Queue<Image> replacementImages;
+	private static final int NUM_REPLACEMENT_IMAGES = 10;
+
+	// TODO: Don't mark replacements as viewed until they are used (or unmark
+	// them if they are never used?)
+
+	// TODO: Use callbacks for getting images/replacements so loading is never
+	// done on ui
 
 	protected ChannelPlayer() {
 		// empty constructor for enhanced class
@@ -62,6 +79,8 @@ public class ChannelPlayer {
 		mListener = listener;
 		mChannel = channel;
 		mImages = new Vector<Image>();
+		channelImageCount = ChannelHelper.getImageCount(channel, false);
+		loadImageBatch(NUM_REPLACEMENT_IMAGES, replacementImages);
 		loadImageBatch(DB_BATCH_SIZE, mImages);
 
 		loadChannelCompleted();
@@ -85,7 +104,7 @@ public class ChannelPlayer {
 		return mChannel;
 	}
 
-	public Image getImage(int index) {
+	public synchronized Image getImage(int index) {
 		// if we are requesting a higher image index than has been loaded, load
 		// enough images to meet the index
 		if (index >= mImages.size()) {
@@ -159,7 +178,7 @@ public class ChannelPlayer {
 			// don't add a duplicate image
 			// TODO: Better way to manage duplicates in the db before we
 			// retrieve them
-			if (!mImages.contains(image)) {
+			if (!mImages.contains(image) && !replacementImages.contains(image)) {
 				mImages.add(image);
 				resultCount++;
 			}
@@ -170,9 +189,53 @@ public class ChannelPlayer {
 	}
 
 	/**
-	 * Callback methods for when the player is ready to start playing
+	 * Get a replacement for an image in the list
 	 * 
-	 * @author Eli
+	 * @param position
+	 * @return
+	 */
+	public synchronized Image getReplacementImage(int position) {
+		// can't replace an image that we haven't loaded yet
+		if (mImages.size() <= position) {
+			throw new IndexOutOfBoundsException();
+		} else {
+			// make sure there are replacement images available to use, if not
+			// try to load more.
+			if (replacementImages.isEmpty()) {
+				// TODO: use a liste
+				loadImageBatch(NUM_REPLACEMENT_IMAGES, replacementImages);
+			}
+
+			Image img = replacementImages.poll();
+			// return the original image if the list is empty
+			if (img == null) {
+				return mImages.get(position);
+			} else {
+				mImages.set(position, img);
+				// if we're not already loading replacements see if we need to
+				if (!loadingReplacements) {
+					loadMoreReplacementsIfNeeded();
+				}
+				return img;
+			}
+		}
+	}
+
+	private boolean loadingReplacements = false;
+
+	@Background
+	protected void loadMoreReplacementsIfNeeded() {
+		Util.log("Loading replacements");
+
+		loadingReplacements = true;
+		if (replacementImages.size() < NUM_REPLACEMENT_IMAGES) {
+			loadImageBatch(NUM_REPLACEMENT_IMAGES, replacementImages);
+		}
+		loadingReplacements = false;
+	}
+
+	/**
+	 * Callback methods for when the player is ready to start playing
 	 * 
 	 */
 	public interface OnLoadListener {
