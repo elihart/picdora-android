@@ -46,7 +46,6 @@ public class PicdoraGridItem extends RelativeLayout {
 				RelativeLayout.LayoutParams.MATCH_PARENT,
 				RelativeLayout.LayoutParams.MATCH_PARENT));
 
-		mImage.setColorFilter(defaultTint);
 		mImage.setScaleType(ScaleType.CENTER_CROP);
 
 		addView(mImage);
