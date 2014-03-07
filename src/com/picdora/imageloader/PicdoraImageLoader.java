@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.http.Header;
 import org.apache.http.client.params.ClientPNames;
@@ -34,9 +36,6 @@ public class PicdoraImageLoader {
 	// check the size of current downloads and reduce the amount of downloads
 	// when they exceed that. Or maybe we can download to file and then retrieve
 	// the file
-
-	// TODO: I think I saw a case where an image had two download spots. The
-	// progress percent kept changing back and forth
 
 	// maximum images to download at once
 	private static final int MAX_DOWNLOADS = 3;
@@ -200,10 +199,9 @@ public class PicdoraImageLoader {
 				// update the start time
 				download.startTime = new Date().getTime();
 
-				// add the callback if it hasn't already been attached
-				if (!download.listeners.contains(callbacks)) {
-					download.listeners.add(callbacks);
-				}
+				// add the callbacks. Uses a set so they won't be added more
+				// than once
+				download.listeners.add(callbacks);
 			}
 
 			// otherwise start a new download
@@ -290,12 +288,12 @@ public class PicdoraImageLoader {
 
 			// if it's in the cache we're already done
 			if (mCache.contains(image)) {
-				break;
+				continue;
 			}
 
 			// check if it's already downloading
 			if (mDownloads.containsKey(image.getImgurId())) {
-				break;
+				continue;
 			}
 
 			// otherwise move it to the front of the queue
@@ -621,7 +619,7 @@ public class PicdoraImageLoader {
 
 	class Download {
 		public long startTime;
-		public List<LoadCallbacks> listeners;
+		public Set<LoadCallbacks> listeners;
 		public RequestHandle handle;
 		public Image image;
 
@@ -634,7 +632,7 @@ public class PicdoraImageLoader {
 			this.handle = handle;
 			this.image = image;
 
-			listeners = new ArrayList<LoadCallbacks>();
+			listeners = new HashSet<LoadCallbacks>();
 			if (listener != null) {
 				listeners.add(listener);
 			}
