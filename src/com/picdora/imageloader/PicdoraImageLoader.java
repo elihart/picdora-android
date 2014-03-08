@@ -11,6 +11,7 @@ import java.util.Set;
 
 import org.apache.http.Header;
 import org.apache.http.client.params.ClientPNames;
+import org.apache.http.conn.ConnectTimeoutException;
 
 import pl.droidsonroids.gif.GifDrawable;
 import android.content.Context;
@@ -38,9 +39,11 @@ public class PicdoraImageLoader {
 
 	// TODO: I think very fast scrolling causes lots of started/canceled
 	// downloads that clog things up and can cause timeout exceptions for
-	// everything and lead to images not loading. 
-	
-	// set the image load timeout in milliseconds
+	// everything and lead to images not loading.
+
+	// set the image load timeout in milliseconds. Use a low threshold so
+	// old/unresponsive images are cleared out faster to make room for new ones.
+	// If an important image timeouts it will retry if it needs to
 	private static final int TIMEOUT = 3000;
 
 	// maximum images to download at once
@@ -134,7 +137,7 @@ public class PicdoraImageLoader {
 	}
 
 	public enum LoadError {
-		UNKOWN, OUT_OF_MEMORY, DOWNLOAD_FAILURE, DOWNLOAD_CANCELED, FAILED_DECODE, IMAGE_DELETED
+		UNKOWN, OUT_OF_MEMORY, DOWNLOAD_FAILURE, DOWNLOAD_CANCELED, FAILED_DECODE, IMAGE_DELETED, DOWNLOAD_TIMEOUT
 	}
 
 	/**
@@ -410,6 +413,8 @@ public class PicdoraImageLoader {
 		// to a removed image
 		if (code.startsWith("3")) {
 			return LoadError.IMAGE_DELETED;
+		} else if (error.getCause() instanceof ConnectTimeoutException) {
+			return LoadError.DOWNLOAD_TIMEOUT;
 		}
 		// TODO: Check for more cases
 		// can check for timeout

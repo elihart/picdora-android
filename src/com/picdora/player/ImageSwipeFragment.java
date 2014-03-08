@@ -194,6 +194,7 @@ public class ImageSwipeFragment extends Fragment implements
 		case FAILED_DECODE:
 		case OUT_OF_MEMORY:
 			// TODO: request memory cleanup
+		case DOWNLOAD_TIMEOUT:
 		case UNKOWN:
 			if (mLoadAttempts < MAX_LOAD_ATTEMPTS) {
 				loadImage();
