@@ -26,14 +26,16 @@ public class Category extends Model {
 	
 	// TODO: Add this field to the db and update on channel creation, and
 		// favoriting
-		private String mPreviewImage = "Z9kkH2r";
+	@Column("icon")
+	private String mPreviewImage;
 
-	public Category(int id, String name, boolean porn, boolean nsfw) {
+	public Category(int id, String name, boolean porn, boolean nsfw, String icon) {
 		super();
 		mId = id;
 		mName = name;
 		mNsfw = nsfw;
 		mPorn = porn;
+		mPreviewImage = icon;
 	}
 	
 	public Category(){
@@ -66,6 +68,13 @@ public class Category extends Model {
 		
 		try {
 			mPorn = jsonObject.getBoolean("porn");
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		try {
+			mPreviewImage = jsonObject.getString("icon");
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

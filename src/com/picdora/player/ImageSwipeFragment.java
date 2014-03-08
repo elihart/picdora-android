@@ -137,9 +137,9 @@ public class ImageSwipeFragment extends Fragment implements
 		if (isVisibleToUser) {
 			// make sure we are loading this image as a priority
 			loadImage();
-			if (mImage != null) {
-				//Util.log("Viewing " + mImage.getImgurId());
-			}
+//			if (mImage != null) {
+//				Util.log("Viewing " + mImage.getImgurId());
+//			}
 		}
 	}
 

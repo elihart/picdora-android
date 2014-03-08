@@ -65,13 +65,13 @@ public class ImageUpdater {
 		// all
 		mLastUpdated = prefs.lastUpdated().get();
 		mIdIndex = 0;
+		
 		// We retry on error, but if we run into too many consecutive errors we
 		// give up
 		mNumFailures = 0;
 
 		Util.log("Last updated " + new Date(mLastUpdated));
 		getNewImageBatch(0);
-
 	}
 
 	// has to be run on the ui thread so http async can work

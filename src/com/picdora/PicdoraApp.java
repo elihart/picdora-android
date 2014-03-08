@@ -35,7 +35,7 @@ public class PicdoraApp extends Application {
 
 		runMigrations();
 
-		//syncDb();
+		syncDb();
 		// TODO: Sync uses lots of memory and can interfere with image loading on small heaps
 	}
 
@@ -83,7 +83,12 @@ public class PicdoraApp extends Application {
 		addModelsMigration.createTable(Category.class);
 		addModelsMigration.createTable(Channel.class);
 		sprinkles.addMigration(addModelsMigration);
-
+		
+		// second migration
+		Migration addCatIcons = new Migration();
+		addCatIcons.dropTable(Category.class);
+		addCatIcons.createTable(Category.class);
+		sprinkles.addMigration(addCatIcons);
 	}
 
 	@Override
