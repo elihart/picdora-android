@@ -1,9 +1,9 @@
 package com.picdora.player;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
-import java.util.Queue;
-import java.util.Vector;
+import java.util.List;
 
 import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EBean;
@@ -13,26 +13,16 @@ import se.emilsjolander.sprinkles.CursorList;
 import se.emilsjolander.sprinkles.Query;
 
 import com.picdora.ChannelHelper;
-import com.picdora.Util;
 import com.picdora.models.Channel;
 import com.picdora.models.Image;
 
 @EBean
 public class ChannelPlayer {
 
-	// TODO: On channels with low image counts there is lag as it tries to fetch
-	// more images (that we don't have). Maybe get the image count on launch
-
 	private Channel mChannel;
-	// use a thread safe list for adding images in the background
-	// TODO: With synchronized methods I'm not sure if we really need a
-	// threadsafe list -> might want to test how much it degrades performance
 	// and then decide on using it
-	private Vector<Image> mImages;
+	private List<Image> mImages;
 	private OnLoadListener mListener;
-
-	// whether we are currently loading images in the background
-	private boolean loadingImagesInBackground;
 
 	// a reserve of images used to replace deleted ones
 	private LinkedList<Image> imageQueue;
@@ -43,19 +33,15 @@ public class ChannelPlayer {
 	// TODO: Don't mark replacements as viewed until they are used (or unmark
 	// them if they are never used?)
 
-	// TODO: Use callbacks for getting images/replacements so loading is never
-	// done on ui
-
 	protected ChannelPlayer() {
 		// empty constructor for enhanced class
 	}
 
 	@Background
 	public void loadChannel(Channel channel, OnLoadListener listener) {
-		loadingImagesInBackground = false;
 		mListener = listener;
 		mChannel = channel;
-		mImages = new Vector<Image>();
+		mImages = new ArrayList<Image>();
 		imageQueue = new LinkedList<Image>();
 		loadImageBatch(TARGET_QUEUE_SIZE * 2, imageQueue);
 
@@ -75,7 +61,7 @@ public class ChannelPlayer {
 		}
 	}
 
-	Channel getChannel() {
+	public Channel getChannel() {
 		return mChannel;
 	}
 
@@ -86,47 +72,70 @@ public class ChannelPlayer {
 	@Background
 	public void getImage(int index, boolean replace,
 			OnGetImageResultListener listener) {
+		// synchronize access so we don't have multiple loads going for the same
+		// image. Also simplifies the threading and db access
+		getImageSync(index, replace, listener);
+		// TODO: Consider async options if performance is laggy
+	}
+
+	private synchronized void getImageSync(int index, boolean replace,
+			OnGetImageResultListener listener) {
 		// can't replace an image we haven't loaded yet
 		if (index >= mImages.size()) {
 			replace = false;
 		}
 
+		Image result = null;
+
+		// if they have requested a replacement then get a new image and replace
+		// the old one
 		if (replace) {
 			Image replacement = nextImage();
 			if (replacement != null) {
 				mImages.set(index, replacement);
 			}
-			if (listener != null) {
-				giveResult(mImages.get(index), listener);
+			result = mImages.get(index);
+		} else {
+			// keep getting new images until either we have enough to satisfy
+			// the index requested, or we don't have anymore to give
+			while (mImages.size() <= index) {
+				Image img = nextImage();
+				if (img == null) {
+					break;
+				} else {
+					mImages.add(img);
+				}
 			}
-			return;
+
+			// return the index requested if we have enough images, otherwise
+			// wrap
+			// around
+			result = mImages.get(index % mImages.size());
 		}
 
-		while (mImages.size() <= index) {
-			Image img = nextImage();
-			if (img == null) {
-				break;
-			} else {
-				mImages.add(img);
-			}
-		}
-
-			giveResult(mImages.get(index % mImages.size()), listener);
+		// return the image result on the ui thread
+		returnGetImageResult(result, listener);
 	}
-	
+
 	@UiThread
-	protected void giveResult(Image image, OnGetImageResultListener listener){
-		if(listener != null){
+	protected void returnGetImageResult(Image image,
+			OnGetImageResultListener listener) {
+		if (listener != null) {
 			listener.onGetImageResult(image);
 		}
 	}
 
 	private boolean allImagesUsed = false;
 
-	private synchronized Image nextImage() {
-		if (!allImagesUsed && imageQueue.size() < TARGET_QUEUE_SIZE) {
+	private Image nextImage() {
+		// if we don't have any images left in the queue and we still have
+		// unused images in the db then refill the queue
+		if (imageQueue.size() < TARGET_QUEUE_SIZE && !allImagesUsed) {
 			int numToLoad = TARGET_QUEUE_SIZE * 2;
-			int numLoaded = loadImageBatch(TARGET_QUEUE_SIZE * 2, imageQueue);
+			int numLoaded = loadImageBatch(numToLoad, imageQueue);
+			// if the db can't load as many as we wanted then we already have
+			// all the images it can give us, don't bother trying to get more as
+			// we'll only get the same ones
 			if (numLoaded < numToLoad) {
 				allImagesUsed = true;
 			}
@@ -139,9 +148,9 @@ public class ChannelPlayer {
 	 * Get the specified number of images from the database and load them into
 	 * the given list.
 	 * 
-	 * @return resultCount The number of images successfully loaded
+	 * @return resultCount The number of images retrieved from the db
 	 */
-	private synchronized int loadImageBatch(int count, Collection<Image> images) {
+	private int loadImageBatch(int count, Collection<Image> images) {
 		// build the query. Start by only selecting images from categories that
 		// this channel includes
 		String query = "SELECT * FROM Images WHERE categoryId IN "
@@ -166,7 +175,7 @@ public class ChannelPlayer {
 				+ Integer.toString(count);
 
 		CursorList<Image> list = Query.many(Image.class, query, null).get();
-		int resultCount = 0;
+		int resultCount = list.size();
 		for (Image image : list.asList()) {
 			// TODO: Figure out a better way to do this. We have to mark them as
 			// viewed right now because otherwise we will pull them from the
@@ -178,7 +187,6 @@ public class ChannelPlayer {
 			// retrieve them
 			if (!mImages.contains(image) && !imageQueue.contains(image)) {
 				images.add(image);
-				resultCount++;
 			}
 		}
 		list.close();
