@@ -37,12 +37,6 @@ public class ImageSwipeFragment extends Fragment implements
 	@FragmentArg
 	int fragPosition;
 
-	// if we try to load an image that was deleted we can request a replacement
-	// and then try again. If we get really unlucky, or something goes wrong, we
-	// might keep getting deleted images so let's give up after a few tries
-	private int numDeletedImages;
-	private static final int NUM_DELETED_ATTEMPTS = 5;
-
 	protected Image mImage;
 	protected ChannelViewActivity mActivity;
 
@@ -53,7 +47,6 @@ public class ImageSwipeFragment extends Fragment implements
 
 	@AfterViews
 	void addImage() {
-		numDeletedImages = 0;
 		mLoadAttempts = 0;
 
 		showLoadingCircle();
@@ -77,13 +70,15 @@ public class ImageSwipeFragment extends Fragment implements
 			mProgressText.setVisibility(View.GONE);
 			deletedText.setVisibility(View.GONE);
 		} catch (NullPointerException e) {
-
+			// the fragment was probably destroyed so we don't have to do
+			// anything
 		}
 	}
 
 	private void loadImage() {
 		if (mImage == null) {
 			showLoadingCircle();
+			// TODO: Maybe show an error image?
 			return;
 		} else if (mImage.isDeleted()) {
 			handleDeletedImage();
@@ -129,13 +124,13 @@ public class ImageSwipeFragment extends Fragment implements
 
 	@Override
 	public void onSuccess(Drawable drawable) {
-		if (mPhotoView == null) {
-			return;
+		try {
+			mPhotoView.setImageDrawable(drawable);
+			mPhotoView.setVisibility(View.VISIBLE);
+			mProgress.setVisibility(View.GONE);
+		} catch (NullPointerException e) {
+			// fragment destroyed
 		}
-
-		mPhotoView.setImageDrawable(drawable);
-		mPhotoView.setVisibility(View.VISIBLE);
-		mProgress.setVisibility(View.GONE);
 	}
 
 	@Override
@@ -144,33 +139,33 @@ public class ImageSwipeFragment extends Fragment implements
 
 		switch (error) {
 		case DOWNLOAD_CANCELED:
+			// if we're visible than we need to load the image
+			if (isVisible()) {
+				loadImage();
+			}
 			break;
 		case DOWNLOAD_FAILURE:
-			break;
 		case FAILED_DECODE:
-			break;
 		case OUT_OF_MEMORY:
 			// TODO: request memory cleanup
-			break;
 		case UNKOWN:
+			if (mLoadAttempts < MAX_LOAD_ATTEMPTS) {
+				loadImage();
+			} else {
+				// TODO: Load error image
+			}
 			break;
 		case IMAGE_DELETED:
 			handleDeletedImage();
-			return;
-		default:
 			break;
-		}
-
-		if (mLoadAttempts < MAX_LOAD_ATTEMPTS) {
-			loadImage();
-		} else {
-			// TODO: Load error image
+		default:
+			// TODO: Show error imge
+			showLoadingCircle();
+			break;
 		}
 	}
 
 	private void handleDeletedImage() {
-		Util.log("Deleted: " + mImage.getUrl());
-
 		// mPhotoView is null if the fragment was destroyed
 		if (mPhotoView == null) {
 			return;
@@ -179,45 +174,31 @@ public class ImageSwipeFragment extends Fragment implements
 		// TODO: Set up reporting to server and save to db
 		mImage.setDeleted(true);
 
-		// if we keep getting deleted images, then something might be wrong...
-		// anyway, give up after a few attempts
-		numDeletedImages++;
-		if (numDeletedImages < NUM_DELETED_ATTEMPTS) {
-			// try to load a different image
-			showLoadingCircle();
-			mActivity.getImage(fragPosition, true,
-					new OnGetImageResultListener() {
+		// try to load a different image
+		showLoadingCircle();
+		mActivity.getImage(fragPosition, true, new OnGetImageResultListener() {
 
-						@Override
-						public void onGetImageResult(Image image) {
-							if (image == null || image.equals(mImage)) {
-								// couldn't get a replacement :(
-								mImage = image;
-								Util.log("bad replacement");
-								showDeletedText();
-							} else {
-								Util.log("loading replacement");
-								mImage = image;
-								loadImage();
-							}
-
-						}
-					});
-		}
-		// otherwise just say the image was deleted
-		else {
-			Util.log("Attempts ran out");
-			showDeletedText();
-		}
+			@Override
+			public void onGetImageResult(Image image) {
+				if (image == null || image.equals(mImage)) {
+					// couldn't get a replacement :(
+					mImage = image;
+					showDeletedText();
+				} else {
+					mImage = image;
+					loadImage();
+				}
+			}
+		});
 	}
 
 	private void showDeletedText() {
-		if (mPhotoView == null) {
-			return;
-		}
+		try {
+			deletedText.setVisibility(View.VISIBLE);
+			mProgress.setVisibility(View.GONE);
+			mPhotoView.setVisibility(View.GONE);
+		} catch (NullPointerException e) {
 
-		deletedText.setVisibility(View.VISIBLE);
-		mProgress.setVisibility(View.GONE);
-		mPhotoView.setVisibility(View.GONE);
+		}
 	}
 }
