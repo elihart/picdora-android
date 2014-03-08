@@ -1,8 +1,5 @@
 package com.picdora.player;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EActivity;
@@ -25,7 +22,6 @@ import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.models.Channel;
-import com.picdora.models.Image;
 import com.picdora.player.ChannelPlayer.ChannelError;
 import com.picdora.player.ChannelPlayer.OnGetImageResultListener;
 import com.picdora.player.ChannelPlayer.OnLoadListener;
@@ -73,20 +69,24 @@ public class ChannelViewActivity extends FragmentActivity {
 			}
 		}
 
-		// Load channel and play when ready
+		// Otherwise load bundled channel and play when ready
 		String json = getIntent().getStringExtra("channel");
 		Channel channel = Util.fromJson(json, Channel.class);
 
-		// we don't always want to cache what we're playing, as in the case of a preview
-		shouldCache = getIntent().getBooleanExtra("cache", false);
+		
 
+
+		// check if we can use the cached player, if not create a new one
 		if (cachedState != null
 				&& cachedState.player.getChannel().equals(channel)) {
+			shouldCache = true;
 			mChannelPlayer = cachedState.player;
 			startChannel(cachedState.position);
 		} else {
-			// cache the player if requested
-			if (shouldCache) {
+			// we don't always want to cache what we're playing, as in the case of a
+			// preview. Cache the player if requested, overriding the old one. Otherwise
+			// leave the old one intact
+			if (getIntent().getBooleanExtra("cache", false)) {
 				cachedState = new CachedPlayerState(mChannelPlayer, 0);
 			}
 
@@ -129,10 +129,10 @@ public class ChannelViewActivity extends FragmentActivity {
 		finish();
 	}
 
-	public void getImage(int position, boolean replacement, OnGetImageResultListener listener) {
+	public void getImage(int position, boolean replacement,
+			OnGetImageResultListener listener) {
 		mChannelPlayer.getImage(position, replacement, listener);
 	}
-	
 
 	protected void startChannel(int startingPosition) {
 		// Instantiate a ViewPager and a PagerAdapter
@@ -143,7 +143,7 @@ public class ChannelViewActivity extends FragmentActivity {
 
 			@Override
 			public void onPageSelected(int pos) {
-				//preloadImages(pos + 1, pos + NUM_IMAGES_TO_PRELOAD);
+				// preloadImages(pos + 1, pos + NUM_IMAGES_TO_PRELOAD);
 
 				if (shouldCache) {
 					cachedState.position = pos;
@@ -162,8 +162,8 @@ public class ChannelViewActivity extends FragmentActivity {
 		});
 
 		pager.setCurrentItem(startingPosition);
-		//preloadImages(startingPosition, startingPosition
-		//		+ NUM_IMAGES_TO_PRELOAD - 1);
+		// preloadImages(startingPosition, startingPosition
+		// + NUM_IMAGES_TO_PRELOAD - 1);
 
 		dismissBusyDialog();
 	}
@@ -178,28 +178,28 @@ public class ChannelViewActivity extends FragmentActivity {
 	 *            The end of the image range, inclusive. Must be greater than
 	 *            start pos or nothing is done
 	 */
-//	protected void preloadImages(int startPos, int endPos) {
-//		if (endPos < startPos) {
-//			return;
-//		}
-//
-//		List<Image> images = new ArrayList<Image>();
-//
-//		// add the images to the list with the earlier images at the front so
-//		// that they will be loaded first
-//		for (int i = startPos; i <= endPos; i++) {
-//			mChannelPlayer.getImage(i, false, new OnGetImageResultListener() {
-//				
-//				@Override
-//				public void onGetImageResult(Image image) {
-//					
-//					
-//				}
-//			});
-//		}
-//
-//		PicdoraImageLoader.instance().preloadImages(images);
-//	}
+	// protected void preloadImages(int startPos, int endPos) {
+	// if (endPos < startPos) {
+	// return;
+	// }
+	//
+	// List<Image> images = new ArrayList<Image>();
+	//
+	// // add the images to the list with the earlier images at the front so
+	// // that they will be loaded first
+	// for (int i = startPos; i <= endPos; i++) {
+	// mChannelPlayer.getImage(i, false, new OnGetImageResultListener() {
+	//
+	// @Override
+	// public void onGetImageResult(Image image) {
+	//
+	//
+	// }
+	// });
+	// }
+	//
+	// PicdoraImageLoader.instance().preloadImages(images);
+	// }
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
