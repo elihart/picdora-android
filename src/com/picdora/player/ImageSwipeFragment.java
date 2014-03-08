@@ -17,6 +17,7 @@ import com.picdora.Util;
 import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.imageloader.PicdoraImageLoader.LoadError;
 import com.picdora.models.Image;
+import com.picdora.player.ChannelPlayer.OnGetImageResultListener;
 
 @EFragment(R.layout.fragment_swipable_image)
 public class ImageSwipeFragment extends Fragment implements
@@ -31,7 +32,8 @@ public class ImageSwipeFragment extends Fragment implements
 	@ViewById
 	TextView deletedText;
 
-	// The position of the fragment in the view pager. Use this to retrieve what image we should show
+	// The position of the fragment in the view pager. Use this to retrieve what
+	// image we should show
 	@FragmentArg
 	int fragPosition;
 
@@ -54,19 +56,34 @@ public class ImageSwipeFragment extends Fragment implements
 		numDeletedImages = 0;
 		mLoadAttempts = 0;
 
-		mPhotoView.setVisibility(View.GONE);
-		mProgress.setVisibility(View.VISIBLE);
-		mProgressText.setVisibility(View.GONE);
-		deletedText.setVisibility(View.GONE);
+		showLoadingCircle();
 
 		mActivity = (ChannelViewActivity) getActivity();
-		mImage = mActivity.getImage(fragPosition);
+		mActivity.getImage(fragPosition, false, new OnGetImageResultListener() {
 
-		loadImage();
+			@Override
+			public void onGetImageResult(Image image) {
+				mImage = image;
+				loadImage();
+			}
+		});
+
+	}
+
+	private void showLoadingCircle() {
+		try {
+			mPhotoView.setVisibility(View.GONE);
+			mProgress.setVisibility(View.VISIBLE);
+			mProgressText.setVisibility(View.GONE);
+			deletedText.setVisibility(View.GONE);
+		} catch (NullPointerException e) {
+
+		}
 	}
 
 	private void loadImage() {
 		if (mImage == null) {
+			showLoadingCircle();
 			return;
 		} else if (mImage.isDeleted()) {
 			handleDeletedImage();
@@ -79,8 +96,10 @@ public class ImageSwipeFragment extends Fragment implements
 	public void onDestroyView() {
 		super.onDestroyView();
 
-		PicdoraImageLoader.instance().unregisterCallbacks(mImage.getImgurId(),
-				this);
+		if (mImage != null) {
+			PicdoraImageLoader.instance().unregisterCallbacks(
+					mImage.getImgurId(), this);
+		}
 
 		mPhotoView.setImageDrawable(null);
 
@@ -165,20 +184,25 @@ public class ImageSwipeFragment extends Fragment implements
 		numDeletedImages++;
 		if (numDeletedImages < NUM_DELETED_ATTEMPTS) {
 			// try to load a different image
-			mProgressText.setVisibility(View.GONE);
-			mProgress.setVisibility(View.VISIBLE);
-			mPhotoView.setVisibility(View.GONE);
-			Image replacement = mActivity.getReplacementImage(fragPosition);
+			showLoadingCircle();
+			mActivity.getImage(fragPosition, true,
+					new OnGetImageResultListener() {
 
-			if (replacement == null || replacement.equals(mImage)) {
-				// couldn't get a replacement :(
-				Util.log("bad replacement");
-				showDeletedText();
-			} else {
-				Util.log("loading replacement");
-				mImage = replacement;
-				loadImage();
-			}
+						@Override
+						public void onGetImageResult(Image image) {
+							if (image == null || image.equals(mImage)) {
+								// couldn't get a replacement :(
+								mImage = image;
+								Util.log("bad replacement");
+								showDeletedText();
+							} else {
+								Util.log("loading replacement");
+								mImage = image;
+								loadImage();
+							}
+
+						}
+					});
 		}
 		// otherwise just say the image was deleted
 		else {

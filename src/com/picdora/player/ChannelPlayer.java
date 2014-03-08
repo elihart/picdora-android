@@ -31,18 +31,14 @@ public class ChannelPlayer {
 	private Vector<Image> mImages;
 	private OnLoadListener mListener;
 
-	// the number of images to load from the database at a time
-	private static final int DB_BATCH_SIZE = 15;
-	// the threshold for when we start loading more images in the background
-	private static final int NUM_IMAGES_LEFT_THRESHOLD = 10;
 	// whether we are currently loading images in the background
 	private boolean loadingImagesInBackground;
-	// the maximum number of unique images in the db that can be used for this
-	// channel
-	private long channelImageCount;
+
 	// a reserve of images used to replace deleted ones
-	private LinkedList<Image> replacementImages;
-	private static final int NUM_REPLACEMENT_IMAGES = 10;
+	private LinkedList<Image> imageQueue;
+	// the size that we'll try to keep the image queue at so we have enough
+	// images without doing too many loads
+	private static final int TARGET_QUEUE_SIZE = 15;
 
 	// TODO: Don't mark replacements as viewed until they are used (or unmark
 	// them if they are never used?)
@@ -60,10 +56,8 @@ public class ChannelPlayer {
 		mListener = listener;
 		mChannel = channel;
 		mImages = new Vector<Image>();
-		replacementImages = new LinkedList<Image>();
-		channelImageCount = ChannelHelper.getImageCount(channel, false);
-		loadImageBatch(NUM_REPLACEMENT_IMAGES, replacementImages);
-		loadImageBatch(DB_BATCH_SIZE, mImages);
+		imageQueue = new LinkedList<Image>();
+		loadImageBatch(TARGET_QUEUE_SIZE * 2, imageQueue);
 
 		loadChannelCompleted();
 	}
@@ -74,7 +68,7 @@ public class ChannelPlayer {
 			return;
 		}
 
-		if (mImages.isEmpty()) {
+		if (mImages.isEmpty() && imageQueue.isEmpty()) {
 			mListener.onFailure(ChannelError.NO_IMAGES);
 		} else {
 			mListener.onSuccess();
@@ -85,38 +79,60 @@ public class ChannelPlayer {
 		return mChannel;
 	}
 
-	public synchronized Image getImage(int index) {
-		// TODO: Check our channel image count and if we don't have enough then don't bother going to the db, just wrap the index around
-		// if we are requesting a higher image index than has been loaded, load
-		// enough images to meet the index
+	public interface OnGetImageResultListener {
+		public void onGetImageResult(Image image);
+	}
+
+	@Background
+	public void getImage(int index, boolean replace,
+			OnGetImageResultListener listener) {
+		// can't replace an image we haven't loaded yet
 		if (index >= mImages.size()) {
-			int imagesNeeded = index - mImages.size() + 1;
-			// get the amount needed to reach the index, plus grab another batch
-			// while we're at it
-			loadImageBatch(imagesNeeded + DB_BATCH_SIZE, mImages);
+			replace = false;
 		}
-		// if we're getting low on images do a background load
-		else if (mImages.size() - index < NUM_IMAGES_LEFT_THRESHOLD) {
-			// don't start another load if one is already going
-			if (!loadingImagesInBackground) {
-				loadImageBatchAsync(DB_BATCH_SIZE, mImages);
+
+		if (replace) {
+			Image replacement = nextImage();
+			if (replacement != null) {
+				mImages.set(index, replacement);
+			}
+			if (listener != null) {
+				giveResult(mImages.get(index), listener);
+			}
+			return;
+		}
+
+		while (mImages.size() <= index) {
+			Image img = nextImage();
+			if (img == null) {
+				break;
+			} else {
+				mImages.add(img);
 			}
 		}
 
-		// if for some reason we still don't have enough images then wrap the
-		// index around
-		if (index >= mImages.size()) {
-			index = index % mImages.size();
+			giveResult(mImages.get(index % mImages.size()), listener);
+	}
+	
+	@UiThread
+	protected void giveResult(Image image, OnGetImageResultListener listener){
+		if(listener != null){
+			listener.onGetImageResult(image);
 		}
-
-		return mImages.get(index);
 	}
 
-	@Background(serial = "loadImagesInBackground")
-	void loadImageBatchAsync(int count, Collection<Image> images) {
-		loadingImagesInBackground = true;
-		loadImageBatch(count, images);
-		loadingImagesInBackground = false;
+	private boolean allImagesUsed = false;
+
+	private synchronized Image nextImage() {
+		if (!allImagesUsed && imageQueue.size() < TARGET_QUEUE_SIZE) {
+			int numToLoad = TARGET_QUEUE_SIZE * 2;
+			int numLoaded = loadImageBatch(TARGET_QUEUE_SIZE * 2, imageQueue);
+			if (numLoaded < numToLoad) {
+				allImagesUsed = true;
+			}
+		}
+
+		return imageQueue.poll();
 	}
 
 	/**
@@ -160,7 +176,7 @@ public class ChannelPlayer {
 			// don't add a duplicate image
 			// TODO: Better way to manage duplicates in the db before we
 			// retrieve them
-			if (!mImages.contains(image) && !replacementImages.contains(image)) {
+			if (!mImages.contains(image) && !imageQueue.contains(image)) {
 				images.add(image);
 				resultCount++;
 			}
@@ -168,55 +184,6 @@ public class ChannelPlayer {
 		list.close();
 
 		return resultCount;
-	}
-
-	/**
-	 * Get a replacement for an image in the list
-	 * 
-	 * @param position
-	 * @return
-	 */
-	public synchronized Image getReplacementImage(int position) {
-		// can't replace an image that we haven't loaded yet
-		if (mImages.size() <= position) {
-			throw new IndexOutOfBoundsException();
-		} else {
-			// make sure there are replacement images available to use, if not
-			// try to load more.
-			if (replacementImages.isEmpty()) {
-				// TODO: use a listener
-				Util.log("replacement empty");
-				loadImageBatch(NUM_REPLACEMENT_IMAGES, replacementImages);				
-			}
-
-			Image img = replacementImages.poll();
-			// return the original image if the list is empty
-			if (img == null) {
-				Util.log("empty queue");
-				return mImages.get(position);
-			} else {
-				mImages.set(position, img);
-				// if we're not already loading replacements see if we need to
-				if (!loadingReplacements) {
-					loadMoreReplacementsIfNeeded();
-				}
-				Util.log("returning replacement");
-				return img;
-			}
-		}
-	}
-
-	private boolean loadingReplacements = false;
-
-	@Background
-	protected void loadMoreReplacementsIfNeeded() {
-		Util.log("Loading replacements");
-
-		loadingReplacements = true;
-		if (replacementImages.size() < NUM_REPLACEMENT_IMAGES) {
-			loadImageBatch(NUM_REPLACEMENT_IMAGES, replacementImages);
-		}
-		loadingReplacements = false;
 	}
 
 	/**
