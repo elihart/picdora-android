@@ -94,7 +94,9 @@ public class ImageSwipeFragment extends Fragment implements
 	}
 
 	private void loadImage() {
-		if (mImage == null) {
+		if (!viewActive) {
+			return;
+		} else if (mImage == null) {
 			showLoadingCircle();
 			// TODO: Maybe show an error image?
 			return;
@@ -132,6 +134,10 @@ public class ImageSwipeFragment extends Fragment implements
 
 	@Override
 	public void onProgress(int percentComplete) {
+		if (!viewActive) {
+			return;
+		}
+
 		// on error the percent can be wacky
 		if (percentComplete < 0 || percentComplete > 100) {
 			mProgressText.setVisibility(View.GONE);
@@ -143,12 +149,12 @@ public class ImageSwipeFragment extends Fragment implements
 
 	@Override
 	public void onSuccess(Drawable drawable) {
-		try {
+		// TODO: check whether it is animated or not and update the gif status
+		// in the db in background if it's not right
+		if (viewActive) {
 			mPhotoView.setImageDrawable(drawable);
 			mPhotoView.setVisibility(View.VISIBLE);
 			mProgress.setVisibility(View.GONE);
-		} catch (NullPointerException e) {
-			// fragment destroyed
 		}
 	}
 
@@ -186,13 +192,12 @@ public class ImageSwipeFragment extends Fragment implements
 	}
 
 	private void handleDeletedImage() {
-		// mPhotoView is null if the fragment was destroyed
-		if (mPhotoView == null) {
-			return;
-		}
-
 		// TODO: Set up reporting to server and save to db
 		mImage.setDeleted(true);
+		
+		if (!viewActive) {
+			return;
+		}
 
 		// try to load a different image
 		showLoadingCircle();

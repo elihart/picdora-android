@@ -48,9 +48,6 @@ public class PicdoraImageLoader {
 	private Map<String, Download> mDownloads;
 	private AsyncHttpClient client;
 	private Context mContext;
-	// hold images that we had to kick out of the download list to make room for
-	// more recent ones. If we have space we can come back to these
-	private LinkedList<Image> mCanceledImages;
 	// hold a queue of upcoming images that can be preloaded if there is space
 	// in the download list
 	private LinkedList<Image> mUpcomingImages;
@@ -81,9 +78,6 @@ public class PicdoraImageLoader {
 		// init downloads map
 		mDownloads = new HashMap<String, Download>();
 
-		// init queues
-		mCanceledImages = new LinkedList<Image>();
-		mUpcomingImages = new LinkedList<Image>();
 
 		// setup async client
 		client = new AsyncHttpClient();
@@ -159,7 +153,6 @@ public class PicdoraImageLoader {
 	 */
 	public void clearDownloads() {
 		mUpcomingImages.clear();
-		mCanceledImages.clear();
 
 		// need to make a copy of the collection because the cancel method
 		// removes them from the list
@@ -328,7 +321,7 @@ public class PicdoraImageLoader {
 		clearFromQueue(image);
 
 		final Download download = new Download(new Date().getTime(), callbacks,
-				null, image);
+				null, image, false);
 
 		RequestHandle handle = client.get(image.getUrl(),
 				new BinaryHttpResponseHandler(ALLOWED_CONTENT_TYPES) {
@@ -377,10 +370,7 @@ public class PicdoraImageLoader {
 			if (!mUpcomingImages.isEmpty()) {
 				loadImage(mUpcomingImages.removeFirst(), null);
 				continue;
-			} else if (!mCanceledImages.isEmpty()) {
-				loadImage(mCanceledImages.removeFirst(), null);
-				continue;
-			} else {
+			}else {
 				break;
 			}
 		}
@@ -389,7 +379,6 @@ public class PicdoraImageLoader {
 	// remove the given image from all queues
 	private void clearFromQueue(Image image) {
 		mUpcomingImages.remove(image);
-		mCanceledImages.remove(image);
 	}
 
 	/**
@@ -466,7 +455,6 @@ public class PicdoraImageLoader {
 	 */
 	private Drawable createDrawable(byte[] binaryData) throws OutOfMemoryError {
 		// try to decode it as a gif
-		// TODO: Update the Image to have the correct gif status in database
 		try {
 			return new GifDrawable(binaryData);
 		} catch (IOException e) {
@@ -584,8 +572,6 @@ public class PicdoraImageLoader {
 		}
 
 		cancelDownload(oldest);
-
-		mCanceledImages.addFirst(oldest.image);
 	}
 
 	/**
@@ -622,15 +608,17 @@ public class PicdoraImageLoader {
 		public Set<LoadCallbacks> listeners;
 		public RequestHandle handle;
 		public Image image;
+		public boolean preload;
 
 		// An error that caused this download to fail
 		public LoadError error;
 
 		public Download(long startTime, LoadCallbacks listener,
-				RequestHandle handle, Image image) {
+				RequestHandle handle, Image image, boolean preload) {
 			this.startTime = startTime;
 			this.handle = handle;
 			this.image = image;
+			this.preload = preload;
 
 			listeners = new HashSet<LoadCallbacks>();
 			if (listener != null) {
