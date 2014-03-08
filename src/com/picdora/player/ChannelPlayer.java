@@ -1,6 +1,7 @@
 package com.picdora.player;
 
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Vector;
 
@@ -43,7 +44,7 @@ public class ChannelPlayer {
 	// channel
 	private long channelImageCount;
 	// a reserve of images used to replace deleted ones
-	private Queue<Image> replacementImages;
+	private LinkedList<Image> replacementImages;
 	private static final int NUM_REPLACEMENT_IMAGES = 10;
 
 	// TODO: Don't mark replacements as viewed until they are used (or unmark
@@ -79,6 +80,7 @@ public class ChannelPlayer {
 		mListener = listener;
 		mChannel = channel;
 		mImages = new Vector<Image>();
+		replacementImages = new LinkedList<Image>();
 		channelImageCount = ChannelHelper.getImageCount(channel, false);
 		loadImageBatch(NUM_REPLACEMENT_IMAGES, replacementImages);
 		loadImageBatch(DB_BATCH_SIZE, mImages);
@@ -105,6 +107,7 @@ public class ChannelPlayer {
 	}
 
 	public synchronized Image getImage(int index) {
+		// TODO: Check our channel image count and if we don't have enough then don't bother going to the db, just wrap the index around
 		// if we are requesting a higher image index than has been loaded, load
 		// enough images to meet the index
 		if (index >= mImages.size()) {
@@ -179,7 +182,7 @@ public class ChannelPlayer {
 			// TODO: Better way to manage duplicates in the db before we
 			// retrieve them
 			if (!mImages.contains(image) && !replacementImages.contains(image)) {
-				mImages.add(image);
+				images.add(image);
 				resultCount++;
 			}
 		}
@@ -202,13 +205,15 @@ public class ChannelPlayer {
 			// make sure there are replacement images available to use, if not
 			// try to load more.
 			if (replacementImages.isEmpty()) {
-				// TODO: use a liste
-				loadImageBatch(NUM_REPLACEMENT_IMAGES, replacementImages);
+				// TODO: use a listener
+				Util.log("replacement empty");
+				loadImageBatch(NUM_REPLACEMENT_IMAGES, replacementImages);				
 			}
 
 			Image img = replacementImages.poll();
 			// return the original image if the list is empty
 			if (img == null) {
+				Util.log("empty queue");
 				return mImages.get(position);
 			} else {
 				mImages.set(position, img);
@@ -216,6 +221,7 @@ public class ChannelPlayer {
 				if (!loadingReplacements) {
 					loadMoreReplacementsIfNeeded();
 				}
+				Util.log("returning replacement");
 				return img;
 			}
 		}

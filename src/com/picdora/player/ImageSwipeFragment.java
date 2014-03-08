@@ -2,11 +2,10 @@ package com.picdora.player;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EFragment;
+import org.androidannotations.annotations.FragmentArg;
 import org.androidannotations.annotations.ViewById;
 
 import uk.co.senab.photoview.PhotoView;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.v4.app.Fragment;
 import android.view.View;
@@ -32,7 +31,17 @@ public class ImageSwipeFragment extends Fragment implements
 	@ViewById
 	TextView deletedText;
 
+	@FragmentArg
+	int fragPosition;
+
+	// if we try to load an image that was deleted we can request a replacement
+	// and then try again. If we get really unlucky, or something goes wrong, we
+	// might keep getting deleted images so let's give up after a few tries
+	private int numDeletedImages;
+	private static final int NUM_DELETED_ATTEMPTS = 5;
+
 	protected Image mImage;
+	protected ChannelViewActivity mActivity;
 
 	// the number of times we have tried to load the image unsuccessfully
 	private int mLoadAttempts;
@@ -41,37 +50,36 @@ public class ImageSwipeFragment extends Fragment implements
 
 	@AfterViews
 	void addImage() {
-		// get image to display
-
-		String imageJson = getArguments().getString("imageJson");
-		mImage = Util.fromJson(imageJson, Image.class);
+		numDeletedImages = 0;
 
 		mPhotoView.setVisibility(View.GONE);
 		mProgress.setVisibility(View.VISIBLE);
 		mProgressText.setVisibility(View.GONE);
 		deletedText.setVisibility(View.GONE);
 
-		if (mImage.isDeleted()) {
-			showDeletedText();
-		} else {
-			loadImage();
-		}
+		mActivity = (ChannelViewActivity) getActivity();
+		mImage = mActivity.getImage(fragPosition);
+
+		loadImage();
 	}
 
 	private void loadImage() {
 		if (mImage == null) {
 			Util.log("Trying to load null image!");
 			return;
+		} else if (mImage.isDeleted()) {
+			handleDeletedImage();
+		} else {
+			PicdoraImageLoader.instance().loadImage(mImage, this);
 		}
-
-		PicdoraImageLoader.instance().loadImage(mImage, this);
 	}
 
 	@Override
 	public void onDestroyView() {
 		super.onDestroyView();
 
-		PicdoraImageLoader.instance().unregisterCallbacks(mImage.getImgurId(), this);
+		PicdoraImageLoader.instance().unregisterCallbacks(mImage.getImgurId(),
+				this);
 
 		mPhotoView.setImageDrawable(null);
 
@@ -90,8 +98,13 @@ public class ImageSwipeFragment extends Fragment implements
 
 	@Override
 	public void onProgress(int percentComplete) {
-		mProgressText.setVisibility(View.VISIBLE);
-		mProgressText.setText(percentComplete + "%");
+		// on error the percent can be wacky
+		if (percentComplete < 0 || percentComplete > 100) {
+			mProgressText.setVisibility(View.GONE);
+		} else {
+			mProgressText.setVisibility(View.VISIBLE);
+			mProgressText.setText(percentComplete + "%");
+		}
 	}
 
 	@Override
@@ -122,7 +135,7 @@ public class ImageSwipeFragment extends Fragment implements
 		case UNKOWN:
 			break;
 		case IMAGE_DELETED:
-			handleImageDeleted();
+			handleDeletedImage();
 			return;
 		default:
 			break;
@@ -135,14 +148,42 @@ public class ImageSwipeFragment extends Fragment implements
 		}
 	}
 
-	private void handleImageDeleted() {
-		if (mImage != null) {
-			mImage.setDeleted(true);
-			Util.log("Deleted: " + mImage.getUrl());
-			// TODO: Set up reporting to server and save to db
+	private void handleDeletedImage() {
+		Util.log("Deleted: " + mImage.getUrl());
+
+		// mPhotoView is null if the fragment was destroyed
+		if (mPhotoView == null) {
+			return;
 		}
 
-		showDeletedText();
+		// TODO: Set up reporting to server and save to db
+		mImage.setDeleted(true);
+
+		// if we keep getting deleted images, then something might be wrong...
+		// anyway, give up after a few attempts
+		numDeletedImages++;
+		if (numDeletedImages < NUM_DELETED_ATTEMPTS) {
+			// try to load a different image
+			mProgressText.setVisibility(View.GONE);
+			mProgress.setVisibility(View.VISIBLE);
+			mPhotoView.setVisibility(View.GONE);
+			Image replacement = mActivity.getReplacementImage(fragPosition);
+
+			if (replacement == null || replacement.equals(mImage)) {
+				// couldn't get a replacement :(
+				Util.log("bad replacement");
+				showDeletedText();
+			} else {
+				Util.log("loading replacement");
+				mImage = replacement;
+				loadImage();
+			}
+		}
+		// otherwise just say the image was deleted
+		else {
+			Util.log("Attempts ran out");
+			showDeletedText();
+		}
 	}
 
 	private void showDeletedText() {
@@ -153,6 +194,5 @@ public class ImageSwipeFragment extends Fragment implements
 		deletedText.setVisibility(View.VISIBLE);
 		mProgress.setVisibility(View.GONE);
 		mPhotoView.setVisibility(View.GONE);
-
 	}
 }

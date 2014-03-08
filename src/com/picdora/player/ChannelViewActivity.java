@@ -12,7 +12,6 @@ import org.androidannotations.annotations.ViewById;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
-import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -89,6 +88,14 @@ public class ChannelViewActivity extends FragmentActivity {
 		}
 		Util.makeBasicToast(this, msg);
 		finish();
+	}
+	
+	public Image getImage(int position){
+		return mChannelPlayer.getImage(position);
+	}
+	
+	public Image getReplacementImage(int position){
+		return mChannelPlayer.getReplacementImage(position);
 	}
 
 	protected void startChannel() {
@@ -201,15 +208,9 @@ public class ChannelViewActivity extends FragmentActivity {
 
 		@Override
 		public Fragment getItem(int position) {
-			ImageSwipeFragment frag = new ImageSwipeFragment_();
-
-			Image image = mChannelPlayer.getImage(position);
-
-			Bundle args = new Bundle();
-			args.putString("imageJson", Util.toJson(image));
-			frag.setArguments(args);
-
-			return frag;
+			return ImageSwipeFragment_.builder()
+			.fragPosition(position)
+			.build();
 		}
 
 		@Override
