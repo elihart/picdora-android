@@ -78,7 +78,8 @@ public class ImageUpdater {
 	@UiThread
 	protected void getNewImageBatch(final int index) {
 		Util.log("Getting update at id " + index);
-		ImageManager.getNewImagesFromServer(index, mLastUpdated, BATCH_SIZE,
+		// To convert to unix time we have to go from millisecond to seconds
+		ImageManager.getNewImagesFromServer(index, mLastUpdated / 1000, BATCH_SIZE,
 				new OnImageUpdateListener() {
 
 					@Override
