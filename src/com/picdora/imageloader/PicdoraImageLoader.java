@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,6 +36,10 @@ public class PicdoraImageLoader {
 	// when they exceed that. Or maybe we can download to file and then retrieve
 	// the file
 
+	// TODO: I think very fast scrolling causes lots of started/canceled
+	// downloads that clog things up and can cause timeout exceptions for
+	// everything and lead to images not loading. 
+
 	// maximum images to download at once
 	private static final int MAX_DOWNLOADS = 3;
 	// the number of times to attempt a method that might fail due to an out of
@@ -48,9 +51,6 @@ public class PicdoraImageLoader {
 	private Map<String, Download> mDownloads;
 	private AsyncHttpClient client;
 	private Context mContext;
-	// hold a queue of upcoming images that can be preloaded if there is space
-	// in the download list
-	private LinkedList<Image> mUpcomingImages;
 
 	// keep track of the largest dimension that the image should fit
 	private int mMaxDimension;
@@ -78,14 +78,12 @@ public class PicdoraImageLoader {
 		// init downloads map
 		mDownloads = new HashMap<String, Download>();
 
-
 		// setup async client
 		client = new AsyncHttpClient();
 		client.getHttpClient().getParams()
 				.setParameter(ClientPNames.ALLOW_CIRCULAR_REDIRECTS, true);
-		client.setMaxConnections(MAX_DOWNLOADS);
 		// TODO: This should catch redirects due to removed images, but I dunno
-		// if it normal images might be redirected and caught as well... Need to
+		// if normal images might be redirected and caught as well... Need to
 		// get the redirect handler below working
 		client.setEnableRedirects(false);
 
@@ -152,8 +150,6 @@ public class PicdoraImageLoader {
 	 * Cancel all downloads in the download list
 	 */
 	public void clearDownloads() {
-		mUpcomingImages.clear();
-
 		// need to make a copy of the collection because the cancel method
 		// removes them from the list
 		List<Download> downloads = new ArrayList<Download>(mDownloads.values());
@@ -177,8 +173,8 @@ public class PicdoraImageLoader {
 	 * @param image
 	 * @param callbacks
 	 */
-	public synchronized void loadImage(final Image image,
-			final LoadCallbacks callbacks) {
+	private synchronized void loadImage(final Image image,
+			final LoadCallbacks callbacks, boolean preload) {
 		// first check if the image has already been saved
 		if (mCache.contains(image)) {
 			// on hit, retrieve and return the image only if there are callbacks
@@ -194,13 +190,74 @@ public class PicdoraImageLoader {
 
 				// add the callbacks. Uses a set so they won't be added more
 				// than once
-				download.listeners.add(callbacks);
+				if (callbacks != null) {
+					download.listeners.add(callbacks);
+				}
+
+				// allow the download to be upgraded from preload, but don't go
+				// from not preload to preload
+				if (!preload) {
+					download.preload = false;
+				}
 			}
 
-			// otherwise start a new download
-			else {
-				startDownload(image, callbacks);
+			// don't do a preload if we don't have room
+			else if (isDownloadsFull() && preload) {
+				if (callbacks != null) {
+					callbacks.onError(LoadError.DOWNLOAD_CANCELED);
+				}
 			}
+			// otherwise start the download
+			else {
+				startDownload(image, callbacks, preload);
+			}
+		}
+	}
+
+	// TODO: Could make these load methods background threads if they cause lag
+	public void loadImage(Image image, LoadCallbacks listener) {
+		loadImage(image, listener, false);
+	}
+
+	public void preloadImage(Image image) {
+		loadImage(image, null, true);
+	}
+
+	/**
+	 * Check if an image is in the cache or is actively being downloaded
+	 * 
+	 * @param image
+	 * @return
+	 */
+	public boolean isImageLoaded(Image image) {
+		if (mCache.contains(image)) {
+			return true;
+		} else if (mDownloads.containsKey(image.getImgurId())) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	private Set<OnDownloadSpaceAvailableListener> downloadSpaceListeners = new HashSet<OnDownloadSpaceAvailableListener>();
+
+	public interface OnDownloadSpaceAvailableListener {
+		public void onDownloadSpaceAvailable();
+	}
+
+	public void registerOnDownloadSpaceAvailableListener(
+			OnDownloadSpaceAvailableListener listener) {
+		downloadSpaceListeners.add(listener);
+	}
+
+	public void unregisterOnDownloadSpaceAvailableListener(
+			OnDownloadSpaceAvailableListener listener) {
+		downloadSpaceListeners.remove(listener);
+	}
+
+	private void notifyDownloadSpace() {
+		for (OnDownloadSpaceAvailableListener l : downloadSpaceListeners) {
+			l.onDownloadSpaceAvailable();
 		}
 	}
 
@@ -269,36 +326,6 @@ public class PicdoraImageLoader {
 	}
 
 	/**
-	 * Add the images to the front of the queue to be next to download. They are
-	 * added in the order they are in the list, with index 0 at the front of the
-	 * queue
-	 * 
-	 * @param image
-	 */
-	public void preloadImages(List<Image> images) {
-		for (int i = images.size() - 1; i >= 0; i--) {
-			Image image = images.get(i);
-
-			// if it's in the cache we're already done
-			if (mCache.contains(image)) {
-				continue;
-			}
-
-			// check if it's already downloading
-			if (mDownloads.containsKey(image.getImgurId())) {
-				continue;
-			}
-
-			// otherwise move it to the front of the queue
-			clearFromQueue(image);
-			mUpcomingImages.addFirst(image);
-		}
-
-		// try to load them
-		tryDownloadNextImageInQueue();
-	}
-
-	/**
 	 * Whether or not we are maxed out on our number of concurrent downloads
 	 * 
 	 * @return
@@ -316,12 +343,11 @@ public class PicdoraImageLoader {
 	 * @param image
 	 * @param callbacks
 	 */
-	private void startDownload(Image image, LoadCallbacks callbacks) {
-		// remove it from the queue if it's there
-		clearFromQueue(image);
+	private void startDownload(Image image, LoadCallbacks callbacks,
+			boolean preload) {
 
 		final Download download = new Download(new Date().getTime(), callbacks,
-				null, image, false);
+				null, image, preload);
 
 		RequestHandle handle = client.get(image.getUrl(),
 				new BinaryHttpResponseHandler(ALLOWED_CONTENT_TYPES) {
@@ -360,25 +386,10 @@ public class PicdoraImageLoader {
 
 	protected void downloadFinished(Download download) {
 		removeDownload(download);
-		tryDownloadNextImageInQueue();
-	}
 
-	private void tryDownloadNextImageInQueue() {
-		// while there is room for more download dequeue images and start them,
-		// with priority to upcoming images
-		while (!isDownloadsFull()) {
-			if (!mUpcomingImages.isEmpty()) {
-				loadImage(mUpcomingImages.removeFirst(), null);
-				continue;
-			}else {
-				break;
-			}
+		if (!isDownloadsFull()) {
+			notifyDownloadSpace();
 		}
-	}
-
-	// remove the given image from all queues
-	private void clearFromQueue(Image image) {
-		mUpcomingImages.remove(image);
 	}
 
 	/**
@@ -554,24 +565,34 @@ public class PicdoraImageLoader {
 	}
 
 	/**
-	 * Find the oldest download in the list and cancel and remove it.
+	 * Remove the youngest preload, or if none exist, the oldest download
 	 */
 	private void removeOldestDownload() {
 		// find the oldest download
 		Download oldest = null;
-		for (Download download : mDownloads.values()) {
-			if (oldest == null) {
-				oldest = download;
-			} else if (download.startTime < oldest.startTime) {
-				oldest = download;
+		Download youngestPreload = null;
+		for (Download d : mDownloads.values()) {
+			// handle preloads separately
+			if (d.preload) {
+				if (youngestPreload == null) {
+					youngestPreload = d;
+				} else if (d.startTime > youngestPreload.startTime) {
+					youngestPreload = d;
+				}
+			} else {
+				if (oldest == null) {
+					oldest = d;
+				} else if (d.startTime < oldest.startTime) {
+					oldest = d;
+				}
 			}
 		}
 
-		if (oldest == null) {
-			return;
+		if (youngestPreload != null) {
+			cancelDownload(youngestPreload);
+		} else if (oldest != null) {
+			cancelDownload(oldest);
 		}
-
-		cancelDownload(oldest);
 	}
 
 	/**
@@ -583,13 +604,13 @@ public class PicdoraImageLoader {
 	private void cancelDownload(Download download) {
 		removeDownload(download);
 
-		download.handle.cancel(true);
-
 		for (LoadCallbacks listener : download.listeners) {
 			if (listener != null) {
 				listener.onError(LoadError.DOWNLOAD_CANCELED);
 			}
 		}
+
+		download.handle.cancel(true);
 	}
 
 	/**
@@ -618,6 +639,9 @@ public class PicdoraImageLoader {
 			this.startTime = startTime;
 			this.handle = handle;
 			this.image = image;
+			// differentiate between preloads and non preloads. Pre loads can be
+			// loaded before they are needed and are less important. They will
+			// be canceled before a non preload
 			this.preload = preload;
 
 			listeners = new HashSet<LoadCallbacks>();

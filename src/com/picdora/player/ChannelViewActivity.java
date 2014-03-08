@@ -21,20 +21,24 @@ import android.widget.TextView;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.imageloader.PicdoraImageLoader;
+import com.picdora.imageloader.PicdoraImageLoader.OnDownloadSpaceAvailableListener;
 import com.picdora.models.Channel;
+import com.picdora.models.Image;
 import com.picdora.player.ChannelPlayer.ChannelError;
 import com.picdora.player.ChannelPlayer.OnGetImageResultListener;
 import com.picdora.player.ChannelPlayer.OnLoadListener;
 
 @Fullscreen
 @EActivity(R.layout.activity_channel_view)
-public class ChannelViewActivity extends FragmentActivity {
+public class ChannelViewActivity extends FragmentActivity implements
+		OnDownloadSpaceAvailableListener {
 	private static final int NUM_IMAGES_TO_PRELOAD = 5;
 
 	// Cache the last player used and remember the user's spot so they can
 	// resume quickly
 	private static CachedPlayerState cachedState;
 	private boolean shouldCache;
+	private PicdoraImageLoader loader;
 
 	@ViewById
 	PicdoraViewPager pager;
@@ -53,7 +57,8 @@ public class ChannelViewActivity extends FragmentActivity {
 	void initChannel() {
 		// show loading screen
 		showBusyDialog("Loading Channel...");
-		
+
+		loader = PicdoraImageLoader.instance();
 
 		// check if we should resume
 		if (getIntent().getBooleanExtra("resume", false)) {
@@ -74,9 +79,6 @@ public class ChannelViewActivity extends FragmentActivity {
 		String json = getIntent().getStringExtra("channel");
 		Channel channel = Util.fromJson(json, Channel.class);
 
-		
-
-
 		// check if we can use the cached player, if not create a new one
 		if (cachedState != null
 				&& cachedState.player.getChannel().equals(channel)) {
@@ -84,8 +86,10 @@ public class ChannelViewActivity extends FragmentActivity {
 			mChannelPlayer = cachedState.player;
 			startChannel(cachedState.position);
 		} else {
-			// we don't always want to cache what we're playing, as in the case of a
-			// preview. Cache the player if requested, overriding the old one. Otherwise
+			// we don't always want to cache what we're playing, as in the case
+			// of a
+			// preview. Cache the player if requested, overriding the old one.
+			// Otherwise
 			// leave the old one intact
 			if (getIntent().getBooleanExtra("cache", false)) {
 				cachedState = new CachedPlayerState(mChannelPlayer, 0);
@@ -144,8 +148,6 @@ public class ChannelViewActivity extends FragmentActivity {
 
 			@Override
 			public void onPageSelected(int pos) {
-				// preloadImages(pos + 1, pos + NUM_IMAGES_TO_PRELOAD);
-
 				if (shouldCache) {
 					cachedState.position = pos;
 				}
@@ -163,44 +165,9 @@ public class ChannelViewActivity extends FragmentActivity {
 		});
 
 		pager.setCurrentItem(startingPosition);
-		// preloadImages(startingPosition, startingPosition
-		// + NUM_IMAGES_TO_PRELOAD - 1);
 
 		dismissBusyDialog();
 	}
-
-	/**
-	 * Tell the imageloader to preload the images with positions between start
-	 * and end, inclusive
-	 * 
-	 * @param startPos
-	 *            Load the images in the range starting with this position
-	 * @param endPos
-	 *            The end of the image range, inclusive. Must be greater than
-	 *            start pos or nothing is done
-	 */
-	// protected void preloadImages(int startPos, int endPos) {
-	// if (endPos < startPos) {
-	// return;
-	// }
-	//
-	// List<Image> images = new ArrayList<Image>();
-	//
-	// // add the images to the list with the earlier images at the front so
-	// // that they will be loaded first
-	// for (int i = startPos; i <= endPos; i++) {
-	// mChannelPlayer.getImage(i, false, new OnGetImageResultListener() {
-	//
-	// @Override
-	// public void onGetImageResult(Image image) {
-	//
-	//
-	// }
-	// });
-	// }
-	//
-	// PicdoraImageLoader.instance().preloadImages(images);
-	// }
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -241,10 +208,27 @@ public class ChannelViewActivity extends FragmentActivity {
 	}
 
 	@Override
+	public void onPause() {
+		super.onPause();
+		loader.unregisterOnDownloadSpaceAvailableListener(this);
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		loader.registerOnDownloadSpaceAvailableListener(this);
+	}
+
+	@Override
 	public void onDestroy() {
 		super.onDestroy();
 
-		PicdoraImageLoader.instance().clearDownloads();
+		// if we are being destroyed because of orientation change then we don't
+		// need to clear downloads, otherwise the activity is exiting and we can
+		// clear them to save memory
+		if (isFinishing()) {
+			loader.clearDownloads();
+		}
 	}
 
 	private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
@@ -271,6 +255,21 @@ public class ChannelViewActivity extends FragmentActivity {
 		public CachedPlayerState(ChannelPlayer player, int position) {
 			this.player = player;
 			this.position = position;
+		}
+	}
+
+	@Override
+	public void onDownloadSpaceAvailable() {
+
+		int next = pager.getCurrentItem() + 1;
+		for (int i = next; i < next + NUM_IMAGES_TO_PRELOAD; i++) {
+			mChannelPlayer.getImage(i, false, new OnGetImageResultListener() {
+
+				@Override
+				public void onGetImageResult(Image image) {
+					loader.preloadImage(image);
+				}
+			});
 		}
 	}
 

@@ -63,18 +63,16 @@ public class ImageSwipeFragment extends Fragment implements
 		if (mImage != null) {
 			loadImage();
 		} else {
+			final Date start = new Date();
 			mActivity.getImage(fragPosition, false,
 					new OnGetImageResultListener() {
 
 						@Override
 						public void onGetImageResult(Image image) {
 							mImage = image;
-							// In between requesting the image and getting it
-							// the user may have moved on. Don't load the image
-							// if the fragment doesn't have a view anymore
-							if (viewActive) {
-								loadImage();
-							}
+//							Util.log("Getting " + image.getImgurId() + " took "
+//									+ (new Date().getTime() - start.getTime()));
+							loadImage();
 						}
 					});
 		}
@@ -93,16 +91,26 @@ public class ImageSwipeFragment extends Fragment implements
 		}
 	}
 
+	private Date loadStart;
+	private boolean downloading;
+
 	private void loadImage() {
+		// if the view was already destroyed then the user has moved on so don't
+		// bother trying to load
 		if (!viewActive) {
 			return;
-		} else if (mImage == null) {
+		} 
+		// we can't load an image if we don't have one...
+		else if (mImage == null) {
 			showLoadingCircle();
 			// TODO: Maybe show an error image?
 			return;
 		} else if (mImage.isDeleted()) {
 			handleDeletedImage();
 		} else {
+			loadStart = new Date();
+			downloading = false;
+//			Util.log("Load " + mImage.getImgurId());
 			PicdoraImageLoader.instance().loadImage(mImage, this);
 		}
 	}
@@ -129,11 +137,21 @@ public class ImageSwipeFragment extends Fragment implements
 		if (isVisibleToUser) {
 			// make sure we are loading this image as a priority
 			loadImage();
+			if (mImage != null) {
+				//Util.log("Viewing " + mImage.getImgurId());
+			}
 		}
 	}
 
 	@Override
 	public void onProgress(int percentComplete) {
+		if (!downloading) {
+//			Util.log("Image " + mImage.getImgurId() + " took "
+//					+ (new Date().getTime() - loadStart.getTime())
+//					+ " to start");
+			downloading = true;
+		}
+
 		if (!viewActive) {
 			return;
 		}
@@ -149,6 +167,8 @@ public class ImageSwipeFragment extends Fragment implements
 
 	@Override
 	public void onSuccess(Drawable drawable) {
+//		Util.log("Image " + mImage.getImgurId() + " took "
+//				+ (new Date().getTime() - loadStart.getTime()) + " to finish");
 		// TODO: check whether it is animated or not and update the gif status
 		// in the db in background if it's not right
 		if (viewActive) {
@@ -160,6 +180,7 @@ public class ImageSwipeFragment extends Fragment implements
 
 	@Override
 	public void onError(LoadError error) {
+//		Util.log("Load fail " + mImage.getImgurId() + " " + error);
 		mLoadAttempts++;
 
 		switch (error) {
@@ -194,7 +215,7 @@ public class ImageSwipeFragment extends Fragment implements
 	private void handleDeletedImage() {
 		// TODO: Set up reporting to server and save to db
 		mImage.setDeleted(true);
-		
+
 		if (!viewActive) {
 			return;
 		}
