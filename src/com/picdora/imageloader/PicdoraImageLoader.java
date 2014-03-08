@@ -39,6 +39,9 @@ public class PicdoraImageLoader {
 	// TODO: I think very fast scrolling causes lots of started/canceled
 	// downloads that clog things up and can cause timeout exceptions for
 	// everything and lead to images not loading. 
+	
+	// set the image load timeout in milliseconds
+	private static final int TIMEOUT = 3000;
 
 	// maximum images to download at once
 	private static final int MAX_DOWNLOADS = 3;
@@ -86,6 +89,7 @@ public class PicdoraImageLoader {
 		// if normal images might be redirected and caught as well... Need to
 		// get the redirect handler below working
 		client.setEnableRedirects(false);
+		client.setTimeout(TIMEOUT);
 
 		// Listener for redirects. If we are redirected to the removed image
 		// page then tell it not to redirect and instead go to failure
@@ -408,6 +412,7 @@ public class PicdoraImageLoader {
 			return LoadError.IMAGE_DELETED;
 		}
 		// TODO: Check for more cases
+		// can check for timeout
 		else {
 			return LoadError.DOWNLOAD_FAILURE;
 		}
