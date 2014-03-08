@@ -53,6 +53,7 @@ public class ChannelViewActivity extends FragmentActivity {
 	void initChannel() {
 		// show loading screen
 		showBusyDialog("Loading Channel...");
+		
 
 		// check if we should resume
 		if (getIntent().getBooleanExtra("resume", false)) {

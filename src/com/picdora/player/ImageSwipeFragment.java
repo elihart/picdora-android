@@ -1,5 +1,7 @@
 package com.picdora.player;
 
+import java.util.Date;
+
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.FragmentArg;
@@ -40,6 +42,9 @@ public class ImageSwipeFragment extends Fragment implements
 	protected Image mImage;
 	protected ChannelViewActivity mActivity;
 
+	// keep track of whether or not this fragment had it's view destroyed
+	private boolean viewActive;
+
 	// the number of times we have tried to load the image unsuccessfully
 	private int mLoadAttempts;
 	// number of times to retry image loading before giving up
@@ -47,19 +52,32 @@ public class ImageSwipeFragment extends Fragment implements
 
 	@AfterViews
 	void addImage() {
+		viewActive = true;
 		mLoadAttempts = 0;
 
 		showLoadingCircle();
 
 		mActivity = (ChannelViewActivity) getActivity();
-		mActivity.getImage(fragPosition, false, new OnGetImageResultListener() {
 
-			@Override
-			public void onGetImageResult(Image image) {
-				mImage = image;
-				loadImage();
-			}
-		});
+		// if we already have the image then don't bother getting it again
+		if (mImage != null) {
+			loadImage();
+		} else {
+			mActivity.getImage(fragPosition, false,
+					new OnGetImageResultListener() {
+
+						@Override
+						public void onGetImageResult(Image image) {
+							mImage = image;
+							// In between requesting the image and getting it
+							// the user may have moved on. Don't load the image
+							// if the fragment doesn't have a view anymore
+							if (viewActive) {
+								loadImage();
+							}
+						}
+					});
+		}
 
 	}
 
@@ -90,6 +108,7 @@ public class ImageSwipeFragment extends Fragment implements
 	@Override
 	public void onDestroyView() {
 		super.onDestroyView();
+		viewActive = false;
 
 		if (mImage != null) {
 			PicdoraImageLoader.instance().unregisterCallbacks(
@@ -153,6 +172,7 @@ public class ImageSwipeFragment extends Fragment implements
 				loadImage();
 			} else {
 				// TODO: Load error image
+				showLoadingCircle();
 			}
 			break;
 		case IMAGE_DELETED:
