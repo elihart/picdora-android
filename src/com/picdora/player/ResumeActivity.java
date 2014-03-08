@@ -3,12 +3,11 @@ package com.picdora.player;
 import org.androidannotations.annotations.EActivity;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 
+import com.picdora.ChannelHelper;
 import com.picdora.R;
-import com.picdora.channelSelection.ChannelSelectionActivity_;
 
 @EActivity
 public class ResumeActivity extends Activity {
@@ -18,7 +17,7 @@ public class ResumeActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		
 		// TODO: Implement resume
-		startActivity(new Intent(this, ChannelSelectionActivity_.class));
+		ChannelHelper.resumeCachedPlayed(this);
 		finish();
 	}
 

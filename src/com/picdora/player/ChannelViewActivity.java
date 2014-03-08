@@ -34,6 +34,11 @@ import com.picdora.player.ChannelPlayer.OnLoadListener;
 public class ChannelViewActivity extends FragmentActivity {
 	private static final int NUM_IMAGES_TO_PRELOAD = 5;
 
+	// Cache the last player used and remember the user's spot so they can
+	// resume quickly
+	private static CachedPlayerState cachedState;
+	private boolean shouldCache;
+
 	@ViewById
 	PicdoraViewPager pager;
 	@Bean
@@ -52,21 +57,42 @@ public class ChannelViewActivity extends FragmentActivity {
 		// show loading screen
 		showBusyDialog("Loading Channel...");
 
+		// check if we should resume
+		if (getIntent().getBooleanExtra("resume", false)) {
+
+			if (cachedState == null) {
+				// nothing to resume from...
+				finish();
+				return;
+			} else {
+				shouldCache = true;
+				mChannelPlayer = cachedState.player;
+				startChannel(cachedState.position);
+				return;
+			}
+		}
+
 		// Load channel and play when ready
 		String json = getIntent().getStringExtra("channel");
 		Channel channel = Util.fromJson(json, Channel.class);
 
-		ChannelPlayer cachedPlayer = ChannelPlayer.getCachedPlayer(channel);
+		// we don't always want to cache what we're playing, as in the case of a preview
+		shouldCache = getIntent().getBooleanExtra("cache", false);
 
-		if (cachedPlayer != null) {
-			mChannelPlayer = cachedPlayer;
-			startChannel();
+		if (cachedState != null
+				&& cachedState.player.getChannel().equals(channel)) {
+			mChannelPlayer = cachedState.player;
+			startChannel(cachedState.position);
 		} else {
+			// cache the player if requested
+			if (shouldCache) {
+				cachedState = new CachedPlayerState(mChannelPlayer, 0);
+			}
 
 			mChannelPlayer.loadChannel(channel, new OnLoadListener() {
 				@Override
 				public void onSuccess() {
-					startChannel();
+					startChannel(0);
 				}
 
 				@Override
@@ -74,6 +100,18 @@ public class ChannelViewActivity extends FragmentActivity {
 					handleChannelLoadError(error);
 				}
 			});
+		}
+	}
+
+	public static boolean hasCachedPlayer() {
+		return cachedState != null;
+	}
+
+	public static String getCachedPlayerChannelName() {
+		if (hasCachedPlayer()) {
+			return cachedState.player.getChannel().getName();
+		} else {
+			return null;
 		}
 	}
 
@@ -89,21 +127,19 @@ public class ChannelViewActivity extends FragmentActivity {
 		Util.makeBasicToast(this, msg);
 		finish();
 	}
-	
-	public Image getImage(int position){
+
+	public Image getImage(int position) {
 		return mChannelPlayer.getImage(position);
 	}
-	
-	public Image getReplacementImage(int position){
+
+	public Image getReplacementImage(int position) {
 		return mChannelPlayer.getReplacementImage(position);
 	}
 
-	protected void startChannel() {
+	protected void startChannel(int startingPosition) {
 		// Instantiate a ViewPager and a PagerAdapter
 		mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
 		pager.setAdapter(mPagerAdapter);
-
-		preloadImages(0, NUM_IMAGES_TO_PRELOAD - 1);
 
 		pager.setOnPageChangeListener(new OnPageChangeListener() {
 
@@ -111,20 +147,25 @@ public class ChannelViewActivity extends FragmentActivity {
 			public void onPageSelected(int pos) {
 				preloadImages(pos + 1, pos + NUM_IMAGES_TO_PRELOAD);
 
+				if (shouldCache) {
+					cachedState.position = pos;
+				}
 			}
 
 			@Override
 			public void onPageScrolled(int arg0, float arg1, int arg2) {
-				// TODO Auto-generated method stub
 
 			}
 
 			@Override
 			public void onPageScrollStateChanged(int arg0) {
-				// TODO Auto-generated method stub
 
 			}
 		});
+
+		pager.setCurrentItem(startingPosition);
+		preloadImages(startingPosition, startingPosition
+				+ NUM_IMAGES_TO_PRELOAD - 1);
 
 		dismissBusyDialog();
 	}
@@ -208,14 +249,22 @@ public class ChannelViewActivity extends FragmentActivity {
 
 		@Override
 		public Fragment getItem(int position) {
-			return ImageSwipeFragment_.builder()
-			.fragPosition(position)
-			.build();
+			return ImageSwipeFragment_.builder().fragPosition(position).build();
 		}
 
 		@Override
 		public int getCount() {
 			return Integer.MAX_VALUE;
+		}
+	}
+
+	private class CachedPlayerState {
+		public ChannelPlayer player;
+		public int position;
+
+		public CachedPlayerState(ChannelPlayer player, int position) {
+			this.player = player;
+			this.position = position;
 		}
 	}
 

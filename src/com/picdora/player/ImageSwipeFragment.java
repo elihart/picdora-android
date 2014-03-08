@@ -31,6 +31,7 @@ public class ImageSwipeFragment extends Fragment implements
 	@ViewById
 	TextView deletedText;
 
+	// The position of the fragment in the view pager. Use this to retrieve what image we should show
 	@FragmentArg
 	int fragPosition;
 
@@ -45,12 +46,13 @@ public class ImageSwipeFragment extends Fragment implements
 
 	// the number of times we have tried to load the image unsuccessfully
 	private int mLoadAttempts;
-	// number of times to retry before giving up
+	// number of times to retry image loading before giving up
 	private static final int MAX_LOAD_ATTEMPTS = 2;
 
 	@AfterViews
 	void addImage() {
 		numDeletedImages = 0;
+		mLoadAttempts = 0;
 
 		mPhotoView.setVisibility(View.GONE);
 		mProgress.setVisibility(View.VISIBLE);
@@ -65,7 +67,6 @@ public class ImageSwipeFragment extends Fragment implements
 
 	private void loadImage() {
 		if (mImage == null) {
-			Util.log("Trying to load null image!");
 			return;
 		} else if (mImage.isDeleted()) {
 			handleDeletedImage();

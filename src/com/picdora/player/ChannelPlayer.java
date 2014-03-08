@@ -19,9 +19,6 @@ import com.picdora.models.Image;
 
 @EBean
 public class ChannelPlayer {
-	// keep track of the last channel so we don't have to reload it
-	// TODO: Also remember position
-	protected static ChannelPlayer lastChannelPlayer;
 
 	// TODO: On channels with low image counts there is lag as it tries to fetch
 	// more images (that we don't have). Maybe get the image count on launch
@@ -57,23 +54,6 @@ public class ChannelPlayer {
 		// empty constructor for enhanced class
 	}
 
-	public static ChannelPlayer getCachedPlayer(Channel channel) {
-		if (lastChannelPlayer != null
-				&& channel.equals(lastChannelPlayer.getChannel())) {
-			return lastChannelPlayer;
-		} else {
-			return null;
-		}
-	}
-
-	public static Channel lastPlayedChannel() {
-		if (lastChannelPlayer != null) {
-			return lastChannelPlayer.getChannel();
-		} else {
-			return null;
-		}
-	}
-
 	@Background
 	public void loadChannel(Channel channel, OnLoadListener listener) {
 		loadingImagesInBackground = false;
@@ -97,12 +77,11 @@ public class ChannelPlayer {
 		if (mImages.isEmpty()) {
 			mListener.onFailure(ChannelError.NO_IMAGES);
 		} else {
-			lastChannelPlayer = this;
 			mListener.onSuccess();
 		}
 	}
 
-	private Channel getChannel() {
+	Channel getChannel() {
 		return mChannel;
 	}
 
@@ -261,16 +240,6 @@ public class ChannelPlayer {
 		// set listener to null so any background threads that end won't do
 		// their callbacks
 		mListener = null;
-	}
-
-	public static void clearCachedPlayer() {
-		if (lastChannelPlayer != null) {
-			lastChannelPlayer.mChannel = null;
-			lastChannelPlayer.mImages = null;
-			lastChannelPlayer.mListener = null;
-		}
-
-		lastChannelPlayer = null;
 	}
 
 }

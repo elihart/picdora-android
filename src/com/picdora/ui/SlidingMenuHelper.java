@@ -15,6 +15,7 @@ import com.picdora.R;
 import com.picdora.channelSelection.ChannelSelectionActivity_;
 import com.picdora.favorites.FavoritesActivity_;
 import com.picdora.likes.LikesActivity_;
+import com.picdora.player.ChannelViewActivity;
 import com.picdora.player.ResumeActivity_;
 import com.picdora.settings.SettingsActivity;
 
@@ -23,7 +24,6 @@ public class SlidingMenuHelper {
 	// TODO: Hide contextual action buttons on drawer show
 	// TODO: Drawer tutorial
 	// TODO: Highlight activity name when drawer opens in that activity
-	// TODO: Show messages count next to Messages label
 
 	/**
 	 * Get a list of the items to place in the sliding menu
@@ -33,8 +33,10 @@ public class SlidingMenuHelper {
 	private static ArrayList<SlidingMenuItem> getMenuEntries() {
 		ArrayList<SlidingMenuItem> items = new ArrayList<SlidingMenuItem>();
 
-		items.add(new SlidingMenuItem(R.drawable.ic_action_play_over_video, "Resume",
+		if(ChannelViewActivity.hasCachedPlayer()){
+		items.add(new SlidingMenuItem(R.drawable.ic_action_play_over_video, ChannelViewActivity.getCachedPlayerChannelName(),
 				ResumeActivity_.class));
+		}
 		items.add(new SlidingMenuItem(R.drawable.ic_action_channels, "Channels",
 				ChannelSelectionActivity_.class));
 		items.add(new SlidingMenuItem(R.drawable.ic_action_like, "Likes",

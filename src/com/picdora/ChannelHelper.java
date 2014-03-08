@@ -28,9 +28,10 @@ public class ChannelHelper {
 	@RootContext
 	Context context;
 
-	public static void playChannel(Channel channel, Activity activity) {
+	public static void playChannel(Channel channel, boolean cache, Activity activity) {
 		Intent intent = new Intent(activity, ChannelViewActivity_.class);
 		intent.putExtra("channel", Util.toJson(channel));
+		intent.putExtra("cache", cache);
 		activity.startActivity(intent);
 	}
 
@@ -135,6 +136,13 @@ public class ChannelHelper {
 			return left.getName().toLowerCase()
 					.compareTo(right.getName().toLowerCase());
 		}
+	}
+
+	public static void resumeCachedPlayed(Activity activity) {
+		Intent intent = new Intent(activity, ChannelViewActivity_.class);
+		intent.putExtra("resume", true);
+		activity.startActivity(intent);
+		
 	}
 
 }

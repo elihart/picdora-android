@@ -65,7 +65,7 @@ public class ChannelSelectionActivity extends PicdoraActivity {
 	}
 
 	public void channelSelected(Channel channel) {
-		ChannelHelper.playChannel(channel, this);
+		ChannelHelper.playChannel(channel, true, this);
 	}
 
 	@Override

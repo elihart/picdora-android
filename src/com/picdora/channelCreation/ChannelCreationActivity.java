@@ -242,9 +242,6 @@ public class ChannelCreationActivity extends PicdoraActivity{
 			saveState(categories);
 		}
 
-		// the player might have the same name as the cached player if the user
-		// if previewing several. We don't want the old one!
-		ChannelPlayer.clearCachedPlayer();
 
 		Channel channel = new Channel(channelInfoState.channelName, categories,
 				channelInfoState.gifSetting);
@@ -316,7 +313,7 @@ public class ChannelCreationActivity extends PicdoraActivity{
 			return;
 		}
 
-		ChannelHelper.playChannel(channel, this);
+		ChannelHelper.playChannel(channel, !preview, this);
 
 		if (!preview) {
 			clearSavedState();
