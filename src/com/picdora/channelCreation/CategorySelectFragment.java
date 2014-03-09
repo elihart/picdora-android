@@ -112,7 +112,7 @@ public class CategorySelectFragment extends Fragment {
 		sfwCategories = new ArrayList<Category>();
 
 		for (Category c : allCategories) {
-			if (c.getNsfw()) {
+			if (c.isNsfw()) {
 				nsfwCategories.add(c);
 			} else {
 				sfwCategories.add(c);

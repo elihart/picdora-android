@@ -89,7 +89,7 @@ public class Category extends Model {
 		return mName;
 	}
 
-	public boolean getNsfw() {
+	public boolean isNsfw() {
 		return mNsfw;
 	}
 
@@ -119,6 +119,10 @@ public class Category extends Model {
 
     public String getPreviewUrl() {
 		return "http://i.imgur.com/" + mPreviewImage + "b.jpg";
+	}
+
+	public String getIconId() {
+		return mPreviewImage;
 	}
 
 }

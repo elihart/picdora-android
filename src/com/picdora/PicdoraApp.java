@@ -36,22 +36,21 @@ public class PicdoraApp extends Application {
 		runMigrations();
 
 		syncDb();
-		// TODO: Sync uses lots of memory and can interfere with image loading on small heaps
+		// TODO: Sync uses lots of memory and can interfere with image loading
+		// on small heaps
 	}
 
 	private void initUniversalImageLoader() {
 		DisplayImageOptions options = new DisplayImageOptions.Builder()
-        .cacheInMemory(true) 
-        .cacheOnDisc(true)
-        .bitmapConfig(Bitmap.Config.RGB_565) 
-        .build();
-		
-		ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(getApplicationContext())
-        .defaultDisplayImageOptions(options) 
-        .build();
-		
-    ImageLoader.getInstance().init(config);
-		
+				.cacheInMemory(true).cacheOnDisc(true)
+				.bitmapConfig(Bitmap.Config.RGB_565).build();
+
+		ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(
+				getApplicationContext()).defaultDisplayImageOptions(options)
+				.build();
+
+		ImageLoader.getInstance().init(config);
+
 	}
 
 	private void syncDb() {
@@ -74,7 +73,8 @@ public class PicdoraApp extends Application {
 
 	// Run db migrations with sprinkles
 	private void runMigrations() {
-		// Util.log("Delete : " + deleteDatabase("sprinkles.db"));
+		
+		//Util.log("Delete : " + deleteDatabase("sprinkles.db"));
 		Sprinkles sprinkles = Sprinkles.getInstance(getApplicationContext());
 
 		// create models
@@ -83,12 +83,18 @@ public class PicdoraApp extends Application {
 		addModelsMigration.createTable(Category.class);
 		addModelsMigration.createTable(Channel.class);
 		sprinkles.addMigration(addModelsMigration);
-		
-		// second migration
+
+		// add category icons
 		Migration addCatIcons = new Migration();
 		addCatIcons.dropTable(Category.class);
 		addCatIcons.createTable(Category.class);
 		sprinkles.addMigration(addCatIcons);
+
+		// add channel icons
+		Migration addChannelIcons = new Migration();
+		addChannelIcons.dropTable(Channel.class);
+		addChannelIcons.createTable(Channel.class);
+		sprinkles.addMigration(addChannelIcons);
 	}
 
 	@Override

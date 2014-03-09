@@ -26,15 +26,17 @@ public class Channel extends Model {
 	@Column("name")
 	private String mName;
 
-	// TODO: Why is this a string?
 	@Column("nsfw")
-	private String mNsfw;
+	private boolean mNsfw;
 
-	// TODO: Add this field to the db and update on channel creation, and
-	// favoriting
-	private String mPreviewImage = "Z9kkH2r";
+	@Column("icon")
+	private String mPreviewImage;
 	
-	// TODO: Add created and last used fields
+	@Column("lastUsed")
+	private long mLastUsed;
+	
+	@Column("createAt")
+	private long mCreatedAt;
 
 	@Column("categories")
 	private String mCategoriesAsJson;
@@ -47,14 +49,27 @@ public class Channel extends Model {
 		mName = name;
 		mCategories = categories;
 		mGifSetting = gifSetting.ordinal();
-
-		// TODO: Validate non null/empty values. Unique name.
-
-		// TODO: Set nsfw based on categories
 	}
+	
+	// TODO: Add validations and check them before creating
 
 	public Channel() {
 		// empty constructor for Sprinkles model creation
+	}
+	
+	@Override
+	protected void beforeCreate() {
+	    mCreatedAt = System.currentTimeMillis();
+	    mLastUsed = System.currentTimeMillis();
+	    
+	    mPreviewImage = getCategories().get(0).getIconId();
+	    
+	    for(Category c : getCategories()){
+	    	if(c.isNsfw()){
+	    		mNsfw = true;
+	    		break;
+	    	}
+	    }
 	}
 
 	public long getId() {
@@ -65,7 +80,7 @@ public class Channel extends Model {
 		return mName;
 	}
 
-	public String getNsfw() {
+	public boolean getNsfw() {
 		return mNsfw;
 	}
 
