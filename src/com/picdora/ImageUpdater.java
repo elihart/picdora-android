@@ -1,5 +1,8 @@
 package com.picdora;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Date;
 
 import org.androidannotations.annotations.Background;
@@ -10,11 +13,15 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import retrofit.Callback;
+import retrofit.RestAdapter;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
 import se.emilsjolander.sprinkles.Sprinkles;
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.picdora.ImageManager.OnImageUpdateListener;
+import com.picdora.api.PicdoraApi;
 
 /**
  * This class keeps the local image database up to date with the server. This
@@ -53,6 +60,8 @@ public class ImageUpdater {
 	@Pref
 	PicdoraPreferences_ prefs;
 
+	PicdoraApi api;
+
 	public ImageUpdater() {
 		// empty constructor for enhanced class
 	}
@@ -65,10 +74,15 @@ public class ImageUpdater {
 		// all
 		mLastUpdated = prefs.lastUpdated().get();
 		mIdIndex = 0;
-		
+
 		// We retry on error, but if we run into too many consecutive errors we
 		// give up
 		mNumFailures = 0;
+
+		RestAdapter restAdapter = new RestAdapter.Builder().setEndpoint(
+				PicdoraApiClient.BASE_URL).build();
+
+		api = restAdapter.create(PicdoraApi.class);
 
 		Util.log("Last updated " + new Date(mLastUpdated));
 		getNewImageBatch(0);
@@ -78,26 +92,57 @@ public class ImageUpdater {
 	@UiThread
 	protected void getNewImageBatch(final int index) {
 		Util.log("Getting update at id " + index);
+
+		api.newImages(index, mLastUpdated / 1000, BATCH_SIZE, new Callback<Response>() {
+
+			@Override
+			public void success(Response response, Response arg1) {
+				try {
+					InputStream is = response.getBody().in();
+					BufferedReader r = new BufferedReader(new InputStreamReader(is));
+					StringBuilder total = new StringBuilder();
+					String line;
+					while ((line = r.readLine()) != null) {
+					    total.append(line);
+					}
+					is.close();
+					
+					handleNewImageSuccess(new JSONObject(total.toString()));
+					//InputStream is = response.getBody().in();
+
+					//handleNewImageSuccess(new JsonFactory().createJsonParser(is));
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+
+			@Override
+			public void failure(RetrofitError error) {
+				error.printStackTrace();
+			}
+		});
+
 		// To convert to unix time we have to go from millisecond to seconds
-		ImageManager.getNewImagesFromServer(index, mLastUpdated / 1000, BATCH_SIZE,
-				new OnImageUpdateListener() {
-
-					@Override
-					public void onSuccess(JSONObject json) {
-						handleNewImageSuccess(json);
-					}
-
-					@Override
-					public void onFailure() {
-						mNumFailures++;
-						// try again if we haven't hit the retry limit
-						Util.log("Update failure. Retrying " + index);
-						if (mNumFailures < FAILURE_LIMIT) {
-							getNewImageBatch(index);
-						}
-
-					}
-				});
+		// ImageManager.getNewImagesFromServer(index, mLastUpdated / 1000,
+		// BATCH_SIZE, new OnImageUpdateListener() {
+		//
+		// @Override
+		// public void onSuccess(JSONObject json) {
+		// handleNewImageSuccess(json);
+		// }
+		//
+		// @Override
+		// public void onFailure() {
+		// mNumFailures++;
+		// // try again if we haven't hit the retry limit
+		// Util.log("Update failure. Retrying " + index);
+		// if (mNumFailures < FAILURE_LIMIT) {
+		// getNewImageBatch(index);
+		// }
+		//
+		// }
+		// });
 	}
 
 	@Background
@@ -144,17 +189,17 @@ public class ImageUpdater {
 	}
 
 	protected void addNewImagesToDb(JSONArray array) {
-		if(array == null || array.length() == 0){
+		if (array == null || array.length() == 0) {
 			return;
 		}
-		
+
 		SQLiteDatabase db = Sprinkles.getDatabase();
 		db.beginTransaction();
 
 		try {
 			int numImages = array.length();
 			for (int i = numImages - 1; i >= 0; i--) {
-				JSONObject imageJson = array.getJSONObject(i);		
+				JSONObject imageJson = array.getJSONObject(i);
 
 				ContentValues values = new ContentValues();
 				values.put("id", imageJson.getLong("id"));

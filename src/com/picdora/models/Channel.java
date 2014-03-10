@@ -44,6 +44,8 @@ public class Channel extends Model {
 
 	@Column("gifSetting")
 	private int mGifSetting;
+	
+	// TODO: Implement parcelable to pass this between activities
 
 	public Channel(String name, List<Category> categories, GifSetting gifSetting) {
 		mName = name;
