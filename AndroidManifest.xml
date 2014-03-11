@@ -21,11 +21,6 @@
         <activity
             android:name="com.picdora.channelSelection.ChannelSelectionActivity_"
             android:label="@string/title_activity_channel_selection" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
         <activity
             android:name="com.picdora.player.ChannelViewActivity_"
@@ -55,6 +50,15 @@
         <activity
             android:name="com.picdora.likes.LikesActivity_"
             android:label="@string/title_activity_likes" >
+        </activity>
+        <activity
+            android:name="com.picdora.LaunchActivity"
+            android:label="@string/title_activity_launch" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
     </application>
 
