@@ -41,9 +41,13 @@ public class ChannelViewActivity extends FragmentActivity implements
 	private PicdoraImageLoader loader;
 
 	@ViewById
-	PicdoraViewPager pager;
+	protected PicdoraViewPager pager;
 	@Bean
-	ChannelPlayer mChannelPlayer;
+	protected ChannelPlayer mChannelPlayer;
+
+	// hold a copy of the player when orientation changes and the activity
+	// recreates
+	private static CachedPlayerState mOnConfigChangeState;
 
 	/**
 	 * The pager adapter, which provides the pages to the view pager widget.
@@ -67,10 +71,11 @@ public class ChannelViewActivity extends FragmentActivity implements
 		Channel channel = Util.fromJson(json, Channel.class);
 
 		// check if we can use the cached player, if not create a new one
-		if (shouldCache && cachedState != null
+		if (mOnConfigChangeState != null) {
+			resumeState(mOnConfigChangeState);
+		} else if (shouldCache && cachedState != null
 				&& cachedState.player.getChannel().equals(channel)) {
-			mChannelPlayer = cachedState.player;
-			startChannel(cachedState.position);
+			resumeState(cachedState);
 		} else {
 			// we don't always want to cache what we're playing, as in the case
 			// of apreview. Cache the player if requested, overriding the old
@@ -92,6 +97,11 @@ public class ChannelViewActivity extends FragmentActivity implements
 				}
 			});
 		}
+	}
+
+	private void resumeState(CachedPlayerState state) {
+		mChannelPlayer = state.player;
+		startChannel(state.position);
 	}
 
 	public static boolean hasCachedChannel() {
@@ -213,6 +223,10 @@ public class ChannelViewActivity extends FragmentActivity implements
 		// clear them to save memory
 		if (isFinishing()) {
 			loader.clearDownloads();
+			mChannelPlayer = null;
+			mOnConfigChangeState = null;
+		} else {
+			mOnConfigChangeState = new CachedPlayerState(mChannelPlayer, pager.getCurrentItem());
 		}
 	}
 
