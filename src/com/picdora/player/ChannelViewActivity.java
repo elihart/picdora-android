@@ -60,38 +60,23 @@ public class ChannelViewActivity extends FragmentActivity implements
 
 		loader = PicdoraImageLoader.instance();
 
-		// check if we should resume
-		if (getIntent().getBooleanExtra("resume", false)) {
+		shouldCache = getIntent().getBooleanExtra("cache", false);
 
-			if (cachedState == null) {
-				// nothing to resume from...
-				finish();
-				return;
-			} else {
-				shouldCache = true;
-				mChannelPlayer = cachedState.player;
-				startChannel(cachedState.position);
-				return;
-			}
-		}
-
-		// Otherwise load bundled channel and play when ready
+		// Load bundled channel and play when ready
 		String json = getIntent().getStringExtra("channel");
 		Channel channel = Util.fromJson(json, Channel.class);
 
 		// check if we can use the cached player, if not create a new one
-		if (cachedState != null
+		if (shouldCache && cachedState != null
 				&& cachedState.player.getChannel().equals(channel)) {
-			shouldCache = true;
 			mChannelPlayer = cachedState.player;
 			startChannel(cachedState.position);
 		} else {
 			// we don't always want to cache what we're playing, as in the case
-			// of a
-			// preview. Cache the player if requested, overriding the old one.
-			// Otherwise
-			// leave the old one intact
-			if (getIntent().getBooleanExtra("cache", false)) {
+			// of apreview. Cache the player if requested, overriding the old
+			// one.
+			// Otherwise leave the old one intact
+			if (shouldCache) {
 				cachedState = new CachedPlayerState(mChannelPlayer, 0);
 			}
 
@@ -109,13 +94,13 @@ public class ChannelViewActivity extends FragmentActivity implements
 		}
 	}
 
-	public static boolean hasCachedPlayer() {
+	public static boolean hasCachedChannel() {
 		return cachedState != null;
 	}
 
-	public static String getCachedPlayerChannelName() {
-		if (hasCachedPlayer()) {
-			return cachedState.player.getChannel().getName();
+	public static Channel getCachedChannel() {
+		if (hasCachedChannel()) {
+			return cachedState.player.getChannel();
 		} else {
 			return null;
 		}

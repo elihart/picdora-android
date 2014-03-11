@@ -26,10 +26,8 @@ import com.picdora.ChannelHelper;
 import com.picdora.PicdoraActivity;
 import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
-import com.picdora.Util;
 import com.picdora.models.Category;
 import com.picdora.models.Channel;
-import com.picdora.player.ChannelPlayer;
 
 /**
  * This activity guides the user through creating a new channel. It consists of
@@ -312,17 +310,18 @@ public class ChannelCreationActivity extends PicdoraActivity{
 		if (!loadingChannel) {
 			return;
 		}
-
-		ChannelHelper.playChannel(channel, !preview, this);
-
+		
 		if (!preview) {
 			clearSavedState();
 			channel.save();
 			finish();
 		}
 
-		setLoadingStatus(false);
+		ChannelHelper.playChannel(channel, !preview, this);
 
+		
+
+		setLoadingStatus(false);
 	}
 
 	@UiThread

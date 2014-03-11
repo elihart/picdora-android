@@ -34,8 +34,8 @@ public class SlidingMenuHelper {
 		ArrayList<SlidingMenuItem> items = new ArrayList<SlidingMenuItem>();
 
 		// TODO: Resume doesn't get updated on activity resume
-		if(ChannelViewActivity.hasCachedPlayer()){
-		items.add(new SlidingMenuItem(R.drawable.ic_action_play_over_video, ChannelViewActivity.getCachedPlayerChannelName(),
+		if(ChannelViewActivity.hasCachedChannel()){
+		items.add(new SlidingMenuItem(R.drawable.ic_action_play_over_video, ChannelViewActivity.getCachedChannel().getName(),
 				ResumeActivity_.class));
 		}
 		items.add(new SlidingMenuItem(R.drawable.ic_action_channels, "Channels",

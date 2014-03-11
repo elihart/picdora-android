@@ -16,7 +16,6 @@ public class ResumeActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		// TODO: Implement resume
 		ChannelHelper.resumeCachedPlayed(this);
 		finish();
 	}

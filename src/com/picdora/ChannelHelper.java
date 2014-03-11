@@ -21,6 +21,7 @@ import android.text.TextUtils;
 
 import com.picdora.models.Category;
 import com.picdora.models.Channel;
+import com.picdora.player.ChannelViewActivity;
 import com.picdora.player.ChannelViewActivity_;
 
 @EBean
@@ -140,9 +141,9 @@ public class ChannelHelper {
 
 	public static void resumeCachedPlayed(Activity activity) {
 		Intent intent = new Intent(activity, ChannelViewActivity_.class);
-		intent.putExtra("resume", true);
-		activity.startActivity(intent);
-		
+		intent.putExtra("channel", Util.toJson(ChannelViewActivity.getCachedChannel()));
+		intent.putExtra("cache", true);
+		activity.startActivity(intent);		
 	}
 
 }
