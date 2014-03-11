@@ -18,6 +18,7 @@ import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.view.Menu;
 import android.widget.TextView;
 
+import com.nostra13.universalimageloader.core.ImageLoader;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.imageloader.PicdoraImageLoader;
@@ -61,6 +62,10 @@ public class ChannelViewActivity extends FragmentActivity implements
 	void initChannel() {
 		// show loading screen
 		showBusyDialog("Loading Channel...");
+
+		// We don't use the Universal Image loader here, it's only used for
+		// thumbnails, so lets clear out so memory and clear it's cache
+		ImageLoader.getInstance().clearMemoryCache();
 
 		loader = PicdoraImageLoader.instance();
 
@@ -226,7 +231,8 @@ public class ChannelViewActivity extends FragmentActivity implements
 			mChannelPlayer = null;
 			mOnConfigChangeState = null;
 		} else {
-			mOnConfigChangeState = new CachedPlayerState(mChannelPlayer, pager.getCurrentItem());
+			mOnConfigChangeState = new CachedPlayerState(mChannelPlayer,
+					pager.getCurrentItem());
 		}
 	}
 

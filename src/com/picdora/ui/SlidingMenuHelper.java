@@ -19,7 +19,6 @@ import com.picdora.player.ChannelViewActivity;
 import com.picdora.player.ResumeActivity_;
 import com.picdora.settings.SettingsActivity;
 
-
 public class SlidingMenuHelper {
 	// TODO: Hide contextual action buttons on drawer show
 	// TODO: Drawer tutorial
@@ -34,19 +33,19 @@ public class SlidingMenuHelper {
 		ArrayList<SlidingMenuItem> items = new ArrayList<SlidingMenuItem>();
 
 		// TODO: Resume doesn't get updated on activity resume
-		if(ChannelViewActivity.hasCachedChannel()){
-		items.add(new SlidingMenuItem(R.drawable.ic_action_play_over_video, ChannelViewActivity.getCachedChannel().getName(),
-				ResumeActivity_.class));
+		if (ChannelViewActivity.hasCachedChannel()) {
+			items.add(new SlidingMenuItem(R.drawable.ic_action_play_over_video,
+					ChannelViewActivity.getCachedChannel().getName(),
+					ResumeActivity_.class));
 		}
-		items.add(new SlidingMenuItem(R.drawable.ic_action_channels, "Channels",
-				ChannelSelectionActivity_.class));
+		items.add(new SlidingMenuItem(R.drawable.ic_action_channels,
+				"Channels", ChannelSelectionActivity_.class));
 		items.add(new SlidingMenuItem(R.drawable.ic_action_like, "Likes",
 				LikesActivity_.class));
-		items.add(new SlidingMenuItem(R.drawable.ic_action_favorite, "Favorites",
-				FavoritesActivity_.class));
-		items.add(new SlidingMenuItem(R.drawable.ic_action_settings, "Settings",
-				SettingsActivity.class));
-
+		items.add(new SlidingMenuItem(R.drawable.ic_action_favorite,
+				"Favorites", FavoritesActivity_.class));
+		items.add(new SlidingMenuItem(R.drawable.ic_action_settings,
+				"Settings", SettingsActivity.class));
 
 		return items;
 	}
@@ -147,9 +146,11 @@ public class SlidingMenuHelper {
 			@Override
 			public void onDrawerOpened(View drawerView) {
 				// When the drawer is opened change the action bar text to
-				// the app name. Remember the old openTitle so we can change it back
+				// the app name. Remember the old openTitle so we can change it
+				// back
 				// when the drawer closes
-				openTitle = activity.getSupportActionBar().getTitle().toString();
+				openTitle = activity.getSupportActionBar().getTitle()
+						.toString();
 				activity.setActionBarTitle("Picdora");
 
 				// Redraw action bar to hide contextual actions while drawer is
@@ -162,5 +163,23 @@ public class SlidingMenuHelper {
 
 		drawerLayout.setDrawerListener(toggle);
 		activity.setDrawerToggle(toggle);
+	}
+
+	public static void refreshList(PicdoraActivity activity) {
+		DrawerLayout drawerLayout = (DrawerLayout) activity
+				.findViewById(R.id.drawer_layout);
+
+		// make sure this activity actually has a drawer layout
+		if (drawerLayout == null) {
+			return;
+		}
+
+		ListView drawerList = (ListView) activity
+				.findViewById(R.id.sliding_menu_list);
+
+		// Set the adapter for the list view
+		drawerList.setAdapter(new SlidingMenuAdapter(activity,
+				SlidingMenuHelper.getMenuEntries()));
+
 	}
 }

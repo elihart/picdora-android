@@ -7,7 +7,6 @@ import org.androidannotations.annotations.sharedpreferences.Pref;
 import se.emilsjolander.sprinkles.Migration;
 import se.emilsjolander.sprinkles.Sprinkles;
 import android.app.Application;
-import android.graphics.Bitmap;
 
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -53,9 +52,7 @@ public class PicdoraApp extends Application {
 				.showImageOnLoading(R.drawable.rect_white)
 				.showImageForEmptyUri(R.drawable.rect_white)
 				.showImageOnFail(R.drawable.rect_white)
-				.considerExifParams(true)
-				.cacheInMemory(true)
-				.cacheOnDisc(true)
+				.considerExifParams(true).cacheInMemory(true).cacheOnDisc(true)
 				.build();
 
 		ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(
@@ -92,7 +89,12 @@ public class PicdoraApp extends Application {
 
 	@Override
 	public void onLowMemory() {
-		// TODO: Contact system activities and tell them to cut back memory
+		trimMemory();
+	}
+
+	private void trimMemory() {
+		ImageLoader.getInstance().clearMemoryCache();
+		System.gc();
 	}
 
 }

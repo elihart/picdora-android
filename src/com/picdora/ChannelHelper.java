@@ -111,7 +111,7 @@ public class ChannelHelper {
 		String query = "SELECT * FROM Channels";
 
 		 if(!includeNsfw){
-		 query += " AND nsfw=0";
+		 query += " WHERE nsfw=0";
 		 }
 
 		CursorList<Channel> list = Query.many(Channel.class, query, null).get();

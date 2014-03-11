@@ -52,7 +52,7 @@
             android:label="@string/title_activity_likes" >
         </activity>
         <activity
-            android:name="com.picdora.LaunchActivity"
+            android:name="com.picdora.launch.LaunchActivity"
             android:label="@string/title_activity_launch" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

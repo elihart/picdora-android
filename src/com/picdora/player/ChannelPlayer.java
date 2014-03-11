@@ -18,6 +18,8 @@ import com.picdora.models.Image;
 
 @EBean
 public class ChannelPlayer {
+	// TODO: Explore loading all images into cursorlist initially and then
+	// pulling them from there. Could be a lot more efficient
 
 	private Channel mChannel;
 	// and then decide on using it

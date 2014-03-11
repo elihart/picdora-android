@@ -23,6 +23,8 @@ import com.picdora.ui.SlidingMenuHelper;
 
 @EActivity(R.layout.activity_channel_selection)
 public class ChannelSelectionActivity extends PicdoraActivity {
+	// TODO: Have one main menu activity and have fragments for the menu options
+
 	@FragmentById
 	ChannelGridFragment channelFragment;
 	@Pref
@@ -46,6 +48,8 @@ public class ChannelSelectionActivity extends PicdoraActivity {
 	@Override
 	public void onResume() {
 		super.onResume();
+
+		SlidingMenuHelper.refreshList(this);
 
 		refreshChannels();
 	}
