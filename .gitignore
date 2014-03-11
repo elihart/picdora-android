@@ -5,6 +5,10 @@
 # files for the dex VM
 *.dex
 
+#Crashlytics
+res/values/com_crashlytics_export_strings.xml
+
+
 # Java class files
 *.class
 
