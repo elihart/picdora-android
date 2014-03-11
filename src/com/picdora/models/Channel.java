@@ -3,12 +3,10 @@ package com.picdora.models;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import se.emilsjolander.sprinkles.Model;
 import se.emilsjolander.sprinkles.annotations.AutoIncrementPrimaryKey;
 import se.emilsjolander.sprinkles.annotations.Column;
-import se.emilsjolander.sprinkles.annotations.PrimaryKey;
 import se.emilsjolander.sprinkles.annotations.Table;
 
 import com.google.gson.Gson;
@@ -19,7 +17,7 @@ public class Channel extends Model {
 	public enum GifSetting {
 		NONE, ALLOWED, ONLY
 	}
-	
+
 	/********** DB Fields ***********************/
 	@AutoIncrementPrimaryKey
 	@Column("id")
@@ -29,27 +27,52 @@ public class Channel extends Model {
 	private String mName;
 
 	@Column("nsfw")
-	private String mNsfw;
+	private boolean mNsfw;
+
+	@Column("icon")
+	private String mPreviewImage;
+	
+	@Column("lastUsed")
+	private long mLastUsed;
+	
+	@Column("createAt")
+	private long mCreatedAt;
 
 	@Column("categories")
 	private String mCategoriesAsJson;
 	private List<Category> mCategories;
-	
+
 	@Column("gifSetting")
 	private int mGifSetting;
 	
+	// TODO: Implement parcelable to pass this between activities
+
 	public Channel(String name, List<Category> categories, GifSetting gifSetting) {
 		mName = name;
 		mCategories = categories;
 		mGifSetting = gifSetting.ordinal();
-		
-		// TODO: Set nsfw based on categories
 	}
+	
+	// TODO: Add validations and check them before creating
 
 	public Channel() {
 		// empty constructor for Sprinkles model creation
 	}
 	
+	@Override
+	protected void beforeCreate() {
+	    mCreatedAt = System.currentTimeMillis();
+	    mLastUsed = System.currentTimeMillis();
+	    
+	    mPreviewImage = getCategories().get(0).getIconId();
+	    
+	    for(Category c : getCategories()){
+	    	if(c.isNsfw()){
+	    		mNsfw = true;
+	    		break;
+	    	}
+	    }
+	}
 
 	public long getId() {
 		return mId;
@@ -59,11 +82,11 @@ public class Channel extends Model {
 		return mName;
 	}
 
-	public String getNsfw() {
+	public boolean getNsfw() {
 		return mNsfw;
 	}
-	
-	public GifSetting getGifSetting(){
+
+	public GifSetting getGifSetting() {
 		return GifSetting.values()[mGifSetting];
 	}
 
@@ -74,15 +97,13 @@ public class Channel extends Model {
 		return mCategories;
 	}
 
-	
-
 	@Override
 	protected void beforeSave() {
 		// create a json string to represent the categories in the database
 		if (mCategories == null) {
 			mCategories = new ArrayList<Category>();
 		}
-		
+
 		mCategoriesAsJson = new Gson().toJson(mCategories);
 	}
 
@@ -94,23 +115,44 @@ public class Channel extends Model {
 		}.getType();
 		mCategories = new Gson().fromJson(mCategoriesAsJson, type);
 	}
-	
+
 	@Override
 	public int hashCode() {
-        return (int) mId;
-    }
+		return (int) mId;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null)
+			return false;
+		if (obj == this)
+			return true;
+		if (!(obj instanceof Channel))
+			return false;
+
+		Channel ch = (Channel) obj;
+
+		// If either channel wasn't taken out of the database it won't have an
+		// id, so compare names instead
+
+		if (ch.getId() == 0 && mId == 0) {
+			return ch.getName().equals(mName);
+		} else {
+			return ch.getId() == mId;
+		}
+	}
+
+	public String getPreviewUrl() {
+		return "http://i.imgur.com/" + mPreviewImage + "b.jpg";
+	}
 	
 	@Override
-    public boolean equals(Object obj) {
-        if (obj == null)
-            return false;
-        if (obj == this)
-            return true;
-        if (!(obj instanceof Channel))
-            return false;
-
-        Channel ch = (Channel) obj;
-        return ch.getId() == mId;
-    }
+	public String toString(){
+		String result = mName + " gif: " + mGifSetting + " Categories: ";
+		for(Category c : getCategories()){
+			result += c.getName() + " ";
+		}
+		return result;
+	}
 
 }

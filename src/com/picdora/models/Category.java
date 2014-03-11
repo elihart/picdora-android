@@ -23,13 +23,19 @@ public class Category extends Model {
 
 	@Column("porn")
 	private boolean mPorn;
+	
+	// TODO: Add this field to the db and update on channel creation, and
+		// favoriting
+	@Column("icon")
+	private String mPreviewImage;
 
-	public Category(int id, String name, boolean porn, boolean nsfw) {
+	public Category(int id, String name, boolean porn, boolean nsfw, String icon) {
 		super();
 		mId = id;
 		mName = name;
 		mNsfw = nsfw;
 		mPorn = porn;
+		mPreviewImage = icon;
 	}
 	
 	public Category(){
@@ -66,6 +72,13 @@ public class Category extends Model {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		try {
+			mPreviewImage = jsonObject.getString("icon");
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public int getId() {
@@ -76,7 +89,7 @@ public class Category extends Model {
 		return mName;
 	}
 
-	public boolean getNsfw() {
+	public boolean isNsfw() {
 		return mNsfw;
 	}
 
@@ -103,5 +116,13 @@ public class Category extends Model {
     public int hashCode() {
         return mId;
     }
+
+    public String getPreviewUrl() {
+		return "http://i.imgur.com/" + mPreviewImage + "b.jpg";
+	}
+
+	public String getIconId() {
+		return mPreviewImage;
+	}
 
 }

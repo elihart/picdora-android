@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:key="showNsfw"
+        android:summary="Show nsfw content"
+        android:title="NSFW" />
+
+    <Preference
+        android:key="pref_contact"
+        android:summary="Send us any questions, comments, or problems you have!"
+        android:title="Contact Us" />
+
+</PreferenceScreen>

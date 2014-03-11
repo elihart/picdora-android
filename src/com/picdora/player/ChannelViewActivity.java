@@ -1,8 +1,5 @@
 package com.picdora.player;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EActivity;
@@ -12,7 +9,6 @@ import org.androidannotations.annotations.ViewById;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
-import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -22,23 +18,37 @@ import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.view.Menu;
 import android.widget.TextView;
 
+import com.nostra13.universalimageloader.core.ImageLoader;
 import com.picdora.R;
 import com.picdora.Util;
-import com.picdora.imageloader.ImageLoader;
+import com.picdora.imageloader.PicdoraImageLoader;
+import com.picdora.imageloader.PicdoraImageLoader.OnDownloadSpaceAvailableListener;
 import com.picdora.models.Channel;
 import com.picdora.models.Image;
 import com.picdora.player.ChannelPlayer.ChannelError;
+import com.picdora.player.ChannelPlayer.OnGetImageResultListener;
 import com.picdora.player.ChannelPlayer.OnLoadListener;
 
 @Fullscreen
 @EActivity(R.layout.activity_channel_view)
-public class ChannelViewActivity extends FragmentActivity {
+public class ChannelViewActivity extends FragmentActivity implements
+		OnDownloadSpaceAvailableListener {
 	private static final int NUM_IMAGES_TO_PRELOAD = 5;
 
+	// Cache the last player used and remember the user's spot so they can
+	// resume quickly
+	private static CachedPlayerState cachedState;
+	private boolean shouldCache;
+	private PicdoraImageLoader loader;
+
 	@ViewById
-	PicdoraViewPager pager;
+	protected PicdoraViewPager pager;
 	@Bean
-	ChannelPlayer mChannelPlayer;
+	protected ChannelPlayer mChannelPlayer;
+
+	// hold a copy of the player when orientation changes and the activity
+	// recreates
+	private static CachedPlayerState mOnConfigChangeState;
 
 	/**
 	 * The pager adapter, which provides the pages to the view pager widget.
@@ -53,21 +63,37 @@ public class ChannelViewActivity extends FragmentActivity {
 		// show loading screen
 		showBusyDialog("Loading Channel...");
 
-		// Load channel and play when ready
+		// We don't use the Universal Image loader here, it's only used for
+		// thumbnails, so lets clear out so memory and clear it's cache
+		ImageLoader.getInstance().clearMemoryCache();
+
+		loader = PicdoraImageLoader.instance();
+
+		shouldCache = getIntent().getBooleanExtra("cache", false);
+
+		// Load bundled channel and play when ready
 		String json = getIntent().getStringExtra("channel");
 		Channel channel = Util.fromJson(json, Channel.class);
 
-		ChannelPlayer cachedPlayer = ChannelPlayer.getCachedPlayer(channel);
-
-		if (cachedPlayer != null) {
-			mChannelPlayer = cachedPlayer;
-			startChannel();
+		// check if we can use the cached player, if not create a new one
+		if (mOnConfigChangeState != null) {
+			resumeState(mOnConfigChangeState);
+		} else if (shouldCache && cachedState != null
+				&& cachedState.player.getChannel().equals(channel)) {
+			resumeState(cachedState);
 		} else {
+			// we don't always want to cache what we're playing, as in the case
+			// of apreview. Cache the player if requested, overriding the old
+			// one.
+			// Otherwise leave the old one intact
+			if (shouldCache) {
+				cachedState = new CachedPlayerState(mChannelPlayer, 0);
+			}
 
 			mChannelPlayer.loadChannel(channel, new OnLoadListener() {
 				@Override
 				public void onSuccess() {
-					startChannel();
+					startChannel(0);
 				}
 
 				@Override
@@ -75,6 +101,23 @@ public class ChannelViewActivity extends FragmentActivity {
 					handleChannelLoadError(error);
 				}
 			});
+		}
+	}
+
+	private void resumeState(CachedPlayerState state) {
+		mChannelPlayer = state.player;
+		startChannel(state.position);
+	}
+
+	public static boolean hasCachedChannel() {
+		return cachedState != null;
+	}
+
+	public static Channel getCachedChannel() {
+		if (hasCachedChannel()) {
+			return cachedState.player.getChannel();
+		} else {
+			return null;
 		}
 	}
 
@@ -91,61 +134,39 @@ public class ChannelViewActivity extends FragmentActivity {
 		finish();
 	}
 
-	protected void startChannel() {
+	public void getImage(int position, boolean replacement,
+			OnGetImageResultListener listener) {
+		mChannelPlayer.getImage(position, replacement, listener);
+	}
+
+	protected void startChannel(int startingPosition) {
 		// Instantiate a ViewPager and a PagerAdapter
 		mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
 		pager.setAdapter(mPagerAdapter);
-
-		preloadImages(0, NUM_IMAGES_TO_PRELOAD - 1);
 
 		pager.setOnPageChangeListener(new OnPageChangeListener() {
 
 			@Override
 			public void onPageSelected(int pos) {
-				preloadImages(pos + 1, pos + NUM_IMAGES_TO_PRELOAD);
-
+				if (shouldCache) {
+					cachedState.position = pos;
+				}
 			}
 
 			@Override
 			public void onPageScrolled(int arg0, float arg1, int arg2) {
-				// TODO Auto-generated method stub
 
 			}
 
 			@Override
 			public void onPageScrollStateChanged(int arg0) {
-				// TODO Auto-generated method stub
 
 			}
 		});
 
+		pager.setCurrentItem(startingPosition);
+
 		dismissBusyDialog();
-	}
-
-	/**
-	 * Tell the imageloader to preload the images with positions between start
-	 * and end, inclusive
-	 * 
-	 * @param startPos
-	 *            Load the images in the range starting with this position
-	 * @param endPos
-	 *            The end of the image range, inclusive. Must be greater than
-	 *            start pos or nothing is done
-	 */
-	protected void preloadImages(int startPos, int endPos) {
-		if (endPos < startPos) {
-			return;
-		}
-
-		List<Image> images = new ArrayList<Image>();
-
-		// add the images to the list with the earlier images at the front so
-		// that they will be loaded first
-		for (int i = startPos; i <= endPos; i++) {
-			images.add(mChannelPlayer.getImage(i));
-		}
-
-		ImageLoader.instance().preloadImages(images);
 	}
 
 	@Override
@@ -187,10 +208,32 @@ public class ChannelViewActivity extends FragmentActivity {
 	}
 
 	@Override
+	public void onPause() {
+		super.onPause();
+		loader.unregisterOnDownloadSpaceAvailableListener(this);
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		loader.registerOnDownloadSpaceAvailableListener(this);
+	}
+
+	@Override
 	public void onDestroy() {
 		super.onDestroy();
 
-		ImageLoader.instance().clearDownloads();
+		// if we are being destroyed because of orientation change then we don't
+		// need to clear downloads, otherwise the activity is exiting and we can
+		// clear them to save memory
+		if (isFinishing()) {
+			loader.clearDownloads();
+			mChannelPlayer = null;
+			mOnConfigChangeState = null;
+		} else {
+			mOnConfigChangeState = new CachedPlayerState(mChannelPlayer,
+					pager.getCurrentItem());
+		}
 	}
 
 	private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
@@ -201,20 +244,37 @@ public class ChannelViewActivity extends FragmentActivity {
 
 		@Override
 		public Fragment getItem(int position) {
-			ImageSwipeFragment frag = new ImageSwipeFragment_();
-
-			Image image = mChannelPlayer.getImage(position);
-
-			Bundle args = new Bundle();
-			args.putString("imageJson", Util.toJson(image));
-			frag.setArguments(args);
-
-			return frag;
+			return ImageSwipeFragment_.builder().fragPosition(position).build();
 		}
 
 		@Override
 		public int getCount() {
 			return Integer.MAX_VALUE;
+		}
+	}
+
+	private class CachedPlayerState {
+		public ChannelPlayer player;
+		public int position;
+
+		public CachedPlayerState(ChannelPlayer player, int position) {
+			this.player = player;
+			this.position = position;
+		}
+	}
+
+	@Override
+	public void onDownloadSpaceAvailable() {
+
+		int next = pager.getCurrentItem() + 1;
+		for (int i = next; i < next + NUM_IMAGES_TO_PRELOAD; i++) {
+			mChannelPlayer.getImage(i, false, new OnGetImageResultListener() {
+
+				@Override
+				public void onGetImageResult(Image image) {
+					loader.preloadImage(image);
+				}
+			});
 		}
 	}
 

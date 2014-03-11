@@ -1,9 +1,9 @@
 package com.picdora.player;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Vector;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EBean;
@@ -13,55 +13,39 @@ import se.emilsjolander.sprinkles.CursorList;
 import se.emilsjolander.sprinkles.Query;
 
 import com.picdora.ChannelHelper;
-import com.picdora.Util;
 import com.picdora.models.Channel;
 import com.picdora.models.Image;
 
 @EBean
 public class ChannelPlayer {
-	// keep track of the last channel so we don't have to reload it
-	protected static ChannelPlayer lastChannelPlayer;
+	// TODO: Explore loading all images into cursorlist initially and then
+	// pulling them from there. Could be a lot more efficient
 
 	private Channel mChannel;
-	// use a thread safe list for adding images in the background
-	private Vector<Image> mImages;
+	// and then decide on using it
+	private List<Image> mImages;
 	private OnLoadListener mListener;
 
-	// the number of images to load from the database at a time
-	private static final int DB_BATCH_SIZE = 15;
-	// the threshold for when we start loading more images in the background
-	private static final int NUM_IMAGES_LEFT_THRESHOLD = 10;
-	// whether we are currently loading images in the background
-	private boolean loadingImagesInBackground;
+	// a reserve of images used to replace deleted ones
+	private LinkedList<Image> imageQueue;
+	// the size that we'll try to keep the image queue at so we have enough
+	// images without doing too many loads
+	private static final int TARGET_QUEUE_SIZE = 15;
+
+	// TODO: Don't mark replacements as viewed until they are used (or unmark
+	// them if they are never used?)
 
 	protected ChannelPlayer() {
 		// empty constructor for enhanced class
 	}
 
-	public static ChannelPlayer getCachedPlayer(Channel channel) {
-		if (lastChannelPlayer != null
-				&& channel.equals(lastChannelPlayer.getChannel())) {
-			return lastChannelPlayer;
-		} else {
-			return null;
-		}
-	}
-
-	public static Channel lastPlayedChannel() {
-		if (lastChannelPlayer != null) {
-			return lastChannelPlayer.getChannel();
-		} else {
-			return null;
-		}
-	}
-
 	@Background
 	public void loadChannel(Channel channel, OnLoadListener listener) {
-		loadingImagesInBackground = false;
 		mListener = listener;
 		mChannel = channel;
-		mImages = new Vector<Image>();
-		loadImageBatch(DB_BATCH_SIZE, mImages);
+		mImages = new ArrayList<Image>();
+		imageQueue = new LinkedList<Image>();
+		loadImageBatch(TARGET_QUEUE_SIZE * 2, imageQueue);
 
 		loadChannelCompleted();
 	}
@@ -72,56 +56,103 @@ public class ChannelPlayer {
 			return;
 		}
 
-		if (mImages.isEmpty()) {
+		if (mImages.isEmpty() && imageQueue.isEmpty()) {
 			mListener.onFailure(ChannelError.NO_IMAGES);
 		} else {
-			lastChannelPlayer = this;
 			mListener.onSuccess();
 		}
 	}
 
-	private Channel getChannel() {
+	public Channel getChannel() {
 		return mChannel;
 	}
 
-	public Image getImage(int index) {
-		// if we are requesting a higher image index than has been loaded, load
-		// enough images to meet the index
+	public interface OnGetImageResultListener {
+		public void onGetImageResult(Image image);
+	}
+
+	@Background
+	public void getImage(int index, boolean replace,
+			OnGetImageResultListener listener) {
+		// synchronize access so we don't have multiple loads going for the same
+		// image. Also simplifies the threading and db access
+		getImageSync(index, replace, listener);
+		// TODO: Consider async options if performance is laggy
+	}
+
+	private synchronized void getImageSync(int index, boolean replace,
+			OnGetImageResultListener listener) {
+		// can't replace an image we haven't loaded yet
 		if (index >= mImages.size()) {
-			int imagesNeeded = index - mImages.size() + 1;
-			// get the amount needed to reach the index, plus grab another batch
-			// while we're at it
-			loadImageBatch(imagesNeeded + DB_BATCH_SIZE, mImages);
+			replace = false;
 		}
-		// if we're getting low on images do a background load
-		else if (mImages.size() - index < NUM_IMAGES_LEFT_THRESHOLD) {
-			// don't start another load if one is already going
-			if (!loadingImagesInBackground) {
-				loadImageBatchAsync(DB_BATCH_SIZE, mImages);
+
+		Image result = null;
+
+		// if they have requested a replacement then get a new image and replace
+		// the old one
+		if (replace) {
+			Image replacement = nextImage();
+			if (replacement != null) {
+				mImages.set(index, replacement);
+			}
+			result = mImages.get(index);
+		} else {
+			// keep getting new images until either we have enough to satisfy
+			// the index requested, or we don't have anymore to give
+			while (mImages.size() <= index) {
+				Image img = nextImage();
+				if (img == null) {
+					break;
+				} else {
+					mImages.add(img);
+				}
+			}
+
+			// return the index requested if we have enough images, otherwise
+			// wrap
+			// around
+			result = mImages.get(index % mImages.size());
+		}
+
+		// return the image result on the ui thread
+		returnGetImageResult(result, listener);
+	}
+
+	@UiThread
+	protected void returnGetImageResult(Image image,
+			OnGetImageResultListener listener) {
+		if (listener != null) {
+			listener.onGetImageResult(image);
+		}
+	}
+
+	private boolean allImagesUsed = false;
+
+	private Image nextImage() {
+		// if we don't have any images left in the queue and we still have
+		// unused images in the db then refill the queue
+		if (imageQueue.size() < TARGET_QUEUE_SIZE && !allImagesUsed) {
+			int numToLoad = TARGET_QUEUE_SIZE * 2;
+			int numLoaded = loadImageBatch(numToLoad, imageQueue);
+			// if the db can't load as many as we wanted then we already have
+			// all the images it can give us, don't bother trying to get more as
+			// we'll only get the same ones
+			if (numLoaded < numToLoad) {
+				allImagesUsed = true;
 			}
 		}
 
-		// if for some reason we still don't have enough images then wrap the
-		// index around
-		if (index >= mImages.size()) {
-			index = index % mImages.size();
-		}
-
-		return mImages.get(index);
-	}
-
-	@Background(serial = "loadImagesInBackground")
-	void loadImageBatchAsync(int count, Collection<Image> images) {
-		loadingImagesInBackground = true;
-		loadImageBatch(count, images);
-		loadingImagesInBackground = false;
+		return imageQueue.poll();
 	}
 
 	/**
 	 * Get the specified number of images from the database and load them into
-	 * the given list
+	 * the given list.
+	 * 
+	 * @return resultCount The number of images retrieved from the db
 	 */
-	private synchronized int loadImageBatch(int count, Collection<Image> images) {
+	private int loadImageBatch(int count, Collection<Image> images) {
 		// build the query. Start by only selecting images from categories that
 		// this channel includes
 		String query = "SELECT * FROM Images WHERE categoryId IN "
@@ -139,6 +170,8 @@ public class ChannelPlayer {
 			break;
 		}
 
+		// TODO: Add nsfw setting
+
 		// set ordering and add limit
 		query += " ORDER BY viewCount ASC, redditScore DESC LIMIT "
 				+ Integer.toString(count);
@@ -151,7 +184,12 @@ public class ChannelPlayer {
 			// database again. Maybe supply these ids to the db to avoid
 			// instead, or keep a list of unviewed images
 			image.markView();
-			mImages.add(image);
+			// don't add a duplicate image
+			// TODO: Better way to manage duplicates in the db before we
+			// retrieve them
+			if (!mImages.contains(image) && !imageQueue.contains(image)) {
+				images.add(image);
+			}
 		}
 		list.close();
 
@@ -160,8 +198,6 @@ public class ChannelPlayer {
 
 	/**
 	 * Callback methods for when the player is ready to start playing
-	 * 
-	 * @author Eli
 	 * 
 	 */
 	public interface OnLoadListener {

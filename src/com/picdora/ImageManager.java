@@ -17,6 +17,7 @@ import android.database.sqlite.SQLiteDoneException;
 import android.database.sqlite.SQLiteStatement;
 import android.text.TextUtils;
 
+import com.picdora.api.PicdoraApiService;
 import com.picdora.loopj.JsonHttpResponseHandler;
 import com.picdora.loopj.RequestParams;
 import com.picdora.models.Category;
@@ -24,145 +25,9 @@ import com.picdora.models.Image;
 
 public abstract class ImageManager {
 
-	/**
-	 * Get images from every category that we have. Includes gifs
-	 * indiscriminately
-	 * 
-	 * @param limit
-	 *            The number of images to try to get from each category. May be
-	 *            less if the category doesn't have enough images
-	 */
-	public static void getImagesFromServer(int limit, OnResultListener listener) {
-		// TODO: Efficient raw query to just get category ids
-		CursorList<Category> list = Query.many(Category.class,
-				"SELECT * FROM Categories", null).get();
 
-		List<String> ids = new ArrayList<String>();
-		for (Category cat : list.asList()) {
-			ids.add(Integer.toString(cat.getId()));
-		}
 
-		getImagesFromServer(limit, ids, null, listener);
-	}
 
-	/**
-	 * Get more images from the server, excluding images that we already have
-	 * locally
-	 * 
-	 * @param limit
-	 *            The number of images to attempt to get. May retrieve less than
-	 *            this if we don't have this many unique images on the server
-	 * @param categoryIds
-	 *            The ids of the categories that the images should come from
-	 * @param gif
-	 *            Whether or not to retrieve gifs. false for no, true if we only
-	 *            want gifs, and null to mix gifs with images indiscriminately
-	 */
-	public static void getImagesFromServer(int limit,
-			final List<String> categoryIds, Boolean gif,
-			final OnResultListener listener) {
-		// get list of images that we already have that we don't want the server
-		// to give us again
-		List<String> exclude = getImageIdsInCategories(categoryIds);
-
-		RequestParams params = new RequestParams();
-		params.put("count", Integer.toString(limit));
-		params.put("category_ids", categoryIds);
-		params.put("exclude", exclude);
-
-		// set the gif setting. Leave it blank if gifs should be included,
-		// false if we don't want them, and true if we only want gifs
-		if (gif == null) {
-			// don't do anything and the server will include gifs by default
-		} else if (gif.booleanValue()) {
-			// get only gifs
-			params.put("gif", true);
-		} else {
-			// exclude gifs entirely
-			params.put("gif", false);
-		}
-
-		PicdoraApiClient.get("images/top", params,
-				new JsonHttpResponseHandler() {
-
-					@Override
-					public void onSuccess(int statusCode, Header[] headers,
-							org.json.JSONArray response) {
-						boolean success = saveImagesToDb(response);
-						if (success) {
-							listener.onSuccess();
-						} else {
-							listener.onFailure();
-						}
-					}
-
-					@Override
-					public void onFailure(int statusCode,
-							org.apache.http.Header[] headers,
-							java.lang.String responseBody, java.lang.Throwable e) {
-						Util.log("Get images failed");
-						listener.onFailure();
-					}
-				});
-	}
-
-	public static void getImagesFromServer(int start, int end,
-			final OnServerResultListener listener) {
-
-		RequestParams params = new RequestParams();
-		params.put("start", Integer.toString(start));
-		params.put("end", Integer.toString(end));
-
-		PicdoraApiClient.get("images/range", params,
-				new JsonHttpResponseHandler() {
-
-					@Override
-					public void onSuccess(int statusCode, Header[] headers,
-							org.json.JSONArray response) {
-						listener.onSuccess(response);
-					}
-
-					@Override
-					public void onFailure(int statusCode,
-							org.apache.http.Header[] headers,
-							java.lang.String responseBody, java.lang.Throwable e) {
-						Util.log("Get images failed");
-						listener.onFailure();
-					}
-				});
-	}
-
-	public static void getNewImagesFromServer(int idIndex, long createdAfter,
-			Integer batchSize, final OnImageUpdateListener listener) {
-
-		RequestParams params = new RequestParams();
-		params.put("id", Integer.toString(idIndex));
-		params.put("time", String.valueOf(createdAfter));
-
-		if (batchSize != null) {
-			params.put("limit", batchSize.toString());
-		}
-
-		PicdoraApiClient.get("images/new", params,
-				new JsonHttpResponseHandler() {
-
-					@Override
-					public void onSuccess(int statusCode, Header[] headers,
-							org.json.JSONObject response) {
-						listener.onSuccess(response);
-					}
-
-					@Override
-					public void onFailure(int statusCode,
-							org.apache.http.Header[] headers,
-							java.lang.String responseBody, java.lang.Throwable e) {
-						// network or server failure
-						listener.onFailure();
-					}
-				});
-	}
-
-	
 
 	/**
 	 * Get a list of image ids as strings for use in telling the server which
@@ -234,8 +99,6 @@ public abstract class ImageManager {
 
 		return success;
 	}
-
-	
 
 	public interface OnResultListener {
 		public void onSuccess();

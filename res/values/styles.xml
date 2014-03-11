@@ -26,5 +26,25 @@
         <item name="android:windowEnterAnimation">@android:anim/fade_in</item>
         <item name="android:windowExitAnimation">@android:anim/fade_out</item>
     </style>
+    
+    <style name="PicdoraActionBarTheme" parent="@style/Theme.AppCompat.Light">
+
+        <!-- Support library compatibility -->
+        <item name="actionBarStyle">@style/PicdoraActionBar</item>
+    </style>
+
+    <!-- ActionBar styles -->
+    <style name="PicdoraActionBar" parent="@style/Widget.AppCompat.Light.ActionBar">
+        <item name="android:background">@color/action_bar_background</item>
+
+        <!-- Support library compatibility -->
+        <item name="titleTextStyle">@style/TitleTextStyle</item>
+        <item name="background">@color/action_bar_background</item>
+    </style>
+
+    <!-- action bar title text -->
+    <style name="TitleTextStyle" parent="@style/TextAppearance.AppCompat.Widget.ActionBar.Title">
+        <item name="android:textColor">@color/actionBarText</item>
+    </style>
 
 </resources>

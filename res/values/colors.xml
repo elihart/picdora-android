@@ -1,7 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-     <color name="transparent">#00000000</color>
-     <color name="black">#000000</color>
-     <color name="translucent_black">#44000000</color>
-     <color name="white">#ffffff</color>
+
+    <color name="transparent">#00000000</color>
+    <color name="black">#000000</color>
+    <color name="blackDisabled">#33111111</color>
+    <color name="blackPressed">#444444</color>
+    <color name="red">#ff0000</color>
+    <color name="translucent_black">#44000000</color>
+    <color name="white">#ffffff</color>
+    <color name="buttonLightBlue">#1cb0f6</color>
+    <color name="buttonDarkBlue">#0c82b9</color>
+    <color name="buttonBlueDisabled">#551cb0f6</color>
+    <color name="buttonDarkOrange">#8B4C03</color>
+    <color name="buttonLightOrange">#FF9111</color>
+    <color name="buttonOrangeDisabled">#55FF9111</color>
+    <color name="action_bar_background">#f2f2f2</color>
+    <color name="actionBarText">#4c4c4c</color>
+    <color name="activityBackground">#ffffff</color>
+    <color name="drawerBackground">#f2f2f2</color>
+    <color name="drawerDivider">#a8a8a8</color>
+    <color name="drawerText">#000000</color>
+    <color name="channel_grid_item_tint">#60000000</color>
+    <color name="channel_grid_item_tint_selected">#601cb0f6</color>
+    <color name="channel_grid_item_tint_pressed">#60FF9111</color>
+    <color name="channel_grid_item_text_color">#ffffff</color>
+
 </resources>

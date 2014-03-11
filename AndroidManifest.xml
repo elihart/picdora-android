@@ -17,30 +17,48 @@
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/Theme.AppCompat.Light" >
-        <service android:name="net.frakbot.imageviewex.service.ImageViewExService" />
-
+        android:theme="@style/PicdoraActionBarTheme" >
         <activity
-            android:name="com.picdora.ChannelSelectionActivity_"
+            android:name="com.picdora.channelSelection.ChannelSelectionActivity_"
             android:label="@string/title_activity_channel_selection" >
+        </activity>
+        <activity
+            android:name="com.picdora.player.ChannelViewActivity_"
+            android:label="@string/app_name"
+            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" >
+        </activity>
+        <activity
+            android:name="com.picdora.channelCreation.ChannelCreationActivity_"
+            android:label="@string/title_activity_channel_creation"
+            android:parentActivityName="com.picdora.channelSelection.ChannelSelectionActivity_" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.picdora.channelSelection.ChannelSelectionActivity_" />
+        </activity>
+        <activity
+            android:name="com.picdora.player.ResumeActivity_"
+            android:label="@string/title_activity_resume" >
+        </activity>
+        <activity
+            android:name="com.picdora.settings.SettingsActivity"
+            android:label="@string/title_activity_settings" >
+        </activity>
+        <activity
+            android:name="com.picdora.favorites.FavoritesActivity_"
+            android:label="@string/title_activity_favorites" >
+        </activity>
+        <activity
+            android:name="com.picdora.likes.LikesActivity_"
+            android:label="@string/title_activity_likes" >
+        </activity>
+        <activity
+            android:name="com.picdora.launch.LaunchActivity"
+            android:label="@string/title_activity_launch" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-        <activity
-            android:name="com.picdora.player.ChannelViewActivity_"
-            android:label="@string/app_name"
-            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen">
-        </activity>
-        <activity
-            android:name="com.picdora.ChannelCreationActivity_"
-            android:label="@string/title_activity_channel_creation"
-            android:parentActivityName="com.picdora.ChannelSelectionActivity_" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="om.picdora.ChannelSelectionActivity_" />
         </activity>
     </application>
 

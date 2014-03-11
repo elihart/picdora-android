@@ -1,5 +1,7 @@
 package com.picdora;
 
+import com.picdora.ui.FontHelper;
+
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.ActionBarDrawerToggle;
@@ -15,6 +17,25 @@ public class PicdoraActivity extends ActionBarActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
+		setActionBarTitle(null);
+	}
+
+	/**
+	 * Set the action bar title
+	 * 
+	 * @param text
+	 *            The text to set the title to. If null the default activity
+	 *            title is used
+	 */
+	public void setActionBarTitle(String text) {
+		try {
+			String title = text != null ? text : getTitle().toString();
+			getSupportActionBar().setTitle(
+					FontHelper.styleString(title, FontHelper.STYLE.MEDIUM));
+		} catch (Exception e) {
+			e.printStackTrace();
+			Util.log("Error setting title font");
+		}
 	}
 
 	@Override
@@ -22,6 +43,15 @@ public class PicdoraActivity extends ActionBarActivity {
 		super.onConfigurationChanged(newConfig);
 		if (mDrawerToggle != null) {
 			mDrawerToggle.onConfigurationChanged(newConfig);
+		}
+	}
+
+	@Override
+	protected void onPostCreate(Bundle savedInstanceState) {
+		super.onPostCreate(savedInstanceState);
+		// Sync the toggle state after onRestoreInstanceState has occurred.
+		if (mDrawerToggle != null) {
+			mDrawerToggle.syncState();
 		}
 	}
 
