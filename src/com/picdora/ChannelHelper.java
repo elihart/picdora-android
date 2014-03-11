@@ -110,10 +110,9 @@ public class ChannelHelper {
 		List<Channel> channels = new ArrayList<Channel>();
 		String query = "SELECT * FROM Channels";
 
-		// TODO: Set nsfw setting when created and switch to boolean
-		// if(!includeNsfw){
-		// query += " AND nsfw=0";
-		// }
+		 if(!includeNsfw){
+		 query += " AND nsfw=0";
+		 }
 
 		CursorList<Channel> list = Query.many(Channel.class, query, null).get();
 		channels.addAll(list.asList());

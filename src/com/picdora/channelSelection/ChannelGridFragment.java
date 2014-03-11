@@ -13,6 +13,8 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.GridView;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.PauseOnScrollListener;
@@ -22,7 +24,11 @@ import com.picdora.models.Channel;
 @EFragment(R.layout.fragment_channel_selection)
 public class ChannelGridFragment extends Fragment {
 	@ViewById
-	GridView grid;
+	protected RelativeLayout noChannelsView;
+	@ViewById
+	protected GridView grid;
+	@ViewById
+	protected ProgressBar progress;
 
 	@Bean
 	ChannelListAdapter adapter;
@@ -35,6 +41,8 @@ public class ChannelGridFragment extends Fragment {
 	void initViews() {
 		// TODO: Load list in background and show loading icon
 		grid.setAdapter(adapter);
+		
+		setProgressVisibility(true);
 
 		boolean pauseOnScroll = false;
 		boolean pauseOnFling = true;
@@ -50,6 +58,14 @@ public class ChannelGridFragment extends Fragment {
 				channelClicked(adapter.getItem(arg2));
 			}
 		});
+	}
+
+	private void setProgressVisibility(boolean visible) {
+		if (visible) {
+			progress.setVisibility(View.VISIBLE);
+		} else {
+			progress.setVisibility(View.GONE);
+		}
 	}
 
 	private void channelClicked(Channel channel) {
@@ -81,7 +97,17 @@ public class ChannelGridFragment extends Fragment {
 
 	public void setChannels(List<Channel> channels) {
 		adapter.setChannels(channels);
-		clearSelectedChannels();				
+		clearSelectedChannels();
+
+		if (adapter.isEmpty()) {
+			noChannelsView.setVisibility(View.VISIBLE);
+			grid.setVisibility(View.GONE);
+		} else {
+			noChannelsView.setVisibility(View.GONE);
+			grid.setVisibility(View.VISIBLE);
+		}
+		
+		setProgressVisibility(false);
 	}
 
 	public void setOnChannelClickListener(OnChannelClickListener listener) {
@@ -89,7 +115,7 @@ public class ChannelGridFragment extends Fragment {
 	}
 
 	public void clearSelectedChannels() {
-		for(Channel channel : selectedChannels){
+		for (Channel channel : selectedChannels) {
 			deselectChannel(channel);
 		}
 	}

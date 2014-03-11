@@ -29,8 +29,8 @@ public class PicdoraApp extends Application {
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		
-		//resetApp();
+
+		// resetApp();
 
 		FontHelper.init(getApplicationContext());
 
@@ -45,13 +45,18 @@ public class PicdoraApp extends Application {
 
 	private void resetApp() {
 		deleteDatabase("sprinkles.db");
-		mPrefs.clear();		
+		mPrefs.clear();
 	}
 
 	private void initUniversalImageLoader() {
 		DisplayImageOptions options = new DisplayImageOptions.Builder()
-				.cacheInMemory(true).cacheOnDisc(true)
-				.bitmapConfig(Bitmap.Config.RGB_565).build();
+				.showImageOnLoading(R.drawable.rect_white)
+				.showImageForEmptyUri(R.drawable.rect_white)
+				.showImageOnFail(R.drawable.rect_white)
+				.considerExifParams(true)
+				.cacheInMemory(true)
+				.cacheOnDisc(true)
+				.build();
 
 		ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(
 				getApplicationContext()).defaultDisplayImageOptions(options)

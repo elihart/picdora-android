@@ -5,6 +5,9 @@ import android.graphics.Typeface;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.util.SparseArray;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 /**
@@ -118,5 +121,19 @@ public class FontHelper {
 		}
 
 		return typeface;
+	}
+
+	public static void setTypeFace(ViewGroup vg) {
+		for (int i = 0; i < vg.getChildCount(); i++) {
+			View child = vg.getChildAt(i);
+			if (child instanceof Button) {
+				setTypeFace((TextView) child, STYLE.MEDIUM);
+			} else if (child instanceof TextView) {
+				setTypeFace((TextView) child, STYLE.REGULAR);
+			}
+			if (child instanceof ViewGroup) {
+				setTypeFace((ViewGroup) child);
+			}
+		}
 	}
 }

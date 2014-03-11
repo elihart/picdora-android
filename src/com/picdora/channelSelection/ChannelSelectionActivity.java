@@ -3,6 +3,7 @@ package com.picdora.channelSelection;
 import java.util.List;
 
 import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.FragmentById;
 import org.androidannotations.annotations.sharedpreferences.Pref;
@@ -40,8 +41,6 @@ public class ChannelSelectionActivity extends PicdoraActivity {
 				channelSelected(channel);
 			}
 		});
-
-		// TODO: Listener for preference change for nsfw
 	}
 
 	@Override
@@ -57,7 +56,8 @@ public class ChannelSelectionActivity extends PicdoraActivity {
 	private void refreshChannels() {
 		if (channelFragment != null) {
 			// TODO: Filter out nsfw by preference
-			List<Channel> channels = ChannelHelper.getAllChannels(prefs.showNsfw().get());
+			List<Channel> channels = ChannelHelper.getAllChannels(prefs
+					.showNsfw().get());
 			// TODO: Allow more sorting options
 			ChannelHelper.sortChannelsAlphabetically(channels);
 			channelFragment.setChannels(channels);
@@ -85,6 +85,11 @@ public class ChannelSelectionActivity extends PicdoraActivity {
 		default:
 			return super.onOptionsItemSelected(item);
 		}
+	}
+
+	@Click
+	protected void createChannelButtonClicked() {
+		newChannel();
 	}
 
 	private void newChannel() {
