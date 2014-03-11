@@ -9,7 +9,7 @@ public interface PicdoraPreferences {
 	// The field lastUpdated will have default value 0
 	long lastUpdated();
 	
-	@DefaultBoolean(false)
+	@DefaultBoolean(true)
     boolean showNsfw();
 
 }

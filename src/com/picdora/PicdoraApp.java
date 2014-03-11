@@ -2,6 +2,7 @@ package com.picdora;
 
 import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EApplication;
+import org.androidannotations.annotations.sharedpreferences.Pref;
 
 import se.emilsjolander.sprinkles.Migration;
 import se.emilsjolander.sprinkles.Sprinkles;
@@ -11,21 +12,25 @@ import android.graphics.Bitmap;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
-import com.picdora.ImageManager.OnResultListener;
 import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.models.Category;
 import com.picdora.models.Channel;
 import com.picdora.models.Image;
+import com.picdora.sync.PicdoraSyncManager;
 import com.picdora.ui.FontHelper;
 
 @EApplication
 public class PicdoraApp extends Application {
 	@Bean
-	protected ImageUpdater mImageUpdater;
+	protected PicdoraSyncManager mSyncManager;
+	@Pref
+	protected PicdoraPreferences_ mPrefs;
 
 	@Override
 	public void onCreate() {
 		super.onCreate();
+		
+		//resetApp();
 
 		FontHelper.init(getApplicationContext());
 
@@ -35,9 +40,12 @@ public class PicdoraApp extends Application {
 
 		runMigrations();
 
-		syncDb();
-		// TODO: Sync uses lots of memory and can interfere with image loading
-		// on small heaps
+		mSyncManager.sync();
+	}
+
+	private void resetApp() {
+		deleteDatabase("sprinkles.db");
+		mPrefs.clear();		
 	}
 
 	private void initUniversalImageLoader() {
@@ -53,28 +61,8 @@ public class PicdoraApp extends Application {
 
 	}
 
-	private void syncDb() {
-		CategoryHelper.syncCategoriesWithServer(new OnResultListener() {
-
-			@Override
-			public void onSuccess() {
-				Util.log("Category sync success");
-				mImageUpdater.getNewImages();
-			}
-
-			@Override
-			public void onFailure() {
-				Util.log("Category sync failure");
-				mImageUpdater.getNewImages();
-			}
-		});
-
-	}
-
 	// Run db migrations with sprinkles
 	private void runMigrations() {
-		
-		//Util.log("Delete : " + deleteDatabase("sprinkles.db"));
 		Sprinkles sprinkles = Sprinkles.getInstance(getApplicationContext());
 
 		// create models
