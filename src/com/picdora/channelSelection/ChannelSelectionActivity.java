@@ -26,17 +26,29 @@ import com.picdora.channelSelection.ChannelGridFragment.OnChannelClickListener;
 import com.picdora.models.Channel;
 import com.picdora.ui.SlidingMenuHelper;
 
+/**
+ * Provide a screen where the user can see all of their channels and access
+ * them. The nsfw channels are not shown if the nsfw setting is turned off. The
+ * channels are shown in a grid, and clicking on one presents a menu to either
+ * play the channel or go to the channel detail page.
+ * 
+ * @author eli
+ * 
+ */
 @EActivity(R.layout.activity_channel_selection)
 public class ChannelSelectionActivity extends PicdoraActivity implements
 		OnItemClickListener, OnChannelClickListener {
 	// TODO: Have one main menu activity and have fragments for the menu options
 
+	// Use a fragment to display the channels
 	@FragmentById
-	ChannelGridFragment channelFragment;
+	protected ChannelGridFragment channelFragment;
 	@Pref
-	PicdoraPreferences_ prefs;
+	protected PicdoraPreferences_ prefs;
+
 	protected Activity mActivity;
 
+	// Keep track of the last channel/grid item that was clicked
 	private Channel mSelectedChannel;
 	private ChannelSelectionGridItem mSelectedView;
 
@@ -48,8 +60,10 @@ public class ChannelSelectionActivity extends PicdoraActivity implements
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 		getSupportActionBar().setHomeButtonEnabled(true);
 
+		// listeners to get the clicked channel and view item. On an grid item
+		// click the channel will first call the channel listener before calling
+		// the item listener so we know which channel to associate with the item
 		channelFragment.setOnItemClickListener(this);
-
 		channelFragment.setOnChannelClickListener(this);
 	}
 
@@ -57,7 +71,7 @@ public class ChannelSelectionActivity extends PicdoraActivity implements
 	public void onResume() {
 		super.onResume();
 
-		SlidingMenuHelper.refreshList(this);
+		SlidingMenuHelper.redrawMenu(this);
 
 		refreshChannels();
 	}
@@ -104,15 +118,24 @@ public class ChannelSelectionActivity extends PicdoraActivity implements
 		startActivity(new Intent(this, ChannelCreationActivity_.class));
 	}
 
+	/**
+	 * The fragment will alert us when a channel is selected. This will be called before the onItemClick listener
+	 */
 	@Override
 	public void onChannelClicked(Channel channel) {
 		mSelectedChannel = channel;
 	}
 
+	/**
+	 * We are overriding the default channel grid to add a button menu on top of
+	 * each item when it is clicked. We need to get the clicked view and enable
+	 * the buttons
+	 */
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position,
 			long id) {
 
+		// disable buttons on the previously selected item
 		if (mSelectedView != null) {
 			mSelectedView.showButtons(false);
 		}
@@ -140,7 +163,6 @@ public class ChannelSelectionActivity extends PicdoraActivity implements
 								mActivity);
 					}
 				});
-
 	}
 
 }
