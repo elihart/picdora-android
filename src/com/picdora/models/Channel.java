@@ -142,7 +142,11 @@ public class Channel extends Model {
 		}
 	}
 
-	public String getPreviewUrl() {
+	/**
+	 * 160x160 icon
+	 * @return
+	 */
+	public String getLargeThumbUrl() {
 		return "http://i.imgur.com/" + mPreviewImage + "b.jpg";
 	}
 	

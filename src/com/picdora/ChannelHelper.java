@@ -19,6 +19,7 @@ import android.database.sqlite.SQLiteDoneException;
 import android.database.sqlite.SQLiteStatement;
 import android.text.TextUtils;
 
+import com.picdora.channelDetail.ChannelDetailActivity_;
 import com.picdora.models.Category;
 import com.picdora.models.Channel;
 import com.picdora.player.ChannelViewActivity;
@@ -29,7 +30,8 @@ public class ChannelHelper {
 	@RootContext
 	Context context;
 
-	public static void playChannel(Channel channel, boolean cache, Activity activity) {
+	public static void playChannel(Channel channel, boolean cache,
+			Activity activity) {
 		Intent intent = new Intent(activity, ChannelViewActivity_.class);
 		intent.putExtra("channel", Util.toJson(channel));
 		intent.putExtra("cache", cache);
@@ -110,9 +112,9 @@ public class ChannelHelper {
 		List<Channel> channels = new ArrayList<Channel>();
 		String query = "SELECT * FROM Channels";
 
-		 if(!includeNsfw){
-		 query += " WHERE nsfw=0";
-		 }
+		if (!includeNsfw) {
+			query += " WHERE nsfw=0";
+		}
 
 		CursorList<Channel> list = Query.many(Channel.class, query, null).get();
 		channels.addAll(list.asList());
@@ -140,9 +142,16 @@ public class ChannelHelper {
 
 	public static void resumeCachedPlayed(Activity activity) {
 		Intent intent = new Intent(activity, ChannelViewActivity_.class);
-		intent.putExtra("channel", Util.toJson(ChannelViewActivity.getCachedChannel()));
+		intent.putExtra("channel",
+				Util.toJson(ChannelViewActivity.getCachedChannel()));
 		intent.putExtra("cache", true);
-		activity.startActivity(intent);		
+		activity.startActivity(intent);
+	}
+
+	public static void showChannelDetail(Channel channel, Activity activity) {
+		Intent intent = new Intent(activity, ChannelDetailActivity_.class);
+		intent.putExtra("channel", Util.toJson(channel));
+		activity.startActivity(intent);
 	}
 
 }

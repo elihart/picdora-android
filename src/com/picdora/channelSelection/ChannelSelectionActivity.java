@@ -8,9 +8,14 @@ import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.FragmentById;
 import org.androidannotations.annotations.sharedpreferences.Pref;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 
 import com.picdora.ChannelHelper;
 import com.picdora.PicdoraActivity;
@@ -22,27 +27,30 @@ import com.picdora.models.Channel;
 import com.picdora.ui.SlidingMenuHelper;
 
 @EActivity(R.layout.activity_channel_selection)
-public class ChannelSelectionActivity extends PicdoraActivity {
+public class ChannelSelectionActivity extends PicdoraActivity implements
+		OnItemClickListener, OnChannelClickListener {
 	// TODO: Have one main menu activity and have fragments for the menu options
 
 	@FragmentById
 	ChannelGridFragment channelFragment;
 	@Pref
 	PicdoraPreferences_ prefs;
+	protected Activity mActivity;
+
+	private Channel mSelectedChannel;
+	private ChannelSelectionGridItem mSelectedView;
 
 	@AfterViews
 	void initViews() {
+		mActivity = this;
+
 		SlidingMenuHelper.addMenuToActivity(this, true);
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 		getSupportActionBar().setHomeButtonEnabled(true);
 
-		channelFragment.setOnChannelClickListener(new OnChannelClickListener() {
+		channelFragment.setOnItemClickListener(this);
 
-			@Override
-			public void onChannelClick(Channel channel) {
-				channelSelected(channel);
-			}
-		});
+		channelFragment.setOnChannelClickListener(this);
 	}
 
 	@Override
@@ -66,10 +74,6 @@ public class ChannelSelectionActivity extends PicdoraActivity {
 			ChannelHelper.sortChannelsAlphabetically(channels);
 			channelFragment.setChannels(channels);
 		}
-	}
-
-	public void channelSelected(Channel channel) {
-		ChannelHelper.playChannel(channel, true, this);
 	}
 
 	@Override
@@ -98,6 +102,45 @@ public class ChannelSelectionActivity extends PicdoraActivity {
 
 	private void newChannel() {
 		startActivity(new Intent(this, ChannelCreationActivity_.class));
+	}
+
+	@Override
+	public void onChannelClicked(Channel channel) {
+		mSelectedChannel = channel;
+	}
+
+	@Override
+	public void onItemClick(AdapterView<?> parent, View view, int position,
+			long id) {
+
+		if (mSelectedView != null) {
+			mSelectedView.showButtons(false);
+		}
+
+		mSelectedView = (ChannelSelectionGridItem) view;
+		mSelectedView.showButtons(true);
+
+		// set up listeners for the buttons
+		mSelectedView.findViewById(R.id.playButton).setOnClickListener(
+				new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						ChannelHelper.playChannel(mSelectedChannel, true,
+								mActivity);
+					}
+				});
+
+		mSelectedView.findViewById(R.id.settingsButton).setOnClickListener(
+				new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						ChannelHelper.showChannelDetail(mSelectedChannel,
+								mActivity);
+					}
+				});
+
 	}
 
 }

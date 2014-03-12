@@ -5,20 +5,16 @@ import org.androidannotations.annotations.res.ColorRes;
 import org.androidannotations.annotations.res.DrawableRes;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.Gravity;
-import android.view.View;
 import android.widget.ImageView.ScaleType;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.makeramen.RoundedImageView;
 import com.nostra13.universalimageloader.core.ImageLoader;
-import com.nostra13.universalimageloader.core.assist.FailReason;
-import com.nostra13.universalimageloader.core.assist.ImageLoadingListener;
 import com.picdora.R;
 import com.picdora.ui.FontHelper.STYLE;
 
@@ -37,7 +33,7 @@ public class PicdoraGridItem extends RelativeLayout {
 	protected Drawable imagePlaceholder;
 
 	protected static final int TEXT_PADDING_DP = 8;
-	protected static final int TEXT_SIZE_DP = 25;
+	protected static final int TEXT_SIZE_DP = 20;
 	protected static final int CORNER_RADIUS = 10;
 
 	protected boolean highlighted;
@@ -73,7 +69,7 @@ public class PicdoraGridItem extends RelativeLayout {
 		int pad = dpToPixel(TEXT_PADDING_DP);
 		mText.setPadding(pad, pad, pad, pad);
 		mText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, TEXT_SIZE_DP);
-		FontHelper.setTypeFace(mText, STYLE.MEDIUM);
+		FontHelper.setTypeFace(mText, STYLE.REGULAR);
 
 		addView(mText);
 	}
@@ -86,7 +82,7 @@ public class PicdoraGridItem extends RelativeLayout {
 	public void bind(String text, String url, boolean highlight) {
 		this.text = text;
 		this.url = url;
-		
+
 		// reset the image to be white until an image loads
 		mImage.setImageDrawable(imagePlaceholder);
 
@@ -98,54 +94,9 @@ public class PicdoraGridItem extends RelativeLayout {
 			mImage.setColorFilter(defaultTint);
 		}
 
-		mText.setText(text);
+		mText.setText(text.toUpperCase());
 
-		tryLoadUrl();
-	}
-
-	protected int numAttempts = 0;
-	protected static final int MAX_ATTEMPTS = 5;
-
-	protected void tryLoadUrl() {
-		// TODO: On image redirect don't show the imgur error image
-
-		ImageLoader.getInstance().loadImage(url, new ImageLoadingListener() {
-
-			@Override
-			public void onLoadingFailed(String imageUri, View view,
-					FailReason failReason) {
-				mImage.setImageDrawable(imagePlaceholder);
-				handleLoadFailure();
-			}
-
-			@Override
-			public void onLoadingComplete(String imageUri, View view,
-					Bitmap loadedImage) {
-				if (mImage != null && imageUri.equals(url)) {
-					mImage.setImageBitmap(loadedImage);
-				}
-			}
-
-			@Override
-			public void onLoadingCancelled(String imageUri, View view) {
-				mImage.setImageDrawable(imagePlaceholder);
-			}
-
-			@Override
-			public void onLoadingStarted(String imageUri, View view) {
-				mImage.setImageDrawable(imagePlaceholder);
-			}
-		});
-
-	}
-
-	protected void handleLoadFailure() {
-		if (mImage != null) {
-			numAttempts++;
-			if (numAttempts < MAX_ATTEMPTS) {
-				tryLoadUrl();
-			}
-		}
+		ImageLoader.getInstance().displayImage(url, mImage);
 	}
 
 	public void setHighlighted(boolean highlighted) {
@@ -169,6 +120,11 @@ public class PicdoraGridItem extends RelativeLayout {
 		}
 	}
 
+	/**
+	 * Extend Rounded ImageView to have it's height snap to it's width to force
+	 * a square
+	 * 
+	 */
 	protected class PicdoraGridImage extends RoundedImageView {
 
 		public PicdoraGridImage(Context context) {

@@ -39,7 +39,7 @@ public class PicdoraApp extends Application {
 
 		runMigrations();
 
-		clearCache();
+		// clearCache();
 
 		mSyncManager.sync();
 	}
@@ -57,7 +57,10 @@ public class PicdoraApp extends Application {
 
 	private void initUniversalImageLoader() {
 		DisplayImageOptions options = new DisplayImageOptions.Builder()
-				.cacheInMemory(true).cacheOnDisc(true).build();
+				.showImageForEmptyUri(R.drawable.rect_white)
+				.showImageOnLoading(R.drawable.rect_white)
+				.showImageOnFail(R.drawable.rect_white).cacheInMemory(true)
+				.cacheOnDisc(true).build();
 
 		ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(
 				getApplicationContext()).defaultDisplayImageOptions(options)

@@ -10,6 +10,7 @@ import org.androidannotations.annotations.ViewById;
 
 import android.support.v4.app.Fragment;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.GridView;
@@ -19,10 +20,12 @@ import android.widget.RelativeLayout;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.PauseOnScrollListener;
 import com.picdora.R;
+import com.picdora.Util;
 import com.picdora.models.Channel;
 
 @EFragment(R.layout.fragment_channel_selection)
-public class ChannelGridFragment extends Fragment {
+public class ChannelGridFragment extends Fragment implements
+		OnItemClickListener {
 	@ViewById
 	protected RelativeLayout noChannelsView;
 	@ViewById
@@ -33,34 +36,48 @@ public class ChannelGridFragment extends Fragment {
 	@Bean
 	ChannelListAdapter adapter;
 
-	private OnChannelClickListener listener;
-	private boolean multiSelect = false;
-	private List<Channel> selectedChannels = new ArrayList<Channel>();
+	private OnChannelClickListener mChannelSelectListener;
+	private boolean mMultiSelect = false;
+	private List<Channel> mSelectedChannels = new ArrayList<Channel>();
+
+	// the clicked channel
+	private OnItemClickListener mParentItemListener;
 
 	@AfterViews
 	void initViews() {
 		// TODO: Load list in background and show loading icon
 		grid.setAdapter(adapter);
-		
-		setProgressVisibility(true);
+
+		setProgressVisible(true);
 
 		boolean pauseOnScroll = false;
 		boolean pauseOnFling = true;
+
 		PauseOnScrollListener listener = new PauseOnScrollListener(
 				ImageLoader.getInstance(), pauseOnScroll, pauseOnFling);
+		
 		grid.setOnScrollListener(listener);
 
-		grid.setOnItemClickListener(new OnItemClickListener() {
-
-			@Override
-			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
-					long arg3) {
-				channelClicked(adapter.getItem(arg2));
-			}
-		});
+		grid.setOnItemClickListener(this);
 	}
 
-	private void setProgressVisibility(boolean visible) {
+	@Override
+	public void onItemClick(AdapterView<?> parent, View view, int position,
+			long id) {
+		Channel channel = adapter.getItem(position);
+		channelClicked(channel);
+
+		if (mParentItemListener != null) {
+			mParentItemListener.onItemClick(parent, view, position, id);
+		}
+
+	}
+
+	public void setOnItemClickListener(OnItemClickListener listener) {
+		mParentItemListener = listener;
+	}
+
+	private void setProgressVisible(boolean visible) {
 		if (visible) {
 			progress.setVisibility(View.VISIBLE);
 		} else {
@@ -71,26 +88,26 @@ public class ChannelGridFragment extends Fragment {
 	private void channelClicked(Channel channel) {
 		// don't alert the listener of the click until after we have updated the
 		// list
-		if (multiSelect) {
-			if (selectedChannels.contains(channel)) {
+		if (mMultiSelect) {
+			if (mSelectedChannels.contains(channel)) {
 				selectChannel(channel);
 			} else {
 				deselectChannel(channel);
 			}
 		}
 
-		if (listener != null) {
-			listener.onChannelClick(channel);
+		if (mChannelSelectListener != null) {
+			mChannelSelectListener.onChannelClicked(channel);
 		}
 	}
 
 	private void deselectChannel(Channel channel) {
-		selectedChannels.remove(channel);
+		mSelectedChannels.remove(channel);
 		// Unhighlight channel
 	}
 
 	private void selectChannel(Channel channel) {
-		selectedChannels.add(channel);
+		mSelectedChannels.add(channel);
 		// highlight channel
 
 	}
@@ -106,16 +123,16 @@ public class ChannelGridFragment extends Fragment {
 			noChannelsView.setVisibility(View.GONE);
 			grid.setVisibility(View.VISIBLE);
 		}
-		
-		setProgressVisibility(false);
+
+		setProgressVisible(false);
 	}
 
 	public void setOnChannelClickListener(OnChannelClickListener listener) {
-		this.listener = listener;
+		this.mChannelSelectListener = listener;
 	}
 
 	public void clearSelectedChannels() {
-		for (Channel channel : selectedChannels) {
+		for (Channel channel : mSelectedChannels) {
 			deselectChannel(channel);
 		}
 	}
@@ -126,14 +143,15 @@ public class ChannelGridFragment extends Fragment {
 	 * @param selectMultiple
 	 */
 	public void setMultiSelect(boolean selectMultiple) {
-		multiSelect = selectMultiple;
+		mMultiSelect = selectMultiple;
 	}
 
 	public List<Channel> getSelectedChannels() {
-		return selectedChannels;
+		return mSelectedChannels;
 	}
 
 	public interface OnChannelClickListener {
-		public void onChannelClick(Channel channel);
+		public void onChannelClicked(Channel channel);
 	}
+
 }

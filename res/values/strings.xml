@@ -7,6 +7,7 @@
     <string name="action_refresh_images">Refresh Images</string>
     <string name="hello_world">Hello world!</string>
     <string name="title_activity_channel_creation">New Channel</string>
+    <string name="title_activity_channel_detail">Channel</string>
     <string name="title_activity_channel_selection">Channels</string>
     <string name="drawer_close">Close Drawer</string>
     <string name="drawer_open">Open drawer</string>

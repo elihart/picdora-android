@@ -21,6 +21,9 @@ public class ChannelPlayer {
 	// TODO: Explore loading all images into cursorlist initially and then
 	// pulling them from there. Could be a lot more efficient
 
+	// TODO: Don't go in straight order of reddit score. Take different
+	// categories into account and likes (in the future)
+
 	private Channel mChannel;
 	// and then decide on using it
 	private List<Image> mImages;

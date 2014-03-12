@@ -9,8 +9,8 @@ import retrofit.http.Query;
 
 @EBean
 public class PicdoraApiService implements PicdoraApi {
-	 private static final String BASE_URL = "http://picdora.com:3000/";
-	//public static final String BASE_URL = "http://192.168.1.6:3000/";
+	// private static final String BASE_URL = "http://picdora.com:3000/";
+	public static final String BASE_URL = "http://192.168.1.6:3000/";
 
 	private static PicdoraApi client;
 
