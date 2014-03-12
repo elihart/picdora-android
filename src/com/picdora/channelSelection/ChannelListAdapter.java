@@ -31,15 +31,15 @@ public class ChannelListAdapter extends BaseAdapter {
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
 
-		PicdoraGridItem channelView;
+		ChannelSelectionGridItem channelView;
 		if (convertView == null) {
-			channelView = PicdoraGridItem_.build(context);
+			channelView = ChannelSelectionGridItem_.build(context);
 		} else {
-			channelView = (PicdoraGridItem) convertView;
+			channelView = (ChannelSelectionGridItem) convertView;
 		}
 
 		Channel channel = getItem(position);
-		channelView.bind(channel.getName(), channel.getPreviewUrl(), false);
+		channelView.bind(channel.getName(), channel.getLargeThumbUrl(), false);
 
 		return channelView;
 	}

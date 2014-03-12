@@ -18,12 +18,6 @@
 
 package com.picdora.loopj;
 
-import android.util.Log;
-
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.message.BasicHeader;
-
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,6 +27,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPOutputStream;
+
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.message.BasicHeader;
+
+import android.util.Log;
 
 /**
  * HTTP entity to upload JSON data using streams.

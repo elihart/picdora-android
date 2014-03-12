@@ -34,7 +34,7 @@ public class SlidingMenuHelper {
 
 		// TODO: Resume doesn't get updated on activity resume
 		if (ChannelViewActivity.hasCachedChannel()) {
-			items.add(new SlidingMenuItem(R.drawable.ic_action_play_over_video,
+			items.add(new SlidingMenuItem(R.drawable.ic_action_play,
 					ChannelViewActivity.getCachedChannel().getName(),
 					ResumeActivity_.class));
 		}
@@ -165,7 +165,13 @@ public class SlidingMenuHelper {
 		activity.setDrawerToggle(toggle);
 	}
 
-	public static void refreshList(PicdoraActivity activity) {
+	/**
+	 * Update the list items in the menu. This will update the resume tab to
+	 * have the most recent channel
+	 * 
+	 * @param activity
+	 */
+	public static void redrawMenu(PicdoraActivity activity) {
 		DrawerLayout drawerLayout = (DrawerLayout) activity
 				.findViewById(R.id.drawer_layout);
 

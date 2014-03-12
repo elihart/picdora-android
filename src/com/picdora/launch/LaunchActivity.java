@@ -7,7 +7,6 @@ import android.view.Menu;
 
 import com.crashlytics.android.Crashlytics;
 import com.picdora.R;
-import com.picdora.R.menu;
 import com.picdora.channelSelection.ChannelSelectionActivity_;
 
 public class LaunchActivity extends Activity {

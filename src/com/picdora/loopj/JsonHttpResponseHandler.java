@@ -18,14 +18,14 @@
 
 package com.picdora.loopj;
 
-import android.util.Log;
-
 import org.apache.http.Header;
 import org.apache.http.HttpStatus;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
+
+import android.util.Log;
 
 /**
  * Used to intercept and handle the responses from requests made using {@link AsyncHttpClient}, with

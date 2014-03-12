@@ -4,16 +4,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import org.apache.http.Header;
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import se.emilsjolander.sprinkles.Query;
-import se.emilsjolander.sprinkles.Transaction;
 
-import com.picdora.ImageManager.OnResultListener;
-import com.picdora.api.PicdoraApiService;
-import com.picdora.loopj.JsonHttpResponseHandler;
 import com.picdora.models.Category;
 
 public abstract class CategoryHelper {

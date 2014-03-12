@@ -1,11 +1,7 @@
 package com.picdora.settings;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
-import android.preference.Preference;
-import android.preference.Preference.OnPreferenceClickListener;
-import android.service.textservice.SpellCheckerService.Session;
 import android.view.Menu;
 
 import com.picdora.PicdoraActivity;

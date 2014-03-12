@@ -1,10 +1,10 @@
 package com.picdora.loopj;
 
-import android.util.Log;
+import java.io.UnsupportedEncodingException;
 
 import org.apache.http.Header;
 
-import java.io.UnsupportedEncodingException;
+import android.util.Log;
 
 /**
  * Used to intercept and handle the responses from requests made using

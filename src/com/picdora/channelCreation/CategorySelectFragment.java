@@ -135,8 +135,7 @@ public class CategorySelectFragment extends Fragment {
 	}
 
 	private void filterCategories(NsfwSetting setting) {
-		// if the filter hasn't changed then we don't have to update the adapter
-		if (setting == nsfwFilter || adapter == null) {
+		if (adapter == null) {
 			return;
 		}
 

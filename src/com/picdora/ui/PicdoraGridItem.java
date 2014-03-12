@@ -2,28 +2,26 @@ package com.picdora.ui;
 
 import org.androidannotations.annotations.EViewGroup;
 import org.androidannotations.annotations.res.ColorRes;
+import org.androidannotations.annotations.res.DrawableRes;
 
 import android.content.Context;
-import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.Gravity;
-import android.view.View;
-import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.makeramen.RoundedImageView;
 import com.nostra13.universalimageloader.core.ImageLoader;
-import com.nostra13.universalimageloader.core.assist.FailReason;
-import com.nostra13.universalimageloader.core.assist.ImageLoadingListener;
 import com.picdora.R;
 import com.picdora.ui.FontHelper.STYLE;
 
 @EViewGroup
 public class PicdoraGridItem extends RelativeLayout {
 	protected TextView mText;
-	protected ImageView mImage;
+	protected PicdoraGridImage mImage;
 
 	@ColorRes(R.color.channel_grid_item_tint)
 	protected int defaultTint;
@@ -31,11 +29,16 @@ public class PicdoraGridItem extends RelativeLayout {
 	protected int pressedTint;
 	@ColorRes(R.color.channel_grid_item_tint_selected)
 	protected int highlightedTint;
+	@DrawableRes(R.drawable.rect_white)
+	protected Drawable imagePlaceholder;
 
 	protected static final int TEXT_PADDING_DP = 8;
-	protected static final int TEXT_SIZE_DP = 25;
+	protected static final int TEXT_SIZE_DP = 20;
+	protected static final int CORNER_RADIUS = 10;
 
 	protected boolean highlighted;
+	protected String text;
+	protected String url;
 
 	public PicdoraGridItem(Context context) {
 		super(context);
@@ -47,6 +50,9 @@ public class PicdoraGridItem extends RelativeLayout {
 				RelativeLayout.LayoutParams.MATCH_PARENT));
 
 		mImage.setScaleType(ScaleType.CENTER_CROP);
+		mImage.setCornerRadius(CORNER_RADIUS);
+
+		mImage.setImageDrawable(imagePlaceholder);
 
 		addView(mImage);
 
@@ -63,10 +69,9 @@ public class PicdoraGridItem extends RelativeLayout {
 		int pad = dpToPixel(TEXT_PADDING_DP);
 		mText.setPadding(pad, pad, pad, pad);
 		mText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, TEXT_SIZE_DP);
-		FontHelper.setTypeFace(mText, STYLE.MEDIUM);
+		FontHelper.setTypeFace(mText, STYLE.REGULAR);
 
 		addView(mText);
-
 	}
 
 	protected int dpToPixel(int dp) {
@@ -75,8 +80,11 @@ public class PicdoraGridItem extends RelativeLayout {
 	}
 
 	public void bind(String text, String url, boolean highlight) {
-		// reset the background to be white until an image loads
-		mImage.setImageResource(R.drawable.rect_white);
+		this.text = text;
+		this.url = url;
+
+		// reset the image to be white until an image loads
+		mImage.setImageDrawable(imagePlaceholder);
 
 		highlighted = highlight;
 
@@ -86,51 +94,9 @@ public class PicdoraGridItem extends RelativeLayout {
 			mImage.setColorFilter(defaultTint);
 		}
 
-		mText.setText(text);
+		mText.setText(text.toUpperCase());
 
-		tryLoadUrl(url);
-	}
-
-	protected int numAttempts = 0;
-	protected static final int MAX_ATTEMPTS = 3;
-
-	protected void tryLoadUrl(final String url) {
-		ImageLoader.getInstance().loadImage(url, new ImageLoadingListener() {
-
-			@Override
-			public void onLoadingFailed(String imageUri, View view,
-					FailReason failReason) {
-				handleLoadFailure(url);
-			}
-
-			@Override
-			public void onLoadingComplete(String imageUri, View view,
-					Bitmap loadedImage) {
-				if (mImage != null) {
-					mImage.setImageBitmap(loadedImage);
-				}
-			}
-
-			@Override
-			public void onLoadingCancelled(String imageUri, View view) {
-				handleLoadFailure(url);
-			}
-
-			@Override
-			public void onLoadingStarted(String imageUri, View view) {
-
-			}
-		});
-
-	}
-
-	protected void handleLoadFailure(String url) {
-		if (mImage != null) {
-			numAttempts++;
-			if (numAttempts < MAX_ATTEMPTS) {
-				tryLoadUrl(url);
-			}
-		}
+		ImageLoader.getInstance().displayImage(url, mImage);
 	}
 
 	public void setHighlighted(boolean highlighted) {
@@ -154,7 +120,12 @@ public class PicdoraGridItem extends RelativeLayout {
 		}
 	}
 
-	protected class PicdoraGridImage extends ImageView {
+	/**
+	 * Extend Rounded ImageView to have it's height snap to it's width to force
+	 * a square
+	 * 
+	 */
+	protected class PicdoraGridImage extends RoundedImageView {
 
 		public PicdoraGridImage(Context context) {
 			super(context);

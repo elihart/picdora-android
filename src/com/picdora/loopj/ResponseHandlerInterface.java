@@ -1,10 +1,10 @@
 package com.picdora.loopj;
 
-import org.apache.http.Header;
-import org.apache.http.HttpResponse;
-
 import java.io.IOException;
 import java.net.URI;
+
+import org.apache.http.Header;
+import org.apache.http.HttpResponse;
 
 /**
  * Interface to standardize implementations
