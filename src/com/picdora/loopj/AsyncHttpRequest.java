@@ -18,7 +18,9 @@
 
 package com.picdora.loopj;
 
-import android.util.Log;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.UnknownHostException;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpRequestRetryHandler;
@@ -26,9 +28,7 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.AbstractHttpClient;
 import org.apache.http.protocol.HttpContext;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.UnknownHostException;
+import android.util.Log;
 
 /**
  * Internal class, representing the HttpRequest, done in asynchronous manner

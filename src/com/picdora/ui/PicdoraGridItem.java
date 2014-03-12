@@ -2,18 +2,20 @@ package com.picdora.ui;
 
 import org.androidannotations.annotations.EViewGroup;
 import org.androidannotations.annotations.res.ColorRes;
+import org.androidannotations.annotations.res.DrawableRes;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.makeramen.RoundedImageView;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.assist.ImageLoadingListener;
@@ -23,7 +25,7 @@ import com.picdora.ui.FontHelper.STYLE;
 @EViewGroup
 public class PicdoraGridItem extends RelativeLayout {
 	protected TextView mText;
-	protected ImageView mImage;
+	protected PicdoraGridImage mImage;
 
 	@ColorRes(R.color.channel_grid_item_tint)
 	protected int defaultTint;
@@ -31,11 +33,16 @@ public class PicdoraGridItem extends RelativeLayout {
 	protected int pressedTint;
 	@ColorRes(R.color.channel_grid_item_tint_selected)
 	protected int highlightedTint;
+	@DrawableRes(R.drawable.rect_white)
+	protected Drawable imagePlaceholder;
 
 	protected static final int TEXT_PADDING_DP = 8;
 	protected static final int TEXT_SIZE_DP = 25;
+	protected static final int CORNER_RADIUS = 10;
 
 	protected boolean highlighted;
+	protected String text;
+	protected String url;
 
 	public PicdoraGridItem(Context context) {
 		super(context);
@@ -47,6 +54,9 @@ public class PicdoraGridItem extends RelativeLayout {
 				RelativeLayout.LayoutParams.MATCH_PARENT));
 
 		mImage.setScaleType(ScaleType.CENTER_CROP);
+		mImage.setCornerRadius(CORNER_RADIUS);
+
+		mImage.setImageDrawable(imagePlaceholder);
 
 		addView(mImage);
 
@@ -66,7 +76,6 @@ public class PicdoraGridItem extends RelativeLayout {
 		FontHelper.setTypeFace(mText, STYLE.MEDIUM);
 
 		addView(mText);
-
 	}
 
 	protected int dpToPixel(int dp) {
@@ -75,8 +84,11 @@ public class PicdoraGridItem extends RelativeLayout {
 	}
 
 	public void bind(String text, String url, boolean highlight) {
-		// reset the background to be white until an image loads
-		mImage.setImageResource(R.drawable.rect_white);
+		this.text = text;
+		this.url = url;
+		
+		// reset the image to be white until an image loads
+		mImage.setImageDrawable(imagePlaceholder);
 
 		highlighted = highlight;
 
@@ -88,47 +100,50 @@ public class PicdoraGridItem extends RelativeLayout {
 
 		mText.setText(text);
 
-		tryLoadUrl(url);
+		tryLoadUrl();
 	}
 
 	protected int numAttempts = 0;
-	protected static final int MAX_ATTEMPTS = 3;
+	protected static final int MAX_ATTEMPTS = 5;
 
-	protected void tryLoadUrl(final String url) {
+	protected void tryLoadUrl() {
+		// TODO: On image redirect don't show the imgur error image
+
 		ImageLoader.getInstance().loadImage(url, new ImageLoadingListener() {
 
 			@Override
 			public void onLoadingFailed(String imageUri, View view,
 					FailReason failReason) {
-				handleLoadFailure(url);
+				mImage.setImageDrawable(imagePlaceholder);
+				handleLoadFailure();
 			}
 
 			@Override
 			public void onLoadingComplete(String imageUri, View view,
 					Bitmap loadedImage) {
-				if (mImage != null) {
+				if (mImage != null && imageUri.equals(url)) {
 					mImage.setImageBitmap(loadedImage);
 				}
 			}
 
 			@Override
 			public void onLoadingCancelled(String imageUri, View view) {
-				handleLoadFailure(url);
+				mImage.setImageDrawable(imagePlaceholder);
 			}
 
 			@Override
 			public void onLoadingStarted(String imageUri, View view) {
-
+				mImage.setImageDrawable(imagePlaceholder);
 			}
 		});
 
 	}
 
-	protected void handleLoadFailure(String url) {
+	protected void handleLoadFailure() {
 		if (mImage != null) {
 			numAttempts++;
 			if (numAttempts < MAX_ATTEMPTS) {
-				tryLoadUrl(url);
+				tryLoadUrl();
 			}
 		}
 	}
@@ -154,7 +169,7 @@ public class PicdoraGridItem extends RelativeLayout {
 		}
 	}
 
-	protected class PicdoraGridImage extends ImageView {
+	protected class PicdoraGridImage extends RoundedImageView {
 
 		public PicdoraGridImage(Context context) {
 			super(context);

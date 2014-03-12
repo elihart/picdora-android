@@ -1,9 +1,7 @@
 package com.picdora.sync;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 
 import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EBean;

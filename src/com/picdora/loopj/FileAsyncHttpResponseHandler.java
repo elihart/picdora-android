@@ -1,15 +1,15 @@
 package com.picdora.loopj;
 
-import android.content.Context;
-import android.util.Log;
-
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+
+import android.content.Context;
+import android.util.Log;
 
 
 public abstract class FileAsyncHttpResponseHandler extends AsyncHttpResponseHandler {

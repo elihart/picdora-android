@@ -3,12 +3,9 @@ package com.picdora;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.http.Header;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import se.emilsjolander.sprinkles.CursorList;
-import se.emilsjolander.sprinkles.Query;
 import se.emilsjolander.sprinkles.Sprinkles;
 import se.emilsjolander.sprinkles.Transaction;
 import android.database.Cursor;
@@ -17,10 +14,6 @@ import android.database.sqlite.SQLiteDoneException;
 import android.database.sqlite.SQLiteStatement;
 import android.text.TextUtils;
 
-import com.picdora.api.PicdoraApiService;
-import com.picdora.loopj.JsonHttpResponseHandler;
-import com.picdora.loopj.RequestParams;
-import com.picdora.models.Category;
 import com.picdora.models.Image;
 
 public abstract class ImageManager {

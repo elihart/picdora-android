@@ -5,7 +5,8 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
     
     <!-- Channel Selection Grid -->
-    <dimen name="channel_grid_column_width">140dp</dimen>
+    <dimen name="image_grid_column_width">140dp</dimen>
+    <dimen name="image_grid_item_padding">2dp</dimen>
 
 
 </resources>

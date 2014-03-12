@@ -1,9 +1,9 @@
 package com.picdora.settings;
 
-import com.picdora.R;
-
 import android.os.Bundle;
 import android.support.v4.preference.PreferenceFragment;
+
+import com.picdora.R;
 
 public class SettingsFragment extends PreferenceFragment {
     @Override
