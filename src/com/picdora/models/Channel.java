@@ -11,6 +11,8 @@ import se.emilsjolander.sprinkles.annotations.Table;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.picdora.Util;
+import com.picdora.models.Channel.GifSetting;
 
 @Table("Channels")
 public class Channel extends Model {
@@ -31,10 +33,11 @@ public class Channel extends Model {
 
 	@Column("icon")
 	private String mPreviewImage;
-	
+
+	// TODO: Update this on play
 	@Column("lastUsed")
 	private long mLastUsed;
-	
+
 	@Column("createAt")
 	private long mCreatedAt;
 
@@ -44,7 +47,7 @@ public class Channel extends Model {
 
 	@Column("gifSetting")
 	private int mGifSetting;
-	
+
 	// TODO: Implement parcelable to pass this between activities
 
 	public Channel(String name, List<Category> categories, GifSetting gifSetting) {
@@ -52,26 +55,26 @@ public class Channel extends Model {
 		mCategories = categories;
 		mGifSetting = gifSetting.ordinal();
 	}
-	
+
 	// TODO: Add validations and check them before creating
 
 	public Channel() {
 		// empty constructor for Sprinkles model creation
 	}
-	
+
 	@Override
 	protected void beforeCreate() {
-	    mCreatedAt = System.currentTimeMillis();
-	    mLastUsed = System.currentTimeMillis();
-	    
-	    mPreviewImage = getCategories().get(0).getIconId();
-	    
-	    for(Category c : getCategories()){
-	    	if(c.isNsfw()){
-	    		mNsfw = true;
-	    		break;
-	    	}
-	    }
+		mCreatedAt = System.currentTimeMillis();
+		mLastUsed = System.currentTimeMillis();
+
+		mPreviewImage = getCategories().get(0).getIconId();
+
+		for (Category c : getCategories()) {
+			if (c.isNsfw()) {
+				mNsfw = true;
+				break;
+			}
+		}
 	}
 
 	public long getId() {
@@ -82,7 +85,7 @@ public class Channel extends Model {
 		return mName;
 	}
 
-	public boolean getNsfw() {
+	public boolean isNsfw() {
 		return mNsfw;
 	}
 
@@ -100,8 +103,12 @@ public class Channel extends Model {
 	@Override
 	protected void beforeSave() {
 		// create a json string to represent the categories in the database
-		if (mCategories == null) {
-			mCategories = new ArrayList<Category>();
+		saveCategoriesAsJson(mCategories);
+	}
+
+	private void saveCategoriesAsJson(List<Category> categories) {
+		if (categories == null) {
+			categories = new ArrayList<Category>();
 		}
 
 		mCategoriesAsJson = new Gson().toJson(mCategories);
@@ -111,9 +118,21 @@ public class Channel extends Model {
 	 * Convert the database string of categories into a list of Category objects
 	 */
 	private void getCategoriesFromList() {
-		Type type = new TypeToken<List<Category>>() {
-		}.getType();
-		mCategories = new Gson().fromJson(mCategoriesAsJson, type);
+		if (Util.isStringBlank(mCategoriesAsJson)) {
+			mCategories = new ArrayList<Category>();
+		} else {
+			Type type = new TypeToken<List<Category>>() {
+			}.getType();
+			mCategories = new Gson().fromJson(mCategoriesAsJson, type);
+		}
+	}
+
+	public String getCategoriesAsJson() {
+		if (mCategories != null) {
+			saveCategoriesAsJson(mCategories);
+		}
+		
+		return mCategoriesAsJson;
 	}
 
 	@Override
@@ -135,28 +154,36 @@ public class Channel extends Model {
 		// If either channel wasn't taken out of the database it won't have an
 		// id, so compare names instead
 
-		if (ch.getId() == 0 && mId == 0) {
-			return ch.getName().equals(mName);
+		if (ch.getId() == 0 && mId == 0 || ch.getId() == mId) {
+			return (ch.getName().equals(getName()) && ch.isNsfw() == isNsfw()
+					&& ch.getGifSetting() == getGifSetting() && ch
+					.getCategoriesAsJson().equals(getCategoriesAsJson()));
 		} else {
-			return ch.getId() == mId;
+			return false;
 		}
 	}
 
 	/**
 	 * 160x160 icon
+	 * 
 	 * @return
 	 */
 	public String getLargeThumbUrl() {
 		return "http://i.imgur.com/" + mPreviewImage + "b.jpg";
 	}
-	
+
 	@Override
-	public String toString(){
+	public String toString() {
 		String result = mName + " gif: " + mGifSetting + " Categories: ";
-		for(Category c : getCategories()){
+		for (Category c : getCategories()) {
 			result += c.getName() + " ";
 		}
 		return result;
+	}
+
+	public void setGifSetting(GifSetting gifSetting) {
+		mGifSetting = gifSetting.ordinal();
+
 	}
 
 }

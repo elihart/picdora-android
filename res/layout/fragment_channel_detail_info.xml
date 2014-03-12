@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/activityBackground" >
+
+    <RelativeLayout
+        android:id="@+id/rootView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/activityBackground"
+        android:paddingBottom="10dp" >
+
+        <TextView
+            android:id="@+id/gifLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:layout_margin="10dp"
+            android:text="@string/channel_detail_gif_setting_title"
+            android:textSize="20sp" />
+
+        <RadioGroup
+            android:id="@+id/gifSetting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_below="@+id/gifLabel"
+            android:layout_marginLeft="20dp"
+            android:checkedButton="@+id/gif_allowed"
+            android:orientation="horizontal" >
+
+            <RadioButton
+                android:id="@+id/gif_none"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/channel_detail_gif_setting_no" />
+
+            <RadioButton
+                android:id="@+id/gif_allowed"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/channel_detail_gif_setting_yes" />
+
+            <RadioButton
+                android:id="@+id/gif_only"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/channel_detail_gif_setting_only" />
+        </RadioGroup>
+    </RelativeLayout>
+
+</ScrollView>

@@ -125,7 +125,7 @@ public class ChannelViewActivity extends FragmentActivity implements
 		String msg = "Sorry! We failed to load your channel :(";
 		switch (error) {
 		case NO_IMAGES:
-			msg = "Uh oh! Unable to load images for this channel :(";
+			msg = "No images matching your settings! Try changing the gif setting or adding categories";
 			break;
 		default:
 			break;

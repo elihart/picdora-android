@@ -37,7 +37,7 @@ import com.picdora.ui.FontHelper.STYLE;
  * none.
  * 
  */
-@EFragment(R.layout.fragment_channel_info)
+@EFragment(R.layout.fragment_channel_creation_info)
 public class ChannelInfoFragment extends Fragment implements
 		OnCheckedChangeListener {
 	@ViewById

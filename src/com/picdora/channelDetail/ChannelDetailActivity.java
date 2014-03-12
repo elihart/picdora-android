@@ -2,6 +2,7 @@ package com.picdora.channelDetail;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EActivity;
+import org.androidannotations.annotations.FragmentById;
 import org.androidannotations.annotations.OptionsItem;
 import org.androidannotations.annotations.OptionsMenu;
 
@@ -21,6 +22,8 @@ import com.picdora.models.Channel;
 @EActivity(R.layout.activity_channel_detail)
 @OptionsMenu(R.menu.channel_detail)
 public class ChannelDetailActivity extends PicdoraActivity {
+	@FragmentById
+	protected ChannelInfoFragment infoFragment;
 	protected Channel mChannel;
 
 	@AfterViews
@@ -30,6 +33,8 @@ public class ChannelDetailActivity extends PicdoraActivity {
 		mChannel = Util.fromJson(json, Channel.class);
 
 		setActionBarTitle(mChannel.getName().toUpperCase());
+		
+		infoFragment.setChannel(mChannel);
 	}
 
 	@OptionsItem
