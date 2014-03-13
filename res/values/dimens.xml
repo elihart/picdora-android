@@ -8,5 +8,8 @@
     <dimen name="image_grid_column_width">140dp</dimen>
     <dimen name="image_grid_item_padding">2dp</dimen>
 
+    
+    <!-- Channel Detail -->
+    <dimen name="channel_detail_stats_text">21sp</dimen>
 
 </resources>

@@ -32,8 +32,8 @@ public class ChannelDetailActivity extends PicdoraActivity {
 		String json = getIntent().getStringExtra("channel");
 		mChannel = Util.fromJson(json, Channel.class);
 
-		setActionBarTitle(mChannel.getName().toUpperCase());
-		
+		setActionBarTitle(mChannel.getName());
+
 		infoFragment.setChannel(mChannel);
 	}
 
@@ -67,6 +67,18 @@ public class ChannelDetailActivity extends PicdoraActivity {
 
 		builder.show();
 
+	}
+
+	/**
+	 * Change the channel name and save the change to the db async. Update the
+	 * action bar title with the new name
+	 * 
+	 * @param name
+	 */
+	public void updateChannelName(String name) {
+		mChannel.setName(name);
+		setActionBarTitle(name);
+		mChannel.saveAsync();
 	}
 
 }

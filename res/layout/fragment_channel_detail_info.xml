@@ -11,13 +11,45 @@
         android:background="@color/activityBackground"
         android:paddingBottom="10dp" >
 
+        <LinearLayout
+            android:id="@+id/buttonContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:orientation="horizontal"
+            android:weightSum="2" >
+
+            <Button
+                android:id="@+id/changeNameButton"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/orange_button"
+                android:paddingBottom="5dp"
+                android:paddingTop="5dp"
+                android:text="@string/channel_detail_change_name_button"
+                android:textColor="@color/white" />
+
+            <Button
+                android:id="@+id/changeCategoriesButton"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/blue_button"
+                android:paddingBottom="5dp"
+                android:paddingTop="5dp"
+                android:text="@string/channel_detail_change_categories_button"
+                android:textColor="@color/white" />
+        </LinearLayout>
+
         <TextView
             android:id="@+id/gifLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
-            android:layout_alignParentTop="true"
+            android:layout_below="@+id/buttonContainer"
             android:layout_margin="10dp"
+            android:paddingTop="20dp"
             android:text="@string/channel_detail_gif_setting_title"
             android:textSize="20sp" />
 
@@ -49,6 +81,42 @@
                 android:layout_height="wrap_content"
                 android:text="@string/channel_detail_gif_setting_only" />
         </RadioGroup>
+
+        <LinearLayout
+            android:id="@+id/statsContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/gifSetting"
+            android:layout_marginTop="20dp"
+            android:orientation="vertical" >
+
+            <TextView
+                android:id="@+id/createdAt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:gravity="left"
+                android:text="@string/channel_detail_created_at"
+                android:textSize="@dimen/channel_detail_stats_text" />
+
+            <TextView
+                android:id="@+id/lastUsed"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:gravity="left"
+                android:text="@string/channel_detail_last_viewed"
+                android:textSize="@dimen/channel_detail_stats_text" />
+
+            <TextView
+                android:id="@+id/imagesViewed"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:gravity="left"
+                android:text="@string/channel_detail_images_seen"
+                android:textSize="@dimen/channel_detail_stats_text" />
+        </LinearLayout>
     </RelativeLayout>
 
 </ScrollView>

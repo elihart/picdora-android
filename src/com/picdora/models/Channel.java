@@ -2,6 +2,7 @@ package com.picdora.models;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import se.emilsjolander.sprinkles.Model;
@@ -12,7 +13,6 @@ import se.emilsjolander.sprinkles.annotations.Table;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.picdora.Util;
-import com.picdora.models.Channel.GifSetting;
 
 @Table("Channels")
 public class Channel extends Model {
@@ -82,7 +82,11 @@ public class Channel extends Model {
 	}
 
 	public String getName() {
-		return mName;
+		if (mName == null) {
+			return "";
+		} else {
+			return mName;
+		}
 	}
 
 	public boolean isNsfw() {
@@ -128,11 +132,16 @@ public class Channel extends Model {
 	}
 
 	public String getCategoriesAsJson() {
+		// update the json with the current categories in case they were changed
 		if (mCategories != null) {
 			saveCategoriesAsJson(mCategories);
 		}
-		
-		return mCategoriesAsJson;
+
+		if (mCategoriesAsJson == null) {
+			return "";
+		} else {
+			return mCategoriesAsJson;
+		}
 	}
 
 	@Override
@@ -154,13 +163,11 @@ public class Channel extends Model {
 		// If either channel wasn't taken out of the database it won't have an
 		// id, so compare names instead
 
-		if (ch.getId() == 0 && mId == 0 || ch.getId() == mId) {
-			return (ch.getName().equals(getName()) && ch.isNsfw() == isNsfw()
-					&& ch.getGifSetting() == getGifSetting() && ch
-					.getCategoriesAsJson().equals(getCategoriesAsJson()));
-		} else {
-			return false;
-		}
+		return ch.getId() == getId() && ch.getName().equals(getName())
+				&& ch.isNsfw() == isNsfw()
+				&& ch.getGifSetting() == getGifSetting()
+				&& ch.getCategoriesAsJson().equals(getCategoriesAsJson());
+
 	}
 
 	/**
@@ -184,6 +191,22 @@ public class Channel extends Model {
 	public void setGifSetting(GifSetting gifSetting) {
 		mGifSetting = gifSetting.ordinal();
 
+	}
+
+	public void setLastUsed(Date date) {
+		mLastUsed = date.getTime();		
+	}
+	
+	public Date getLastUsed(){
+		return new Date(mLastUsed);
+	}
+	
+	public Date getCreatedAt(){
+		return new Date(mCreatedAt);
+	}
+
+	public void setName(String name) {
+		mName = name;		
 	}
 
 }

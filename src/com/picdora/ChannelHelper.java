@@ -154,4 +154,17 @@ public class ChannelHelper {
 		activity.startActivity(intent);
 	}
 
+	public static int getNumImagesViewed(Channel channel) {
+		// TODO: Right now this will also count images viewed in other channels.
+		// Once the viewcount/liking system is changed we can fix this
+		SQLiteDatabase db = Sprinkles.getDatabase();
+		String query = "SELECT count(*) FROM Images WHERE categoryId IN "
+				+ ChannelHelper.getCategoryIdsString(channel)
+				+ " AND viewCount > 0";
+
+		SQLiteStatement s = db.compileStatement(query);
+
+		return (int) s.simpleQueryForLong();
+	}
+
 }

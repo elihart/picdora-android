@@ -1,5 +1,7 @@
 package com.picdora.player;
 
+import java.util.Date;
+
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EActivity;
@@ -74,6 +76,8 @@ public class ChannelViewActivity extends FragmentActivity implements
 		// Load bundled channel and play when ready
 		String json = getIntent().getStringExtra("channel");
 		Channel channel = Util.fromJson(json, Channel.class);
+		
+		channel.setLastUsed(new Date());
 
 		// check if we can use the cached player, if not create a new one
 		if (mOnConfigChangeState != null) {
