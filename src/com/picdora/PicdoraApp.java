@@ -17,6 +17,7 @@ import com.picdora.models.Channel;
 import com.picdora.models.Image;
 import com.picdora.sync.PicdoraSyncManager;
 import com.picdora.ui.FontHelper;
+import com.picdora.ui.UiUtil;
 
 @EApplication
 public class PicdoraApp extends Application {
@@ -30,6 +31,8 @@ public class PicdoraApp extends Application {
 		super.onCreate();
 
 		// resetApp();
+		
+		UiUtil.init(getApplicationContext());
 
 		FontHelper.init(getApplicationContext());
 

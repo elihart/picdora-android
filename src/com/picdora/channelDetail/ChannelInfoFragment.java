@@ -9,13 +9,14 @@ import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
 
-import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.support.v4.app.Fragment;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.RadioGroup.OnCheckedChangeListener;
@@ -29,6 +30,8 @@ import com.picdora.Util;
 import com.picdora.models.Channel;
 import com.picdora.models.Channel.GifSetting;
 import com.picdora.ui.FontHelper;
+import com.picdora.ui.FontHelper.STYLE;
+import com.picdora.ui.PicdoraDialog;
 
 @EFragment(R.layout.fragment_channel_detail_info)
 public class ChannelInfoFragment extends Fragment implements
@@ -122,8 +125,10 @@ public class ChannelInfoFragment extends Fragment implements
 
 	@UiThread
 	protected void setImageViewCount(int count) {
-		imagesViewed.setText(getResources().getString(
-				R.string.channel_detail_images_seen, count));
+		if (isAdded()) {
+			imagesViewed.setText(getResources().getString(
+					R.string.channel_detail_images_seen, count));
+		}
 	}
 
 	/**
@@ -188,14 +193,14 @@ public class ChannelInfoFragment extends Fragment implements
 	 */
 	@Click
 	protected void changeNameButtonClicked() {
-		// TODO: Style dialog better
-		
-		final EditText channelName = new EditText(mActivity);
+		LinearLayout container = (LinearLayout) LayoutInflater.from(mActivity).inflate(R.layout.edit_text_for_dialog, null);
+		final EditText channelName = (EditText) container.findViewById(R.id.edit_text);
 		channelName.setText(mChannel.getName());
+		FontHelper.setTypeFace(channelName, STYLE.REGULAR);
 
-		AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
-		builder.setTitle(R.string.channel_detail_name_dialog_title)
-				.setView(channelName)
+		final PicdoraDialog dialog = new PicdoraDialog.Builder(mActivity)
+				.setTitle(R.string.channel_detail_name_dialog_title)
+				.setView(container)
 				.setPositiveButton(
 						R.string.channel_detail_name_dialog_positive,
 						new DialogInterface.OnClickListener() {
@@ -204,14 +209,9 @@ public class ChannelInfoFragment extends Fragment implements
 										.toString());
 							}
 						})
-				.setNegativeButton(R.string.dialog_default_negative,
-						new DialogInterface.OnClickListener() {
-							public void onClick(DialogInterface dialog, int id) {
-								// canceled, don't do anything
-							}
-						});
+				.setNegativeButton(R.string.dialog_default_negative, null)
 
-		final AlertDialog dialog = builder.create();
+				.create();
 
 		// show the keyboard when the dialog pops up
 		channelName.setOnFocusChangeListener(new View.OnFocusChangeListener() {
@@ -227,7 +227,7 @@ public class ChannelInfoFragment extends Fragment implements
 
 		// move the cursor to the end of the text
 		channelName.setSelection(channelName.getText().length());
-		
+
 		dialog.show();
 	}
 
