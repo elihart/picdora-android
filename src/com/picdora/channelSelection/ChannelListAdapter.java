@@ -13,8 +13,6 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
 import com.picdora.models.Channel;
-import com.picdora.ui.PicdoraGridItem;
-import com.picdora.ui.PicdoraGridItem_;
 
 @EBean
 public class ChannelListAdapter extends BaseAdapter {

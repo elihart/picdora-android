@@ -28,7 +28,7 @@ import com.picdora.channelCreation.ChannelCreationActivity.OnFilterCategoriesLis
 import com.picdora.models.Category;
 import com.picdora.ui.FontHelper;
 import com.picdora.ui.FontHelper.STYLE;
-import com.picdora.ui.PicdoraGridItem;
+import com.picdora.ui.grid.PicdoraGridItem;
 
 /**
  * This fragment allows the user to select categories to use in the channel.
@@ -73,7 +73,7 @@ public class CategorySelectFragment extends Fragment {
 
 		// share the selected categories with the adapter so the adapter knows
 		// which images to highlight
-		adapter.setSelectedCategories(selectedCategories);
+		adapter.setSelectedItems(selectedCategories);
 
 		setupCategoryLists();
 
@@ -165,7 +165,7 @@ public class CategorySelectFragment extends Fragment {
 			}
 		}
 
-		adapter.setCategoryList(newList);
+		adapter.setAvailabledtItems(newList);
 
 		setCreateButtonEnabled(!selectedCategories.isEmpty());
 	}

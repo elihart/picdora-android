@@ -1,9 +1,11 @@
 package com.picdora;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import se.emilsjolander.sprinkles.CursorList;
 import se.emilsjolander.sprinkles.Query;
 
 import com.picdora.models.Category;
@@ -40,6 +42,26 @@ public abstract class CategoryHelper {
 			return left.getName().toLowerCase()
 					.compareTo(right.getName().toLowerCase());
 		}
+	}
+
+	/**
+	 * Get all categories synchronously from the database
+	 * @param includeNsfw True if nsfw categories should be included
+	 * @return
+	 */
+	public static List<Category> getAll(boolean includeNsfw) {
+		List<Category> categories = new ArrayList<Category>();
+		String query = "SELECT * FROM Categories";
+
+		if (!includeNsfw) {
+			query += " WHERE nsfw=0";
+		}
+
+		CursorList<Category> list = Query.many(Category.class, query, null).get();
+		categories.addAll(list.asList());
+		list.close();
+
+		return categories;
 	}
 
 }

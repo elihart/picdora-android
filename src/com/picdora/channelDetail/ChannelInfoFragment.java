@@ -1,6 +1,7 @@
 package com.picdora.channelDetail;
 
 import java.text.SimpleDateFormat;
+import java.util.List;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Background;
@@ -24,13 +25,18 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.picdora.CategoryHelper;
 import com.picdora.ChannelHelper;
 import com.picdora.R;
 import com.picdora.Util;
+import com.picdora.channelCreation.CategoryListAdapter;
+import com.picdora.channelCreation.CategoryListAdapter_;
+import com.picdora.models.Category;
 import com.picdora.models.Channel;
 import com.picdora.models.Channel.GifSetting;
 import com.picdora.ui.FontHelper;
 import com.picdora.ui.FontHelper.STYLE;
+import com.picdora.ui.grid.ImageGridSelector;
 import com.picdora.ui.PicdoraDialog;
 
 @EFragment(R.layout.fragment_channel_detail_info)
@@ -266,6 +272,10 @@ public class ChannelInfoFragment extends Fragment implements
 
 	@Click
 	protected void changeCategoriesButtonClicked() {
-
+		// TODO: Background
+		List<Category> availableCategories = CategoryHelper.getAll(mChannel.isNsfw());
+		List<Category> selectedCategories = mChannel.getCategories();
+		CategoryListAdapter adapter = CategoryListAdapter_.getInstance_(mActivity);
+		ImageGridSelector<Category> selector = new ImageGridSelector<Category>(mActivity, availableCategories, selectedCategories, adapter);
 	}
 }

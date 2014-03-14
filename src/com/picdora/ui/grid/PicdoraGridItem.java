@@ -1,4 +1,4 @@
-package com.picdora.ui;
+package com.picdora.ui.grid;
 
 import org.androidannotations.annotations.EViewGroup;
 import org.androidannotations.annotations.res.ColorRes;
@@ -16,6 +16,7 @@ import android.widget.TextView;
 import com.makeramen.RoundedImageView;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.picdora.R;
+import com.picdora.ui.FontHelper;
 import com.picdora.ui.FontHelper.STYLE;
 
 @EViewGroup

@@ -9,7 +9,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 
 import com.picdora.R;
-import com.picdora.ui.PicdoraGridItem;
+import com.picdora.ui.grid.PicdoraGridItem;
 
 @EViewGroup
 public class ChannelSelectionGridItem extends PicdoraGridItem {

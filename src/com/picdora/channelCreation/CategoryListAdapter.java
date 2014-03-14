@@ -1,43 +1,23 @@
 package com.picdora.channelCreation;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.androidannotations.annotations.AfterInject;
 import org.androidannotations.annotations.EBean;
 import org.androidannotations.annotations.RootContext;
 
 import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
 
 import com.picdora.models.Category;
-import com.picdora.ui.PicdoraGridItem;
-import com.picdora.ui.PicdoraGridItem_;
+import com.picdora.ui.grid.ImageGridAdapter;
+import com.picdora.ui.grid.PicdoraGridItem;
+import com.picdora.ui.grid.PicdoraGridItem_;
 
 @EBean
-public class CategoryListAdapter extends BaseAdapter {
-	List<Category> categories;
-	private List<Category> selectedCategories;
+public class CategoryListAdapter extends ImageGridAdapter<Category> {
 
 	@RootContext
 	Context context;
 
-	@AfterInject
-	void initAdapter() {
-		selectedCategories = new ArrayList<Category>();
-		categories = new ArrayList<Category>();
-	}
-	
-	public void setCategoryList(List<Category> categories){
-		this.categories = categories;
-		notifyDataSetChanged();
-	}
-	
-	public void setSelectedCategories(List<Category> categories){
-		selectedCategories = categories;
-	}
 
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
@@ -51,10 +31,7 @@ public class CategoryListAdapter extends BaseAdapter {
 
 		Category c = getItem(position);
 		
-		boolean highlight = false;
-		if(selectedCategories != null){
-			highlight = selectedCategories.contains(c); 
-		}
+		boolean highlight = getSelectedItems().contains(c);
 		
 		categoryView.bind(c.getName(), c.getPreviewUrl(), highlight);
 
@@ -63,12 +40,12 @@ public class CategoryListAdapter extends BaseAdapter {
 
 	@Override
 	public int getCount() {
-		return categories.size();
+		return getItems().size();
 	}
 
 	@Override
 	public Category getItem(int position) {
-		return categories.get(position);
+		return getItems().get(position);
 	}
 
 	@Override

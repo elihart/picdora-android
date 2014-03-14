@@ -24,8 +24,6 @@ public class Category extends Model {
 	@Column("porn")
 	private boolean mPorn;
 	
-	// TODO: Add this field to the db and update on channel creation, and
-		// favoriting
 	@Column("icon")
 	private String mPreviewImage;
 
