@@ -209,4 +209,8 @@ public class Channel extends Model {
 		mName = name;		
 	}
 
+	public void setCategories(List<Category> categories) {
+		mCategories = categories;		
+	}
+
 }

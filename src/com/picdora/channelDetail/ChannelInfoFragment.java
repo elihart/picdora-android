@@ -11,6 +11,7 @@ import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
 
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.support.v4.app.Fragment;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -36,8 +37,8 @@ import com.picdora.models.Channel;
 import com.picdora.models.Channel.GifSetting;
 import com.picdora.ui.FontHelper;
 import com.picdora.ui.FontHelper.STYLE;
-import com.picdora.ui.grid.ImageGridSelector;
 import com.picdora.ui.PicdoraDialog;
+import com.picdora.ui.grid.ImageGridSelector;
 
 @EFragment(R.layout.fragment_channel_detail_info)
 public class ChannelInfoFragment extends Fragment implements
@@ -199,8 +200,10 @@ public class ChannelInfoFragment extends Fragment implements
 	 */
 	@Click
 	protected void changeNameButtonClicked() {
-		LinearLayout container = (LinearLayout) LayoutInflater.from(mActivity).inflate(R.layout.edit_text_for_dialog, null);
-		final EditText channelName = (EditText) container.findViewById(R.id.edit_text);
+		LinearLayout container = (LinearLayout) LayoutInflater.from(mActivity)
+				.inflate(R.layout.edit_text_for_dialog, null);
+		final EditText channelName = (EditText) container
+				.findViewById(R.id.edit_text);
 		channelName.setText(mChannel.getName());
 		FontHelper.setTypeFace(channelName, STYLE.REGULAR);
 
@@ -262,7 +265,7 @@ public class ChannelInfoFragment extends Fragment implements
 
 	@UiThread
 	protected void showNameTakenError(String name) {
-		String msg = "There's already a channel called " + name + "!";
+		String msg = getResources().getString(R.string.channel_detail_change_name_taken_error, name);
 		int duration = Toast.LENGTH_SHORT;
 		Toast toast = Toast.makeText(mActivity, msg, duration);
 		toast.setGravity(Gravity.TOP, 0, 0);
@@ -270,12 +273,58 @@ public class ChannelInfoFragment extends Fragment implements
 
 	}
 
+	@Background
 	@Click
 	protected void changeCategoriesButtonClicked() {
-		// TODO: Background
-		List<Category> availableCategories = CategoryHelper.getAll(mChannel.isNsfw());
-		List<Category> selectedCategories = mChannel.getCategories();
-		CategoryListAdapter adapter = CategoryListAdapter_.getInstance_(mActivity);
-		ImageGridSelector<Category> selector = new ImageGridSelector<Category>(mActivity, availableCategories, selectedCategories, adapter);
+		List<Category> availableCategories = CategoryHelper.getAll(mChannel
+				.isNsfw());
+		CategoryHelper.sortByName(availableCategories);
+		final List<Category> selectedCategories = mChannel.getCategories();
+		CategoryListAdapter adapter = CategoryListAdapter_
+				.getInstance_(mActivity);
+		ImageGridSelector<Category> selector = new ImageGridSelector<Category>(
+				mActivity, availableCategories, selectedCategories, adapter);
+
+		showSetCategoriesDialog(selector);
+	}
+
+	@UiThread
+	protected void showSetCategoriesDialog(
+			final ImageGridSelector<Category> selector) {
+		new PicdoraDialog.Builder(mActivity).showTitle(false)
+				.setFullScreen(true).setView(selector.getView())
+				.setPositiveButton(R.string.channel_detail_change_categories_dialog_positive, new OnClickListener() {
+
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						List<Category> selected = selector.getSelectedItems();
+						if (selected.isEmpty()) {
+							showEmptyCategoriesDialog();
+						} else {
+							mChannel.setCategories(selected);
+							mChannel.saveAsync();
+						}
+					}
+				}).setNegativeButton(R.string.dialog_default_negative, null).show();
+	}
+
+	/**
+	 * Show a dialog saying the user can't select no categories
+	 */
+	@UiThread
+	protected void showEmptyCategoriesDialog() {
+		new PicdoraDialog.Builder(mActivity)
+				.setTitle(R.string.channel_detail_change_categories_empty_dialog_title)
+				.setMessage(
+						R.string.channel_detail_change_categories_empty_dialog_message)
+				.setPositiveButton(R.string.dialog_default_positive, new OnClickListener() {
+					
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						// reopen the categories dialog so they can choose again
+						changeCategoriesButtonClicked();						
+					}
+				})
+				.show();
 	}
 }

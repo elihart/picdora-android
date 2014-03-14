@@ -37,7 +37,11 @@
     <string name="channel_detail_low_image_count_warning">Warning, these channel settings only match %1$d images</string>
     <string name="channel_detail_no_image_count_warning">Warning, these channel settings don\'t match any images</string>
     <string name="channel_detail_change_name_button">Edit Name</string>
+    <string name="channel_detail_change_name_taken_error">There\'s already a channel called %1$s!</string>
     <string name="channel_detail_change_categories_button">Categories</string>
+    <string name="channel_detail_change_categories_dialog_positive">Set Categories</string>
+    <string name="channel_detail_change_categories_empty_dialog_message">You must select at least one category for this channel!</string>
+    <string name="channel_detail_change_categories_empty_dialog_title">No Categories Selected</string>
     <string name="channel_detail_created_at">Created: %1$s</string>
     <string name="channel_detail_last_viewed">Last Viewed: %1$s</string>
     <string name="channel_detail_images_seen">Images Seen: %1$d</string>

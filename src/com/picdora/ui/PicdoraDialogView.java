@@ -70,9 +70,9 @@ public class PicdoraDialogView extends RelativeLayout {
 		}
 
 		if (showTitle) {
-			this.title.setVisibility(View.VISIBLE);
+			this.titleContainer.setVisibility(View.VISIBLE);
 		} else {
-			this.title.setVisibility(View.GONE);
+			this.titleContainer.setVisibility(View.GONE);
 		}
 
 		if (view != null) {

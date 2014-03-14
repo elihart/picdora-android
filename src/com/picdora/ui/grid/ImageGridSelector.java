@@ -18,6 +18,7 @@ public class ImageGridSelector<T> {
 	protected Context mContext;
 	protected GridView mGrid;
 	protected ImageGridAdapter<T> mAdapter;
+	protected OnGridItemClickListener<T> mClickListener;
 
 	public ImageGridSelector(Context context, List<T> availableItems,
 			List<T> selectedItems, ImageGridAdapter<T> adapter) {
@@ -30,6 +31,8 @@ public class ImageGridSelector<T> {
 		mAdapter = adapter;
 		mAdapter.setSelectedItems(mSelectedItems);
 		mAdapter.setAvailabledtItems(mAvailableItems);
+		
+		mGrid.setAdapter(mAdapter);
 
 		// tell the image loader to pause on fling scrolling
 		boolean pauseOnScroll = false;
@@ -45,8 +48,45 @@ public class ImageGridSelector<T> {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int pos,
 					long id) {
-
+				itemClicked((GridItemView) view, mAdapter.getItem(pos));
 			}
 		});
+	}
+	
+	public void setItems(List<T> items){
+		mAvailableItems = items;
+		mAdapter.setAvailabledtItems(items);
+	}
+	
+	public List<T> getSelectedItems(){
+		return mSelectedItems;
+	}
+	
+	public View getView(){
+		return mGrid;
+	}
+
+	public void setOnClickListener(OnGridItemClickListener<T> listener) {
+		mClickListener = listener;
+	}
+
+	protected void itemClicked(GridItemView view, T item) {
+
+		// highlight/unhighlight item and add/remove it to the list
+		if (mSelectedItems.contains(item)) {
+			mSelectedItems.remove(item);
+			view.setHighlighted(false);
+		} else {
+			mSelectedItems.add(item);
+			view.setHighlighted(true);
+		}
+
+		if(mClickListener != null){
+			mClickListener.OnGridItemClick(view, item);
+		}
+	}
+
+	public interface OnGridItemClickListener<T> {
+		public void OnGridItemClick(GridItemView view, T item);
 	}
 }

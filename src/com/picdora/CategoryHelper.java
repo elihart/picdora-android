@@ -17,6 +17,10 @@ public abstract class CategoryHelper {
 				categoryId).get();
 	}
 
+	/**
+	 * Sort categories alphabetically by name
+	 * @param categories
+	 */
 	public static void sortByName(List<Category> categories) {
 		Collections.sort(categories, new Comparator<Category>() {
 
@@ -25,23 +29,6 @@ public abstract class CategoryHelper {
 				return lhs.getName().compareToIgnoreCase(rhs.getName());
 			}
 		});
-	}
-
-	
-	
-	public static void sortCategoryListAlphabetically(List<Category> categories){
-		Collections.sort(categories, new CategoryAlphabeticalComparator());
-	}
-	
-    /**
-	 * Basic comparator to sort categories alphabetically by name
-	 * 
-	 */
-	private static class CategoryAlphabeticalComparator implements Comparator<Category> {
-		public int compare(Category left, Category right) {
-			return left.getName().toLowerCase()
-					.compareTo(right.getName().toLowerCase());
-		}
 	}
 
 	/**

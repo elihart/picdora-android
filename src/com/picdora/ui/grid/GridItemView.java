@@ -20,7 +20,7 @@ import com.picdora.ui.FontHelper;
 import com.picdora.ui.FontHelper.STYLE;
 
 @EViewGroup
-public class PicdoraGridItem extends RelativeLayout {
+public class GridItemView extends RelativeLayout {
 	protected TextView mText;
 	protected PicdoraGridImage mImage;
 
@@ -41,7 +41,7 @@ public class PicdoraGridItem extends RelativeLayout {
 	protected String text;
 	protected String url;
 
-	public PicdoraGridItem(Context context) {
+	public GridItemView(Context context) {
 		super(context);
 
 		mImage = new PicdoraGridImage(context);

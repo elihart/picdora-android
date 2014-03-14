@@ -9,10 +9,10 @@ import android.view.View;
 import android.widget.LinearLayout;
 
 import com.picdora.R;
-import com.picdora.ui.grid.PicdoraGridItem;
+import com.picdora.ui.grid.GridItemView;
 
 @EViewGroup
-public class ChannelSelectionGridItem extends PicdoraGridItem {
+public class ChannelSelectionGridItem extends GridItemView {
 	@ViewById
 	protected LinearLayout buttonContainer;
 

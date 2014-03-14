@@ -126,6 +126,11 @@ public class ChannelViewActivity extends FragmentActivity implements
 	}
 
 	protected void handleChannelLoadError(ChannelError error) {
+		// don't cache a failed channel
+		if(shouldCache){
+			cachedState = null;
+		}
+		
 		String msg = "Sorry! We failed to load your channel :(";
 		switch (error) {
 		case NO_IMAGES:
