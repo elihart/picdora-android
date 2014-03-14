@@ -28,6 +28,7 @@ import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
 import com.picdora.models.Category;
 import com.picdora.models.Channel;
+import com.picdora.ui.PicdoraDialog;
 
 /**
  * This activity guides the user through creating a new channel. It consists of
@@ -39,7 +40,7 @@ import com.picdora.models.Channel;
  */
 
 @EActivity(R.layout.activity_channel_creation)
-public class ChannelCreationActivity extends PicdoraActivity{
+public class ChannelCreationActivity extends PicdoraActivity {
 	@ViewById
 	ChannelCreationViewPager pager;
 	@Pref
@@ -225,7 +226,8 @@ public class ChannelCreationActivity extends PicdoraActivity{
 	}
 
 	@Background
-	public void submitChannelCategories(List<Category> categories, boolean preview) {
+	public void submitChannelCategories(List<Category> categories,
+			boolean preview) {
 		// if we're already loading, don't load again
 		if (loadingChannel) {
 			return;
@@ -239,7 +241,6 @@ public class ChannelCreationActivity extends PicdoraActivity{
 		} else {
 			saveState(categories);
 		}
-
 
 		Channel channel = new Channel(channelInfoState.channelName, categories,
 				channelInfoState.gifSetting);
@@ -261,17 +262,17 @@ public class ChannelCreationActivity extends PicdoraActivity{
 
 	@UiThread
 	protected void showNoImagesDialog() {
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setMessage(
-				"The categories and settings you chose don't match any images! Try changing the gif setting or choosing more categories.")
+		new PicdoraDialog.Builder(this)
+				.setMessage(
+						"The categories and settings you chose don't match any images! Try changing the gif setting or choosing more categories.")
 				.setTitle("Warning!")
 				.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int id) {
 						setLoadingStatus(false);
 					}
-				});
+				})
 
-		builder.create().show();
+				.show();
 	}
 
 	@UiThread
@@ -283,10 +284,10 @@ public class ChannelCreationActivity extends PicdoraActivity{
 		} else {
 			positive = "Create anyway";
 		}
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setMessage(
-				"The categories and settings you chose only match " + count
-						+ " images!")
+		new PicdoraDialog.Builder(this)
+				.setMessage(
+						"The categories and settings you chose only match "
+								+ count + " images!")
 				.setTitle("Warning!")
 				.setPositiveButton(positive,
 						new DialogInterface.OnClickListener() {
@@ -299,9 +300,9 @@ public class ChannelCreationActivity extends PicdoraActivity{
 							public void onClick(DialogInterface dialog, int id) {
 								setLoadingStatus(false);
 							}
-						});
+						})
 
-		builder.create().show();
+				.show();
 	}
 
 	@UiThread
@@ -310,7 +311,7 @@ public class ChannelCreationActivity extends PicdoraActivity{
 		if (!loadingChannel) {
 			return;
 		}
-		
+
 		if (!preview) {
 			clearSavedState();
 			channel.save();
@@ -318,8 +319,6 @@ public class ChannelCreationActivity extends PicdoraActivity{
 		}
 
 		ChannelHelper.playChannel(channel, !preview, this);
-
-		
 
 		setLoadingStatus(false);
 	}

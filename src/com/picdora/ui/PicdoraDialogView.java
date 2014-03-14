@@ -63,7 +63,7 @@ public class PicdoraDialogView extends RelativeLayout {
 
 		mDialog = dialog;
 
-		if (title == null) {
+		if (title != null) {
 			this.title.setText(title);
 		} else {
 			this.title.setText(R.string.dialog_default_title);
