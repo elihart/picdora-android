@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <RelativeLayout
+        android:id="@+id/rootView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_margin="@dimen/dialog_side_margin"
+        android:background="@color/picdora_dialog_background" >
+
+        <LinearLayout
+            android:id="@+id/titleContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/picdora_dialog_title_background"
+            android:orientation="vertical" >
+
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/dialog_title_margin"
+                android:drawablePadding="@dimen/dialog_icon_margin"
+                android:gravity="left|center_vertical"
+                android:text="@string/dialog_default_title"
+                android:textColor="@color/picdora_dialog_title"
+                android:textSize="@dimen/dialog_title_text_size" />
+
+            <View
+                android:id="@+id/titleSeparator"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/dialog_title_separator_height"
+                android:background="@color/picdora_dialog_line_break" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/contentContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/titleContainer"
+            android:layout_marginBottom="@dimen/dialog_content_margin"
+            android:layout_marginTop="@dimen/dialog_content_margin"
+            android:measureAllChildren="false" >
+
+            <TextView
+                android:id="@+id/message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/dialog_message_margin"
+                android:gravity="left|center_vertical"
+                android:text="@string/dialog_default_message"
+                android:textColor="@color/picdora_dialog_message"
+                android:textSize="@dimen/dialog_message_text_size" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:id="@+id/buttonContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/contentContainer"
+            android:orientation="horizontal" >
+
+            <Button
+                android:id="@+id/negativeButton"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/orange_button"
+                android:paddingBottom="@dimen/dialog_button_padding"
+                android:paddingTop="@dimen/dialog_button_padding"
+                android:text="@string/dialog_default_negative"
+                android:textColor="@color/white" />
+
+            <Button
+                android:id="@+id/positiveButton"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/blue_button"
+                android:paddingBottom="@dimen/dialog_button_padding"
+                android:paddingTop="@dimen/dialog_button_padding"
+                android:text="@string/dialog_default_positive"
+                android:textColor="@color/white" />
+        </LinearLayout>
+    </RelativeLayout>
+
+</RelativeLayout>

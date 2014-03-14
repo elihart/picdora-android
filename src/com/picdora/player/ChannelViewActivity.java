@@ -181,7 +181,7 @@ public class ChannelViewActivity extends FragmentActivity implements
 	}
 
 	public void showBusyDialog(String message) {
-		busyDialog = new Dialog(this, R.style.lightbox_dialog);
+		busyDialog = new Dialog(this, R.style.picdora_dialog_style);
 		busyDialog.setContentView(R.layout.lightbox_dialog);
 		((TextView) busyDialog.findViewById(R.id.dialogText)).setText(message);
 

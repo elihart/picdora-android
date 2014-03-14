@@ -17,7 +17,7 @@
         <!-- All customizations that are NOT specific to a particular API-level can go here. -->
     </style>
 
-    <style name="lightbox_dialog" parent="@android:style/Theme.Translucent.NoTitleBar">
+    <style name="picdora_dialog_style" parent="@android:style/Theme.Translucent.NoTitleBar">
         <item name="android:windowAnimationStyle">@style/dialog_animation</item>
         <item name="android:background">@color/translucent_black</item>
     </style>

@@ -24,5 +24,12 @@
     <color name="channel_grid_item_tint_selected">#601cb0f6</color>
     <color name="channel_grid_item_tint_pressed">#60FF9111</color>
     <color name="channel_grid_item_text_color">#ffffff</color>
+    
+    <!-- Picdora Dialog -->
+    <color name="picdora_dialog_line_break">@color/buttonLightBlue</color>
+    <color name="picdora_dialog_background">@color/white</color>
+    <color name="picdora_dialog_title">@color/black</color>
+    <color name="picdora_dialog_title_background">@color/white</color>
+    <color name="picdora_dialog_message">@color/black</color>
 
 </resources>

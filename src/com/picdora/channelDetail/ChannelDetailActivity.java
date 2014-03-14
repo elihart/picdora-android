@@ -6,14 +6,15 @@ import org.androidannotations.annotations.FragmentById;
 import org.androidannotations.annotations.OptionsItem;
 import org.androidannotations.annotations.OptionsMenu;
 
-import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 
 import com.picdora.ChannelHelper;
 import com.picdora.PicdoraActivity;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.models.Channel;
+import com.picdora.ui.PicdoraDialog;
 
 /**
  * Show details about a channel, allow edits, deletion, and starting the
@@ -44,28 +45,24 @@ public class ChannelDetailActivity extends PicdoraActivity {
 
 	@OptionsItem
 	protected void deleteChannel() {
-		// show a confirmation dialog before deleting channel
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setMessage(R.string.channel_detail_delete_dialog_message)
+		new PicdoraDialog.Builder(this)
 				.setTitle(R.string.channel_detail_delete_dialog_title)
+				.setMessage(R.string.channel_detail_delete_dialog_message)
 				.setPositiveButton(
 						R.string.channel_detail_delete_dialog_positive,
-						new DialogInterface.OnClickListener() {
-							public void onClick(DialogInterface dialog, int id) {
+						new OnClickListener() {
+
+							@Override
+							public void onClick(DialogInterface dialog,
+									int which) {
 								// delete channel and finish
 								mChannel.delete();
 								finish();
 							}
 						})
 				.setNegativeButton(
-						R.string.channel_detail_delete_dialog_negative,
-						new DialogInterface.OnClickListener() {
-							public void onClick(DialogInterface dialog, int id) {
-								// canceled, don't do anything
-							}
-						});
-
-		builder.show();
+						R.string.channel_detail_delete_dialog_negative, null)
+				.show();
 
 	}
 

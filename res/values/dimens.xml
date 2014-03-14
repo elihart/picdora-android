@@ -3,13 +3,24 @@
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
-    
+
     <!-- Channel Selection Grid -->
     <dimen name="image_grid_column_width">140dp</dimen>
     <dimen name="image_grid_item_padding">2dp</dimen>
 
-    
     <!-- Channel Detail -->
     <dimen name="channel_detail_stats_text">21sp</dimen>
+
+    <!-- Picdora Dialog -->
+    <dimen name="dialog_side_margin">15dp</dimen>
+    <dimen name="dialog_icon_size">28dp</dimen>
+    <dimen name="dialog_icon_margin">2dp</dimen>
+    <dimen name="dialog_title_text_size">22sp</dimen>
+    <dimen name="dialog_title_margin">10dp</dimen>
+    <dimen name="dialog_message_text_size">17sp</dimen>
+    <dimen name="dialog_message_margin">8dp</dimen>
+    <dimen name="dialog_title_separator_height">2dp</dimen>
+    <dimen name="dialog_content_margin">8dp</dimen>
+    <dimen name="dialog_button_padding">5dp</dimen>
 
 </resources>

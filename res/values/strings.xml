@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Picdora Dialog -->
     <string name="dialog_default_positive">Ok</string>
     <string name="dialog_default_negative">Cancel</string>
+    <string name="dialog_default_title">Alert</string>
+    <string name="dialog_default_message">Alert message</string>
 
     <string name="app_name">Picdora</string>
     <string name="action_settings">Settings</string>

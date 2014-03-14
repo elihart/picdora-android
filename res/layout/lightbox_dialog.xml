@@ -20,7 +20,7 @@ limitations under the License.
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical"
-    style="@style/lightbox_dialog">
+    style="@style/picdora_dialog_style">
     
     <LinearLayout
     android:layout_width="fill_parent"
