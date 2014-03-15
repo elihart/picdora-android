@@ -68,7 +68,7 @@ public class ImageGridSelector<T> {
 				R.layout.image_grid, null);
 		mAdapter = adapter;
 		mAdapter.setSelectedItems(mSelectedItems);
-		mAdapter.setAvailabledtItems(mAvailableItems);
+		mAdapter.setAvailableItems(mAvailableItems);
 
 		mGrid.setAdapter(mAdapter);
 
@@ -98,7 +98,7 @@ public class ImageGridSelector<T> {
 	 */
 	public void setItems(List<T> items) {
 		mAvailableItems = items;
-		mAdapter.setAvailabledtItems(items);
+		mAdapter.setAvailableItems(items);
 	}
 
 	/**

@@ -32,7 +32,7 @@ public abstract class ImageGridAdapter<T> extends BaseAdapter {
 	 * 
 	 * @param items
 	 */
-	public void setAvailabledtItems(List<T> items) {
+	public void setAvailableItems(List<T> items) {
 		if (items == null) {
 			throw new IllegalArgumentException("Items can't be null");
 		}

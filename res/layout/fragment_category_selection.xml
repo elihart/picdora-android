@@ -5,12 +5,12 @@
     android:layout_height="match_parent"
     android:background="@color/activityBackground" >
 
-    <include
+    <FrameLayout
+        android:id="@+id/gridContainer"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/menu"
-        android:layout_alignParentTop="true"
-        layout="@layout/image_grid" />
+        android:layout_height="match_parent">
+        
+    </FrameLayout>
 
     <LinearLayout
         android:id="@+id/menu"

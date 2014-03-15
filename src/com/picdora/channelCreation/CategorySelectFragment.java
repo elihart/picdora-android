@@ -12,14 +12,9 @@ import org.androidannotations.annotations.ViewById;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
-import android.widget.GridView;
+import android.widget.FrameLayout;
 
-import com.nostra13.universalimageloader.core.ImageLoader;
-import com.nostra13.universalimageloader.core.assist.PauseOnScrollListener;
 import com.picdora.CategoryHelper;
 import com.picdora.R;
 import com.picdora.Util;
@@ -29,6 +24,8 @@ import com.picdora.models.Category;
 import com.picdora.ui.FontHelper;
 import com.picdora.ui.FontHelper.STYLE;
 import com.picdora.ui.grid.GridItemView;
+import com.picdora.ui.grid.ImageGridSelector;
+import com.picdora.ui.grid.ImageGridSelector.OnGridItemClickListener;
 
 /**
  * This fragment allows the user to select categories to use in the channel.
@@ -40,8 +37,6 @@ import com.picdora.ui.grid.GridItemView;
  */
 @EFragment(R.layout.fragment_category_selection)
 public class CategorySelectFragment extends Fragment {
-	@ViewById
-	GridView grid;
 	@Bean
 	CategoryListAdapter adapter;
 	@ViewById
@@ -50,6 +45,8 @@ public class CategorySelectFragment extends Fragment {
 	Button createButton;
 	@ViewById
 	Button clearButton;
+	@ViewById
+	protected FrameLayout gridContainer;
 
 	private List<Category> selectedCategories;
 	private List<Category> allCategories;
@@ -57,6 +54,7 @@ public class CategorySelectFragment extends Fragment {
 	private List<Category> sfwCategories;
 	private ChannelCreationActivity activity;
 	private NsfwSetting nsfwFilter;
+	protected ImageGridSelector<Category> mCategorySelector;
 
 	@AfterViews
 	void initViews() {
@@ -71,33 +69,26 @@ public class CategorySelectFragment extends Fragment {
 			selectedCategories = new ArrayList<Category>();
 		}
 
-		// share the selected categories with the adapter so the adapter knows
-		// which images to highlight
-		adapter.setSelectedItems(selectedCategories);
-
+		// create the filtered lists
+		// TODO: Async
 		setupCategoryLists();
+
+		mCategorySelector = new ImageGridSelector<Category>(getActivity(),
+				allCategories, selectedCategories, adapter);
 
 		filterCategories(ChannelCreationActivity.getNsfwFilter());
 
-		grid.setAdapter(adapter);
+		gridContainer.addView(mCategorySelector.getView());
 
-		// tell the image loader to pause on fling scrolling
-		boolean pauseOnScroll = false;
-		boolean pauseOnFling = true;
-		PauseOnScrollListener listener = new PauseOnScrollListener(
-				ImageLoader.getInstance(), pauseOnScroll, pauseOnFling);
-		grid.setOnScrollListener(listener);
+		// Update the button state
+		mCategorySelector
+				.setOnClickListener(new OnGridItemClickListener<Category>() {
 
-		// setup click listener that selects/deselects image and reports click
-		// to listener
-		grid.setOnItemClickListener(new OnItemClickListener() {
-
-			@Override
-			public void onItemClick(AdapterView<?> parent, View view, int pos,
-					long id) {
-				categoryClicked(view, adapter.getItem(pos));
-			}
-		});
+					@Override
+					public void OnGridItemClick(GridItemView view, Category item) {
+						setCreateButtonEnabled(!selectedCategories.isEmpty());
+					}
+				});
 
 		// set fonts
 		FontHelper.setTypeFace(previewButton, STYLE.MEDIUM);
@@ -105,6 +96,9 @@ public class CategorySelectFragment extends Fragment {
 		FontHelper.setTypeFace(clearButton, STYLE.MEDIUM);
 	}
 
+	/**
+	 * Separate the categories into filtered lists depending on nsfw
+	 */
 	private void setupCategoryLists() {
 		allCategories = Util.all(Category.class);
 		CategoryHelper.sortByName(allCategories);
@@ -134,6 +128,11 @@ public class CategorySelectFragment extends Fragment {
 		});
 	}
 
+	/**
+	 * Update the filter setting for the categories
+	 * 
+	 * @param setting
+	 */
 	private void filterCategories(NsfwSetting setting) {
 		if (adapter == null) {
 			return;
@@ -165,22 +164,7 @@ public class CategorySelectFragment extends Fragment {
 			}
 		}
 
-		adapter.setAvailabledtItems(newList);
-
-		setCreateButtonEnabled(!selectedCategories.isEmpty());
-	}
-
-	private void categoryClicked(View v, Category category) {
-		GridItemView item = (GridItemView) v;
-
-		// highlight/unhighlight category image and add/remove to the list
-		if (selectedCategories.contains(category)) {
-			selectedCategories.remove(category);
-			item.setHighlighted(false);
-		} else {
-			selectedCategories.add(category);
-			item.setHighlighted(true);
-		}
+		mCategorySelector.setItems(newList);
 
 		setCreateButtonEnabled(!selectedCategories.isEmpty());
 	}
