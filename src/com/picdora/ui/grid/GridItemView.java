@@ -1,5 +1,7 @@
 package com.picdora.ui.grid;
 
+import java.util.Locale;
+
 import org.androidannotations.annotations.EViewGroup;
 import org.androidannotations.annotations.res.ColorRes;
 import org.androidannotations.annotations.res.DrawableRes;
@@ -19,17 +21,27 @@ import com.picdora.R;
 import com.picdora.ui.FontHelper;
 import com.picdora.ui.FontHelper.STYLE;
 
+/**
+ * Used with the ImageGridSelector and ImageGridAdapter to display an item. A
+ * square image is shown with text overlayed on top. The image is loaded from
+ * url using the Universal Image Loader.
+ */
 @EViewGroup
 public class GridItemView extends RelativeLayout {
 	protected TextView mText;
 	protected PicdoraGridImage mImage;
 
+	// the tint to put over each image
 	@ColorRes(R.color.channel_grid_item_tint)
 	protected int defaultTint;
+	// image tint when pressed
 	@ColorRes(R.color.channel_grid_item_tint_pressed)
 	protected int pressedTint;
+	// image tint when selected
 	@ColorRes(R.color.channel_grid_item_tint_selected)
 	protected int highlightedTint;
+
+	// A blank white drawable to use when an image isn't loaded.
 	@DrawableRes(R.drawable.rect_white)
 	protected Drawable imagePlaceholder;
 
@@ -80,6 +92,13 @@ public class GridItemView extends RelativeLayout {
 				getResources().getDisplayMetrics());
 	}
 
+	/**
+	 * Set this grid item to display the given image and text
+	 * 
+	 * @param text
+	 * @param url
+	 * @param highlight
+	 */
 	public void bind(String text, String url, boolean highlight) {
 		this.text = text;
 		this.url = url;
@@ -95,11 +114,17 @@ public class GridItemView extends RelativeLayout {
 			mImage.setColorFilter(defaultTint);
 		}
 
-		mText.setText(text.toUpperCase());
+		mText.setText(text.toUpperCase(Locale.US));
 
 		ImageLoader.getInstance().displayImage(url, mImage);
 	}
 
+	/**
+	 * Toggle whether or not this item should be highlighted, indicating
+	 * selection
+	 * 
+	 * @param highlighted
+	 */
 	public void setHighlighted(boolean highlighted) {
 		this.highlighted = highlighted;
 		setTint();
@@ -108,9 +133,13 @@ public class GridItemView extends RelativeLayout {
 	@Override
 	protected void drawableStateChanged() {
 		super.drawableStateChanged();
+		// detect when the state changes so we can tell if we're being pressed
 		setTint();
 	}
 
+	/**
+	 * Update the tint depending on our current state
+	 */
 	protected void setTint() {
 		if (isPressed()) {
 			mImage.setColorFilter(pressedTint);

@@ -11,14 +11,27 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
+/**
+ * This adapter displays items for the ImageGridSelector. It should be
+ * subclassed to work with whatever model is needed. Each item needs an image
+ * url and text to display over the image.
+ * 
+ * @param <T>
+ *            The item type
+ */
 @EBean
 public abstract class ImageGridAdapter<T> extends BaseAdapter {
 	@RootContext
 	protected Context context;
-	
+
 	protected List<T> mAvailableItems = new ArrayList<T>();
 	protected List<T> mSelectedItems = new ArrayList<T>();
 
+	/**
+	 * Set the items to show. Redraws the list after setting them.
+	 * 
+	 * @param items
+	 */
 	public void setAvailabledtItems(List<T> items) {
 		if (items == null) {
 			throw new IllegalArgumentException("Items can't be null");
@@ -28,6 +41,11 @@ public abstract class ImageGridAdapter<T> extends BaseAdapter {
 		notifyDataSetChanged();
 	}
 
+	/**
+	 * Sets the items that should be shown as selected.
+	 * 
+	 * @param items
+	 */
 	public void setSelectedItems(List<T> items) {
 		if (items == null) {
 			throw new IllegalArgumentException("Items can't be null");
@@ -37,10 +55,20 @@ public abstract class ImageGridAdapter<T> extends BaseAdapter {
 		notifyDataSetChanged();
 	}
 
+	/**
+	 * Get selected items
+	 * 
+	 * @return
+	 */
 	public List<T> getSelectedItems() {
 		return mSelectedItems;
 	}
 
+	/**
+	 * Get all items shown
+	 * 
+	 * @return
+	 */
 	public List<T> getItems() {
 		return mAvailableItems;
 	}
@@ -74,11 +102,29 @@ public abstract class ImageGridAdapter<T> extends BaseAdapter {
 		return itemView;
 	}
 
+	/**
+	 * Get the url of the image to display
+	 * 
+	 * @param item
+	 * @return
+	 */
 	protected abstract String getImageUrl(T item);
 
+	/**
+	 * Get the text to shown over the image
+	 * 
+	 * @param item
+	 * @return
+	 */
 	protected abstract String getText(T item);
 
-	protected GridItemView buildItemView(){
+	/**
+	 * Get the view to use to display the item. This can be overridden to
+	 * provide a subclass of GridItemView for further customization
+	 * 
+	 * @return
+	 */
+	protected GridItemView buildItemView() {
 		return GridItemView_.build(context);
 	}
 
