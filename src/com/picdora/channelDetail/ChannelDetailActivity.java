@@ -9,7 +9,7 @@ import org.androidannotations.annotations.OptionsMenu;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 
-import com.picdora.ChannelHelper;
+import com.picdora.ChannelUtils;
 import com.picdora.PicdoraActivity;
 import com.picdora.R;
 import com.picdora.Util;
@@ -40,7 +40,7 @@ public class ChannelDetailActivity extends PicdoraActivity {
 
 	@OptionsItem
 	protected void playChannel() {
-		ChannelHelper.playChannel(mChannel, true, this);
+		ChannelUtils.playChannel(mChannel, true, this);
 	}
 
 	@OptionsItem

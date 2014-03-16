@@ -26,8 +26,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.picdora.CategoryHelper;
-import com.picdora.ChannelHelper;
+import com.picdora.CategoryUtils;
+import com.picdora.ChannelUtils;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.channelCreation.CategoryListAdapter;
@@ -126,7 +126,7 @@ public class ChannelInfoFragment extends Fragment implements
 	 */
 	@Background
 	protected void getAndSetImageViewCount() {
-		int count = ChannelHelper.getNumImagesViewed(mChannel);
+		int count = ChannelUtils.getNumImagesViewed(mChannel);
 		setImageViewCount(count);
 	}
 
@@ -167,7 +167,7 @@ public class ChannelInfoFragment extends Fragment implements
 
 	@Background(serial = "update")
 	protected void saveChannel() {
-		long imageCount = ChannelHelper.getImageCount(mChannel, false);
+		long imageCount = ChannelUtils.getImageCount(mChannel, false);
 		mChannel.save();
 
 		if (imageCount < LOW_IMAGE_THRESHOLD) {
@@ -245,7 +245,7 @@ public class ChannelInfoFragment extends Fragment implements
 		// if the name is the same don't do anything
 		if (Util.isStringBlank(name) || name.equals(mChannel.getName())) {
 			return;
-		} else if (ChannelHelper.isNameTaken(name)) {
+		} else if (ChannelUtils.isNameTaken(name)) {
 			showNameTakenError(name);
 		} else {
 			updateChannelName(name);
@@ -276,9 +276,9 @@ public class ChannelInfoFragment extends Fragment implements
 	@Background
 	@Click
 	protected void changeCategoriesButtonClicked() {
-		List<Category> availableCategories = CategoryHelper.getAll(mChannel
+		List<Category> availableCategories = CategoryUtils.getAll(mChannel
 				.isNsfw());
-		CategoryHelper.sortByName(availableCategories);
+		CategoryUtils.sortByName(availableCategories);
 		final List<Category> selectedCategories = mChannel.getCategories();
 		CategoryListAdapter adapter = CategoryListAdapter_
 				.getInstance_(mActivity);

@@ -23,6 +23,7 @@ import android.os.AsyncTask;
 import android.os.SystemClock;
 import android.util.DisplayMetrics;
 
+import com.picdora.ImageUtils.IMGUR_SIZE;
 import com.picdora.loopj.AsyncHttpClient;
 import com.picdora.loopj.BinaryHttpResponseHandler;
 import com.picdora.loopj.RequestHandle;
@@ -356,7 +357,7 @@ public class PicdoraImageLoader {
 		final Download download = new Download(new Date().getTime(), callbacks,
 				null, image, preload);
 
-		RequestHandle handle = client.get(image.getUrl(),
+		RequestHandle handle = client.get(image.getUrl(IMGUR_SIZE.FULL),
 				new BinaryHttpResponseHandler(ALLOWED_CONTENT_TYPES) {
 					@Override
 					public void onProgress(int progress, int size) {

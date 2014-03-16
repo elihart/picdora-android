@@ -26,9 +26,10 @@ import com.picdora.Util;
 import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.imageloader.PicdoraImageLoader.OnDownloadSpaceAvailableListener;
 import com.picdora.models.Channel;
+import com.picdora.models.ChannelImage;
 import com.picdora.models.Image;
 import com.picdora.player.ChannelPlayer.ChannelError;
-import com.picdora.player.ChannelPlayer.OnGetImageResultListener;
+import com.picdora.player.ChannelPlayer.OnGetChannelImageResultListener;
 import com.picdora.player.ChannelPlayer.OnLoadListener;
 
 @Fullscreen
@@ -76,7 +77,7 @@ public class ChannelViewActivity extends FragmentActivity implements
 		// Load bundled channel and play when ready
 		String json = getIntent().getStringExtra("channel");
 		Channel channel = Util.fromJson(json, Channel.class);
-		
+
 		channel.setLastUsed(new Date());
 
 		// check if we can use the cached player, if not create a new one
@@ -127,10 +128,10 @@ public class ChannelViewActivity extends FragmentActivity implements
 
 	protected void handleChannelLoadError(ChannelError error) {
 		// don't cache a failed channel
-		if(shouldCache){
+		if (shouldCache) {
 			cachedState = null;
 		}
-		
+
 		String msg = "Sorry! We failed to load your channel :(";
 		switch (error) {
 		case NO_IMAGES:
@@ -144,8 +145,20 @@ public class ChannelViewActivity extends FragmentActivity implements
 	}
 
 	public void getImage(int position, boolean replacement,
-			OnGetImageResultListener listener) {
-		mChannelPlayer.getImage(position, replacement, listener);
+			final OnGetImageResultListener listener) {
+		mChannelPlayer.getImage(position, replacement,
+				new OnGetChannelImageResultListener() {
+
+					@Override
+					public void onGetChannelImageResult(ChannelImage image) {
+						listener.onGetImageResult(image.getImage());
+
+					}
+				});
+	}
+
+	public interface OnGetImageResultListener {
+		public void onGetImageResult(Image image);
 	}
 
 	protected void startChannel(int startingPosition) {
@@ -277,13 +290,14 @@ public class ChannelViewActivity extends FragmentActivity implements
 
 		int next = pager.getCurrentItem() + 1;
 		for (int i = next; i < next + NUM_IMAGES_TO_PRELOAD; i++) {
-			mChannelPlayer.getImage(i, false, new OnGetImageResultListener() {
+			mChannelPlayer.getImage(i, false,
+					new OnGetChannelImageResultListener() {
 
-				@Override
-				public void onGetImageResult(Image image) {
-					loader.preloadImage(image);
-				}
-			});
+						@Override
+						public void onGetChannelImageResult(ChannelImage image) {
+							loader.preloadImage(image.getImage());
+						}
+					});
 		}
 	}
 

@@ -16,11 +16,68 @@ import android.text.TextUtils;
 
 import com.picdora.models.Image;
 
-public abstract class ImageManager {
+public abstract class ImageUtils {
+	// the imgur api endpoint for getting images
+	private static final String IMGUR_BASE_URL = "http://i.imgur.com/";
+	// an extension must be included to get direct access to the image. It
+	// doesn't seem to matter what the extension is; you can reach a gif with a
+	// jpg extension
+	private static final String IMGUR_BASE_EXTENSION = ".jpg";
 
+	/**
+	 * List of IMGUR api thumbnail sizes. The keys should be inserted after the
+	 * image id and before the file extension
+	 */
+	public enum IMGUR_SIZE {
+		/**
+		 * 90X90 - Crops image
+		 */
+		SMALL_SQUARE("s"),
+		/**
+		 * 160X160 - Crops image
+		 */
+		BIG_SQUARE("b"),
+		/**
+		 * 160x160
+		 */
+		SMALL_THUMBNAIL("t"),
+		/**
+		 * 320X320
+		 */
+		MEDIUM_THUMBNAIL("m"),
+		/**
+		 * 640X640
+		 */
+		LARGE_THUMBNAIL("l"),
+		/**
+		 * 1024X1024
+		 */
+		HUGE_THUMBNAIL("h"),
+		/**
+		 * Original image size
+		 */
+		FULL("");
 
+		private String key;
 
+		private IMGUR_SIZE(String key) {
+			this.key = key;
+		}
 
+		public String getKey() {
+			return key;
+		}
+	}
+	
+	public static String getImgurLink(String imgurId, IMGUR_SIZE size) {
+		return IMGUR_BASE_URL + imgurId + size.key + IMGUR_BASE_EXTENSION;
+	}
+
+	public static String getImgurLink(Image image, IMGUR_SIZE size) {
+		return getImgurLink(image.getImgurId(), size);
+	}
+
+	
 
 	/**
 	 * Get a list of image ids as strings for use in telling the server which

@@ -15,7 +15,7 @@ import android.support.v4.app.Fragment;
 import android.widget.Button;
 import android.widget.FrameLayout;
 
-import com.picdora.CategoryHelper;
+import com.picdora.CategoryUtils;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.channelCreation.ChannelCreationActivity.NsfwSetting;
@@ -101,7 +101,7 @@ public class CategorySelectFragment extends Fragment {
 	 */
 	private void setupCategoryLists() {
 		allCategories = Util.all(Category.class);
-		CategoryHelper.sortByName(allCategories);
+		CategoryUtils.sortByName(allCategories);
 		nsfwCategories = new ArrayList<Category>();
 		sfwCategories = new ArrayList<Category>();
 

@@ -22,13 +22,16 @@ import android.text.TextUtils;
 import com.picdora.channelDetail.ChannelDetailActivity_;
 import com.picdora.models.Category;
 import com.picdora.models.Channel;
+import com.picdora.models.Channel.GifSetting;
 import com.picdora.player.ChannelViewActivity;
 import com.picdora.player.ChannelViewActivity_;
 
 @EBean
-public class ChannelHelper {
+public class ChannelUtils {
 	@RootContext
 	Context context;
+
+	
 
 	public static void playChannel(Channel channel, boolean cache,
 			Activity activity) {
@@ -49,7 +52,7 @@ public class ChannelHelper {
 	public static long getImageCount(Channel channel, boolean unseen) {
 		SQLiteDatabase db = Sprinkles.getDatabase();
 		String query = "SELECT count(*) FROM Images WHERE categoryId IN "
-				+ ChannelHelper.getCategoryIdsString(channel);
+				+ ChannelUtils.getCategoryIdsString(channel);
 
 		// add the gif setting
 		switch (channel.getGifSetting()) {
@@ -82,7 +85,7 @@ public class ChannelHelper {
 
 		List<Integer> ids = new ArrayList<Integer>();
 		for (Category cat : categories) {
-			ids.add(cat.getId());
+			ids.add((int) cat.getId());
 		}
 
 		return ("(" + TextUtils.join(",", ids) + ")");
@@ -155,16 +158,12 @@ public class ChannelHelper {
 	}
 
 	public static int getNumImagesViewed(Channel channel) {
-		// TODO: Right now this will also count images viewed in other channels.
-		// Once the viewcount/liking system is changed we can fix this
 		SQLiteDatabase db = Sprinkles.getDatabase();
-		String query = "SELECT count(*) FROM Images WHERE categoryId IN "
-				+ ChannelHelper.getCategoryIdsString(channel)
-				+ " AND viewCount > 0";
+		String query = "SELECT count(*) FROM Views WHERE channelId="
+				+ channel.getId();
 
 		SQLiteStatement s = db.compileStatement(query);
 
 		return (int) s.simpleQueryForLong();
 	}
-
 }

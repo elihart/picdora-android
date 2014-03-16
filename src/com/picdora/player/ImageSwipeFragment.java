@@ -18,7 +18,8 @@ import com.picdora.R;
 import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.imageloader.PicdoraImageLoader.LoadError;
 import com.picdora.models.Image;
-import com.picdora.player.ChannelPlayer.OnGetImageResultListener;
+import com.picdora.player.ChannelPlayer.OnGetChannelImageResultListener;
+import com.picdora.player.ChannelViewActivity.OnGetImageResultListener;
 
 @EFragment(R.layout.fragment_swipable_image)
 public class ImageSwipeFragment extends Fragment implements
@@ -62,7 +63,7 @@ public class ImageSwipeFragment extends Fragment implements
 		if (mImage != null) {
 			loadImage();
 		} else {
-			final Date start = new Date();
+			//final Date start = new Date();
 			mActivity.getImage(fragPosition, false,
 					new OnGetImageResultListener() {
 

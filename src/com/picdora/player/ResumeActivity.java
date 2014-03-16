@@ -6,7 +6,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.Menu;
 
-import com.picdora.ChannelHelper;
+import com.picdora.ChannelUtils;
 import com.picdora.R;
 
 @EActivity
@@ -16,7 +16,7 @@ public class ResumeActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		ChannelHelper.resumeCachedPlayed(this);
+		ChannelUtils.resumeCachedPlayed(this);
 		finish();
 	}
 

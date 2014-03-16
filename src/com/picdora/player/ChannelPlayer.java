@@ -8,12 +8,16 @@ import java.util.List;
 import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EBean;
 import org.androidannotations.annotations.UiThread;
+import org.androidannotations.annotations.sharedpreferences.Pref;
 
 import se.emilsjolander.sprinkles.CursorList;
 import se.emilsjolander.sprinkles.Query;
 
-import com.picdora.ChannelHelper;
+import com.picdora.ChannelUtils;
+import com.picdora.PicdoraPreferences_;
 import com.picdora.models.Channel;
+import com.picdora.models.ChannelImage;
+import com.picdora.models.ChannelPreview;
 import com.picdora.models.Image;
 
 @EBean
@@ -24,13 +28,16 @@ public class ChannelPlayer {
 	// TODO: Don't go in straight order of reddit score. Take different
 	// categories into account and likes (in the future)
 
+	@Pref
+	protected PicdoraPreferences_ mPrefs;
+
 	private Channel mChannel;
 	// and then decide on using it
-	private List<Image> mImages;
+	private List<ChannelImage> mImages;
 	private OnLoadListener mListener;
 
 	// a reserve of images used to replace deleted ones
-	private LinkedList<Image> imageQueue;
+	private LinkedList<ChannelImage> imageQueue;
 	// the size that we'll try to keep the image queue at so we have enough
 	// images without doing too many loads
 	private static final int TARGET_QUEUE_SIZE = 15;
@@ -46,8 +53,8 @@ public class ChannelPlayer {
 	public void loadChannel(Channel channel, OnLoadListener listener) {
 		mListener = listener;
 		mChannel = channel;
-		mImages = new ArrayList<Image>();
-		imageQueue = new LinkedList<Image>();
+		mImages = new ArrayList<ChannelImage>();
+		imageQueue = new LinkedList<ChannelImage>();
 		loadImageBatch(TARGET_QUEUE_SIZE * 2, imageQueue);
 
 		loadChannelCompleted();
@@ -70,13 +77,13 @@ public class ChannelPlayer {
 		return mChannel;
 	}
 
-	public interface OnGetImageResultListener {
-		public void onGetImageResult(Image image);
+	public interface OnGetChannelImageResultListener {
+		public void onGetChannelImageResult(ChannelImage image);
 	}
 
 	@Background
 	public void getImage(int index, boolean replace,
-			OnGetImageResultListener listener) {
+			OnGetChannelImageResultListener listener) {
 		// synchronize access so we don't have multiple loads going for the same
 		// image. Also simplifies the threading and db access
 		getImageSync(index, replace, listener);
@@ -84,18 +91,18 @@ public class ChannelPlayer {
 	}
 
 	private synchronized void getImageSync(int index, boolean replace,
-			OnGetImageResultListener listener) {
+			OnGetChannelImageResultListener listener) {
 		// can't replace an image we haven't loaded yet
 		if (index >= mImages.size()) {
 			replace = false;
 		}
 
-		Image result = null;
+		ChannelImage result = null;
 
 		// if they have requested a replacement then get a new image and replace
 		// the old one
 		if (replace) {
-			Image replacement = nextImage();
+			ChannelImage replacement = nextImage();
 			if (replacement != null) {
 				mImages.set(index, replacement);
 			}
@@ -104,7 +111,7 @@ public class ChannelPlayer {
 			// keep getting new images until either we have enough to satisfy
 			// the index requested, or we don't have anymore to give
 			while (mImages.size() <= index) {
-				Image img = nextImage();
+				ChannelImage img = nextImage();
 				if (img == null) {
 					break;
 				} else {
@@ -123,16 +130,16 @@ public class ChannelPlayer {
 	}
 
 	@UiThread
-	protected void returnGetImageResult(Image image,
-			OnGetImageResultListener listener) {
+	protected void returnGetImageResult(ChannelImage image,
+			OnGetChannelImageResultListener listener) {
 		if (listener != null) {
-			listener.onGetImageResult(image);
+			listener.onGetChannelImageResult(image);
 		}
 	}
 
 	private boolean allImagesUsed = false;
 
-	private Image nextImage() {
+	private ChannelImage nextImage() {
 		// if we don't have any images left in the queue and we still have
 		// unused images in the db then refill the queue
 		if (imageQueue.size() < TARGET_QUEUE_SIZE && !allImagesUsed) {
@@ -155,11 +162,11 @@ public class ChannelPlayer {
 	 * 
 	 * @return resultCount The number of images retrieved from the db
 	 */
-	private int loadImageBatch(int count, Collection<Image> images) {
+	private int loadImageBatch(int count, Collection<ChannelImage> images) {
 		// build the query. Start by only selecting images from categories that
 		// this channel includes
 		String query = "SELECT * FROM Images WHERE categoryId IN "
-				+ ChannelHelper.getCategoryIdsString(mChannel);
+				+ ChannelUtils.getCategoryIdsString(mChannel);
 
 		// add the gif setting
 		switch (mChannel.getGifSetting()) {
@@ -173,11 +180,15 @@ public class ChannelPlayer {
 			break;
 		}
 
-		// TODO: Add nsfw setting
+		if (!mPrefs.showNsfw().get()) {
+			query += " AND nsfw=0";
+		}
+
+		query += " AND imgurId NOT IN (SELECT image FROM Views WHERE channelId="
+				+ mChannel.getId() + ")";
 
 		// set ordering and add limit
-		query += " ORDER BY viewCount ASC, redditScore DESC LIMIT "
-				+ Integer.toString(count);
+		query += " ORDER BY redditScore DESC LIMIT " + Integer.toString(count);
 
 		CursorList<Image> list = Query.many(Image.class, query, null).get();
 		int resultCount = list.size();
@@ -186,12 +197,17 @@ public class ChannelPlayer {
 			// viewed right now because otherwise we will pull them from the
 			// database again. Maybe supply these ids to the db to avoid
 			// instead, or keep a list of unviewed images
-			image.markView();
+
 			// don't add a duplicate image
 			// TODO: Better way to manage duplicates in the db before we
 			// retrieve them
 			if (!mImages.contains(image) && !imageQueue.contains(image)) {
-				images.add(image);
+				ChannelImage channelImage = new ChannelImage(mChannel, image);
+				// don't save if we're previewing. 
+				if (!ChannelPreview.isPreview(mChannel)) {
+					channelImage.save();
+				}
+				images.add(channelImage);
 			}
 		}
 		list.close();

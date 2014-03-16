@@ -5,17 +5,22 @@ import org.json.JSONObject;
 
 import se.emilsjolander.sprinkles.Model;
 import se.emilsjolander.sprinkles.annotations.Column;
+import se.emilsjolander.sprinkles.annotations.NotNull;
 import se.emilsjolander.sprinkles.annotations.PrimaryKey;
 import se.emilsjolander.sprinkles.annotations.Table;
+
+import com.picdora.ImageUtils;
+import com.picdora.ImageUtils.IMGUR_SIZE;
 
 @Table("Categories")
 public class Category extends Model {
 	/********** DB Fields ***********************/
 	@PrimaryKey
 	@Column("id")
-	private int mId;
+	private long mId;
 
 	@Column("name")
+	@NotNull
 	private String mName;
 
 	@Column("nsfw")
@@ -23,8 +28,9 @@ public class Category extends Model {
 
 	@Column("porn")
 	private boolean mPorn;
-	
+
 	@Column("icon")
+	@NotNull
 	private String mPreviewImage;
 
 	public Category(int id, String name, boolean porn, boolean nsfw, String icon) {
@@ -35,9 +41,9 @@ public class Category extends Model {
 		mPorn = porn;
 		mPreviewImage = icon;
 	}
-	
-	public Category(){
-		
+
+	public Category() {
+
 	}
 
 	public Category(JSONObject jsonObject) {
@@ -45,41 +51,36 @@ public class Category extends Model {
 		try {
 			mId = jsonObject.getInt("id");
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		mName = "BadName";
 		try {
 			mName = jsonObject.getString("name");
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
 		try {
 			mNsfw = jsonObject.getBoolean("nsfw");
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		try {
 			mPorn = jsonObject.getBoolean("porn");
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		try {
 			mPreviewImage = jsonObject.getString("icon");
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
-	public int getId() {
+	public long getId() {
 		return mId;
 	}
 
@@ -94,29 +95,27 @@ public class Category extends Model {
 	public boolean getPorn() {
 		return mPorn;
 	}
-	
-	
 
 	// base equals and hashcode on id
 	@Override
-    public boolean equals(Object obj) {
-        if (obj == null)
-            return false;
-        if (obj == this)
-            return true;
-        if (!(obj instanceof Category))
-            return false;
+	public boolean equals(Object obj) {
+		if (obj == null)
+			return false;
+		if (obj == this)
+			return true;
+		if (!(obj instanceof Category))
+			return false;
 
-        Category cat = (Category) obj;
-        return cat.getId() == mId;
-    }
-    
-    public int hashCode() {
-        return mId;
-    }
+		Category cat = (Category) obj;
+		return cat.getId() == mId;
+	}
 
-    public String getPreviewUrl() {
-		return "http://i.imgur.com/" + mPreviewImage + "b.jpg";
+	public int hashCode() {
+		return (int) mId;
+	}
+
+	public String getPreviewUrl(IMGUR_SIZE size) {
+		return ImageUtils.getImgurLink(mPreviewImage, size);
 	}
 
 	public String getIconId() {

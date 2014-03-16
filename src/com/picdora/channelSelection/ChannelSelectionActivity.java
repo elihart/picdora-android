@@ -17,7 +17,7 @@ import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 
-import com.picdora.ChannelHelper;
+import com.picdora.ChannelUtils;
 import com.picdora.PicdoraActivity;
 import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
@@ -82,10 +82,10 @@ public class ChannelSelectionActivity extends PicdoraActivity implements
 	private void refreshChannels() {
 		if (channelFragment != null) {
 			// TODO: Filter out nsfw by preference
-			List<Channel> channels = ChannelHelper.getAllChannels(prefs
+			List<Channel> channels = ChannelUtils.getAllChannels(prefs
 					.showNsfw().get());
 			// TODO: Allow more sorting options
-			ChannelHelper.sortChannelsAlphabetically(channels);
+			ChannelUtils.sortChannelsAlphabetically(channels);
 			channelFragment.setChannels(channels);
 		}
 	}
@@ -149,7 +149,7 @@ public class ChannelSelectionActivity extends PicdoraActivity implements
 
 					@Override
 					public void onClick(View v) {
-						ChannelHelper.playChannel(mSelectedChannel, true,
+						ChannelUtils.playChannel(mSelectedChannel, true,
 								mActivity);
 					}
 				});
@@ -159,7 +159,7 @@ public class ChannelSelectionActivity extends PicdoraActivity implements
 
 					@Override
 					public void onClick(View v) {
-						ChannelHelper.showChannelDetail(mSelectedChannel,
+						ChannelUtils.showChannelDetail(mSelectedChannel,
 								mActivity);
 					}
 				});

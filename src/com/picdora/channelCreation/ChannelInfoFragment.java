@@ -22,7 +22,7 @@ import android.widget.RadioGroup;
 import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.TextView;
 
-import com.picdora.ChannelHelper;
+import com.picdora.ChannelUtils;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.channelCreation.ChannelCreationActivity.NsfwSetting;
@@ -172,7 +172,7 @@ public class ChannelInfoFragment extends Fragment implements
 		if (Util.isStringBlank(name)) {
 			channelName.setError("You have to give your channel a name!");
 			return false;
-		} else if (ChannelHelper.isNameTaken(name)) {
+		} else if (ChannelUtils.isNameTaken(name)) {
 			channelName.setError("You've already used that name!");
 			return false;
 		} else {

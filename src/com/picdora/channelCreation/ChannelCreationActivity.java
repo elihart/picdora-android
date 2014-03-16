@@ -9,7 +9,6 @@ import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
 import org.androidannotations.annotations.sharedpreferences.Pref;
 
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
@@ -22,12 +21,14 @@ import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.view.MenuItem;
 import android.widget.TextView;
 
-import com.picdora.ChannelHelper;
+import com.picdora.ChannelUtils;
 import com.picdora.PicdoraActivity;
 import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
+import com.picdora.Util;
 import com.picdora.models.Category;
 import com.picdora.models.Channel;
+import com.picdora.models.ChannelPreview;
 import com.picdora.ui.PicdoraDialog;
 
 /**
@@ -242,10 +243,15 @@ public class ChannelCreationActivity extends PicdoraActivity {
 			saveState(categories);
 		}
 
-		Channel channel = new Channel(channelInfoState.channelName, categories,
-				channelInfoState.gifSetting);
+		Channel channel = null;
+		if (preview) {
+			channel = new ChannelPreview(categories, channelInfoState.gifSetting);
+		} else {
+			channel = new Channel(channelInfoState.channelName, categories,
+					channelInfoState.gifSetting);
+		}
 
-		long count = ChannelHelper.getImageCount(channel, false);
+		long count = ChannelUtils.getImageCount(channel, false);
 		if (count == 0) {
 			showNoImagesDialog();
 		} else if (count < 100) {
@@ -307,20 +313,28 @@ public class ChannelCreationActivity extends PicdoraActivity {
 
 	@UiThread
 	protected void launchChannel(Channel channel, boolean preview) {
-		// if the loading was canceled then don't keep going
+		// if the loading was canceled then don't keep going, otherwise clear
+		// the loading screen
 		if (!loadingChannel) {
 			return;
+		} else {
+			setLoadingStatus(false);
 		}
 
+		// if the user chose to create the channel then validate, save, and
+		// finish the activity before showing it
 		if (!preview) {
+			if (!channel.isValid()) {
+				Util.makeBasicToast(this, "Uh oh, invalid channel!");
+				return;
+			}
+
 			clearSavedState();
-			channel.save();
+			channel.saveAsync();
 			finish();
 		}
 
-		ChannelHelper.playChannel(channel, !preview, this);
-
-		setLoadingStatus(false);
+		ChannelUtils.playChannel(channel, !preview, this);
 	}
 
 	@UiThread

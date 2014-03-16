@@ -1,6 +1,5 @@
 package com.picdora.models;
 
-import java.util.Date;
 import java.util.Locale;
 
 import org.json.JSONException;
@@ -8,43 +7,43 @@ import org.json.JSONObject;
 
 import se.emilsjolander.sprinkles.Model;
 import se.emilsjolander.sprinkles.annotations.Column;
+import se.emilsjolander.sprinkles.annotations.NotNull;
 import se.emilsjolander.sprinkles.annotations.PrimaryKey;
 import se.emilsjolander.sprinkles.annotations.Table;
+
+import com.picdora.ImageUtils;
+import com.picdora.ImageUtils.IMGUR_SIZE;
 
 @Table("Images")
 public class Image extends Model {
 	/********** DB Fields ***********************/
 	@PrimaryKey
 	@Column("id")
-	private int mId;
-	// TODO: Add non null constraints in new Sprinkles version
+	private long mId;
+
 	@Column("imgurId")
+	@NotNull
 	private String mImgurId;
 
 	@Column("redditScore")
+	@NotNull
 	private int mRedditScore;
 
 	@Column("categoryId")
+	@NotNull
 	private int mCategoryId;
 
-	// TODO: Handle deleted case. This isn't stored in the db yet
+	@Column("deleted")
 	private boolean mDeleted;
+
+	@Column("reported")
+	private boolean mReported;
 
 	@Column("nsfw")
 	private boolean mNsfw;
 
-	// TODO: Can take this out, it's just based on the category setting
-	@Column("porn")
-	private boolean mPorn;
-
 	@Column("gif")
 	private boolean mGif;
-
-	@Column("viewCount")
-	private int mViewCount = 0;
-
-	@Column("lastViewed")
-	private long mLastViewed = 0;
 
 	/****************************************************/
 
@@ -78,7 +77,6 @@ public class Image extends Model {
 		try {
 			mId = obj.getInt("id");
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -86,7 +84,6 @@ public class Image extends Model {
 		try {
 			mImgurId = obj.getString("imgurId");
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -94,7 +91,6 @@ public class Image extends Model {
 		try {
 			mRedditScore = obj.getInt("reddit_score");
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -102,7 +98,6 @@ public class Image extends Model {
 		try {
 			mCategoryId = obj.getInt("category_id");
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -110,7 +105,6 @@ public class Image extends Model {
 		try {
 			mNsfw = obj.getBoolean("nsfw");
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -118,14 +112,13 @@ public class Image extends Model {
 		try {
 			mGif = obj.getBoolean("gif");
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
 	}
 
 	/******************* Getters ***************/
-	public int getId() {
+	public long getId() {
 		return mId;
 	}
 
@@ -145,20 +138,16 @@ public class Image extends Model {
 		return mNsfw;
 	}
 
-	public boolean isPorn() {
-		return mPorn;
-	}
-
 	public boolean isGif() {
 		return mGif;
 	}
 
-	public int getViewCount() {
-		return mViewCount;
+	public boolean isReported() {
+		return mReported;
 	}
 
-	public long getLastViewed() {
-		return mLastViewed;
+	public boolean isDeleted() {
+		return mDeleted;
 	}
 
 	/***************** Setters **********************/
@@ -168,18 +157,12 @@ public class Image extends Model {
 		save();
 	}
 
-	public boolean isDeleted() {
-		return mDeleted;
-	}
-
 	public void setDeleted(boolean mDeleted) {
 		this.mDeleted = mDeleted;
 	}
 
-	public void markView() {
-		mViewCount++;
-		mLastViewed = new Date().getTime();
-		save();
+	public void setReported(boolean reported) {
+		mReported = reported;
 	}
 
 	/********** Public Helper Methods **************/
@@ -187,10 +170,12 @@ public class Image extends Model {
 	/**
 	 * Get the url where this image is stored
 	 * 
+	 * @param size
+	 *            The size of the image the url should point to
 	 * @return
 	 */
-	public String getUrl() {
-		return "http://i.imgur.com/" + mImgurId + ".jpg";
+	public String getUrl(IMGUR_SIZE size) {
+		return ImageUtils.getImgurLink(this, size);
 	}
 
 	@Override

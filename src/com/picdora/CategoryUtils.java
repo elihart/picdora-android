@@ -10,7 +10,7 @@ import se.emilsjolander.sprinkles.Query;
 
 import com.picdora.models.Category;
 
-public abstract class CategoryHelper {
+public abstract class CategoryUtils {
 
 	public static Category getCategoryById(int categoryId) {
 		return Query.one(Category.class, "SELECT * FROM Categories WHERE id=?",
