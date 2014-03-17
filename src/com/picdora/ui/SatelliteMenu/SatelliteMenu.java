@@ -10,18 +10,20 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
-import android.os.CountDownTimer;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
+import android.view.animation.Animation.AnimationListener;
+import android.view.animation.AnimationSet;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.crashlytics.android.internal.aK;
 import com.nineoldandroids.view.ViewHelper;
 import com.picdora.R;
 
@@ -124,6 +126,8 @@ public class SatelliteMenu extends FrameLayout {
 			@Override
 			public void onAnimationEnd(Animation animation) {
 				plusAnimationActive.set(false);
+				// start fading the menu out when it finishes the close
+				// animation
 				if (!rotated) {
 					hideMenu(true);
 				}
@@ -465,24 +469,18 @@ public class SatelliteMenu extends FrameLayout {
 	}
 
 	/**
-	 * Set the visibility of the menu image, from opaque to fully transparent.
+	 * Set the visibility of the menu image, either visible or invisible
 	 * 
-	 * @param percentVisible
-	 *            Must be between 0-100. 100 to be opaque and 0 to be completely
-	 *            hidden.
+	 * @param show
+	 *            True to show the image, false to hide it
 	 */
-	private void setMenuVisibility(int percentVisible) {
-		if (percentVisible > 100) {
-			percentVisible = 100;
-		} else if (percentVisible < 0) {
-			percentVisible = 0;
+	private void setMenuVisible(boolean show) {
+		// use alpha to hide the image so it is still clickable when hidden
+		if (show) {
+			ViewHelper.setAlpha(imgMain, 1);
+		} else {
+			ViewHelper.setAlpha(imgMain, 0);
 		}
-
-		// alpha value is 0-255 where 0 is fully transparent and 255 is fully
-		// opaque
-		int alphaAmount = (int) (255 * percentVisible / 100.0);
-		//ViewHelper.setAlpha(imgMain, alphaAmount);
-		imgMain.setAlpha(alphaAmount);
 	}
 
 	/**
@@ -491,8 +489,12 @@ public class SatelliteMenu extends FrameLayout {
 	 */
 	public void showMenu() {
 		// cancel any hiding animation in progress
-		menuFadingOut = false;
-		setMenuVisibility(100);
+		if (menuFadingOut) {
+			imgMain.clearAnimation();
+			menuFadingOut = false;
+		}
+
+		setMenuVisible(true);
 	}
 
 	/**
@@ -511,49 +513,44 @@ public class SatelliteMenu extends FrameLayout {
 		} else if (animate) {
 			fadeMenuOut(1500);
 		} else {
-			setMenuVisibility(0);
+			setMenuVisible(false);
 		}
 	}
 
 	/**
-	 * Fade the menu to invisible
+	 * Fade the menu to invisible. Should be called through hideMenu() to
+	 * prevent conflicts.
 	 * 
-	 * @param millis
-	 *            The number of milliseconds to fade over
+	 * @param duration
+	 *            The duration in milliseconds that the animation should last
 	 */
-	private void fadeMenuOut(int millis) {
+	private void fadeMenuOut(int duration) {
 		menuFadingOut = true;
-		int increment = 100;
-		int steps = millis / increment;
+		Animation fadeOut = new AlphaAnimation(1, 0);
+		fadeOut.setInterpolator(new AccelerateInterpolator());
+		fadeOut.setDuration(duration);
 
-		if (steps <= 1) {
-			setMenuVisibility(0);
-			return;
-		}
+		AnimationSet animation = new AnimationSet(false);
+		animation.addAnimation(fadeOut);
+		imgMain.setAnimation(animation);
 
-		final int reductionPerStep = 100 / steps;
-
-		new CountDownTimer(millis, increment) {
-			private int percentVisible = 100;
-
-			public void onTick(long millisUntilFinished) {
-				if (!menuFadingOut) {
-					this.cancel();
-					return;
-				} else {
-					percentVisible -= reductionPerStep;
-					setMenuVisibility(percentVisible);
-				}
-			}
-
-			public void onFinish() {
+		animation.setAnimationListener(new AnimationListener() {
+			public void onAnimationEnd(Animation animation) {
 				if (menuFadingOut) {
-					setMenuVisibility(0);
+					setMenuVisible(false);
 				}
-				
 				menuFadingOut = false;
 			}
-		}.start();
+
+			public void onAnimationStart(Animation animation) {
+
+			}
+
+			@Override
+			public void onAnimationRepeat(Animation animation) {
+
+			}
+		});
 	}
 
 	/**
