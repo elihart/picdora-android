@@ -16,6 +16,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ImageButton;
 
 import com.picdora.ChannelUtils;
 import com.picdora.PicdoraActivity;
@@ -135,6 +136,7 @@ public class ChannelSelectionActivity extends PicdoraActivity implements
 	public void onItemClick(AdapterView<?> parent, View view, int position,
 			long id) {
 
+
 		// disable buttons on the previously selected item
 		if (mSelectedView != null) {
 			mSelectedView.showButtons(false);
@@ -142,6 +144,8 @@ public class ChannelSelectionActivity extends PicdoraActivity implements
 
 		mSelectedView = (ChannelSelectionGridItem) view;
 		mSelectedView.showButtons(true);
+		
+		mSelectedView.setOnClickListener(doubleClickListener);
 
 		// set up listeners for the buttons
 		mSelectedView.findViewById(R.id.playButton).setOnClickListener(
@@ -164,5 +168,14 @@ public class ChannelSelectionActivity extends PicdoraActivity implements
 					}
 				});
 	}
+	
+	private OnClickListener doubleClickListener = new OnClickListener() {
+		
+		@Override
+		public void onClick(View v) {
+			ChannelUtils.playChannel(mSelectedChannel, true,
+					mActivity);
+		}
+	};
 
 }

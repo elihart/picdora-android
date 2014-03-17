@@ -338,7 +338,7 @@ public class ChannelViewActivity extends FragmentActivity implements
 		if (busyDialog != null)
 			try {
 				busyDialog.dismiss();
-			} catch (IllegalArgumentException e) {
+			} catch (Exception e) {
 				// catch the "View not attached to Window Manager" errors
 			}
 
@@ -379,6 +379,8 @@ public class ChannelViewActivity extends FragmentActivity implements
 		if (menu != null) {
 			menu.close();
 		}
+		
+		dismissBusyDialog();
 	}
 
 	private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {

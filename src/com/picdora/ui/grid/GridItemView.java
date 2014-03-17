@@ -84,7 +84,7 @@ public class GridItemView extends RelativeLayout {
 		mText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, TEXT_SIZE_DP);
 		FontHelper.setTypeFace(mText, STYLE.REGULAR);
 
-		addView(mText);
+		addView(mText);		
 	}
 
 	protected int dpToPixel(int dp) {

@@ -22,7 +22,6 @@ import android.text.TextUtils;
 import com.picdora.channelDetail.ChannelDetailActivity_;
 import com.picdora.models.Category;
 import com.picdora.models.Channel;
-import com.picdora.models.Channel.GifSetting;
 import com.picdora.player.ChannelViewActivity;
 import com.picdora.player.ChannelViewActivity_;
 
@@ -38,6 +37,8 @@ public class ChannelUtils {
 		Intent intent = new Intent(activity, ChannelViewActivity_.class);
 		intent.putExtra("channel", Util.toJson(channel));
 		intent.putExtra("cache", cache);
+		// only allow one instance of channel view running
+		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		activity.startActivity(intent);
 	}
 

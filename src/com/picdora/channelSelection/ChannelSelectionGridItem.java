@@ -34,8 +34,10 @@ public class ChannelSelectionGridItem extends GridItemView {
 	public void showButtons(boolean show) {
 		if (show) {
 			buttonContainer.setVisibility(View.VISIBLE);
+			setClickable(true);
 		} else {
 			buttonContainer.setVisibility(View.GONE);
+			setClickable(false);
 		}
 	}
 
