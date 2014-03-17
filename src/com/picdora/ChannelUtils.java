@@ -34,6 +34,10 @@ public class ChannelUtils {
 
 	public static void playChannel(Channel channel, boolean cache,
 			Activity activity) {
+		if(channel == null){
+			throw new IllegalArgumentException("Channel can't be null");
+		}
+		
 		Intent intent = new Intent(activity, ChannelViewActivity_.class);
 		intent.putExtra("channel", Util.toJson(channel));
 		intent.putExtra("cache", cache);

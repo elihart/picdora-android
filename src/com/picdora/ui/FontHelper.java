@@ -31,7 +31,7 @@ public class FontHelper {
 	}
 
 	/**
-	 * Style a string with a particular Lyricoo font style
+	 * Style a string with a particular font style
 	 * 
 	 * @param text
 	 *            The text to style
@@ -41,9 +41,10 @@ public class FontHelper {
 	 */
 	public static SpannableString styleString(String text, STYLE style) {
 		SpannableString s = new SpannableString(text);
-		String font = getFontFilename(style);
-		s.setSpan(new TypefaceSpan(mAppContext, font), 0, s.length(),
-				Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+			String font = getFontFilename(style);
+			s.setSpan(new TypefaceSpan(mAppContext, font), 0, s.length(),
+					Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+		
 		return s;
 	}
 

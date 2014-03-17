@@ -15,8 +15,10 @@
         android:padding="3dp"
         android:src="@drawable/ic_settings_white" />
 
+    <!-- Duplicate parent state so when image is clicked it also looks like play button is clicked -->
     <ImageButton
         android:id="@+id/playButton"
+        android:duplicateParentState="true"
         android:layout_width="0dip"
         android:layout_height="match_parent"
         android:layout_weight="1"
