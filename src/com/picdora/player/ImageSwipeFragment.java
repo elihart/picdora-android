@@ -15,6 +15,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.picdora.R;
+import com.picdora.Util;
 import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.imageloader.PicdoraImageLoader.LoadError;
 import com.picdora.models.Image;
@@ -63,15 +64,16 @@ public class ImageSwipeFragment extends Fragment implements
 		if (mImage != null) {
 			loadImage();
 		} else {
-			//final Date start = new Date();
+			// final Date start = new Date();
 			mActivity.getImage(fragPosition, false,
 					new OnGetImageResultListener() {
 
 						@Override
 						public void onGetImageResult(Image image) {
 							mImage = image;
-//							Util.log("Getting " + image.getImgurId() + " took "
-//									+ (new Date().getTime() - start.getTime()));
+							// Util.log("Getting " + image.getImgurId() +
+							// " took "
+							// + (new Date().getTime() - start.getTime()));
 							loadImage();
 						}
 					});
@@ -99,7 +101,7 @@ public class ImageSwipeFragment extends Fragment implements
 		// bother trying to load
 		if (!viewActive) {
 			return;
-		} 
+		}
 		// we can't load an image if we don't have one...
 		else if (mImage == null) {
 			showLoadingCircle();
@@ -110,7 +112,7 @@ public class ImageSwipeFragment extends Fragment implements
 		} else {
 			loadStart = new Date();
 			downloading = false;
-//			Util.log("Load " + mImage.getImgurId());
+			// Util.log("Load " + mImage.getImgurId());
 			PicdoraImageLoader.instance().loadImage(mImage, this);
 		}
 	}
@@ -135,20 +137,23 @@ public class ImageSwipeFragment extends Fragment implements
 		super.setUserVisibleHint(isVisibleToUser);
 
 		if (isVisibleToUser) {
+			if (mImage != null) {
+				Util.log("Showing " + mImage.getImgurId());
+			}
 			// make sure we are loading this image as a priority
 			loadImage();
-//			if (mImage != null) {
-//				Util.log("Viewing " + mImage.getImgurId());
-//			}
+			// if (mImage != null) {
+			// Util.log("Viewing " + mImage.getImgurId());
+			// }
 		}
 	}
 
 	@Override
 	public void onProgress(int percentComplete) {
 		if (!downloading) {
-//			Util.log("Image " + mImage.getImgurId() + " took "
-//					+ (new Date().getTime() - loadStart.getTime())
-//					+ " to start");
+			// Util.log("Image " + mImage.getImgurId() + " took "
+			// + (new Date().getTime() - loadStart.getTime())
+			// + " to start");
 			downloading = true;
 		}
 
@@ -167,8 +172,8 @@ public class ImageSwipeFragment extends Fragment implements
 
 	@Override
 	public void onSuccess(Drawable drawable) {
-//		Util.log("Image " + mImage.getImgurId() + " took "
-//				+ (new Date().getTime() - loadStart.getTime()) + " to finish");
+		// Util.log("Image " + mImage.getImgurId() + " took "
+		// + (new Date().getTime() - loadStart.getTime()) + " to finish");
 		// TODO: check whether it is animated or not and update the gif status
 		// in the db in background if it's not right
 		if (viewActive) {
@@ -180,7 +185,7 @@ public class ImageSwipeFragment extends Fragment implements
 
 	@Override
 	public void onError(LoadError error) {
-//		Util.log("Load fail " + mImage.getImgurId() + " " + error);
+		// Util.log("Load fail " + mImage.getImgurId() + " " + error);
 		mLoadAttempts++;
 
 		switch (error) {

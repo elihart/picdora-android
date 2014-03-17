@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
+import android.os.CountDownTimer;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.AttributeSet;
@@ -20,6 +21,8 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.crashlytics.android.internal.aK;
+import com.nineoldandroids.view.ViewHelper;
 import com.picdora.R;
 
 /**
@@ -60,6 +63,9 @@ public class SatelliteMenu extends FrameLayout {
 	private int satelliteDistance = DEFAULT_SATELLITE_DISTANCE;
 	private int expandDuration = DEFAULT_EXPAND_DURATION;
 	private boolean closeItemsOnClick = DEFAULT_CLOSE_ON_CLICK;
+
+	// if the menu image is undergoing a fade out animation
+	private boolean menuFadingOut;
 
 	public SatelliteMenu(Context context) {
 		super(context);
@@ -118,6 +124,9 @@ public class SatelliteMenu extends FrameLayout {
 			@Override
 			public void onAnimationEnd(Animation animation) {
 				plusAnimationActive.set(false);
+				if (!rotated) {
+					hideMenu(true);
+				}
 			}
 		};
 
@@ -135,6 +144,8 @@ public class SatelliteMenu extends FrameLayout {
 	}
 
 	private void onClick() {
+		showMenu();
+
 		if (plusAnimationActive.compareAndSet(false, true)) {
 			if (!rotated) {
 				imgMain.startAnimation(mainRotateLeft);
@@ -451,6 +462,98 @@ public class SatelliteMenu extends FrameLayout {
 	 */
 	public void setMainImage(int resource) {
 		this.imgMain.setImageResource(resource);
+	}
+
+	/**
+	 * Set the visibility of the menu image, from opaque to fully transparent.
+	 * 
+	 * @param percentVisible
+	 *            Must be between 0-100. 100 to be opaque and 0 to be completely
+	 *            hidden.
+	 */
+	private void setMenuVisibility(int percentVisible) {
+		if (percentVisible > 100) {
+			percentVisible = 100;
+		} else if (percentVisible < 0) {
+			percentVisible = 0;
+		}
+
+		// alpha value is 0-255 where 0 is fully transparent and 255 is fully
+		// opaque
+		int alphaAmount = (int) (255 * percentVisible / 100.0);
+		//ViewHelper.setAlpha(imgMain, alphaAmount);
+		imgMain.setAlpha(alphaAmount);
+	}
+
+	/**
+	 * Make the menu completely visible. Stops all fade out animations in
+	 * progress.
+	 */
+	public void showMenu() {
+		// cancel any hiding animation in progress
+		menuFadingOut = false;
+		setMenuVisibility(100);
+	}
+
+	/**
+	 * Hide the menu from view. It must first be closed, otherwise this won't do
+	 * anything
+	 * 
+	 * @param animate
+	 *            Whether the menu should fade out or instantly be hidden
+	 */
+	public void hideMenu(boolean animate) {
+		if (rotated) {
+			// menu is open, don't hide the menu now
+		} else if (menuFadingOut || ViewHelper.getAlpha(imgMain) == 0) {
+			// already hidden
+			return;
+		} else if (animate) {
+			fadeMenuOut(1500);
+		} else {
+			setMenuVisibility(0);
+		}
+	}
+
+	/**
+	 * Fade the menu to invisible
+	 * 
+	 * @param millis
+	 *            The number of milliseconds to fade over
+	 */
+	private void fadeMenuOut(int millis) {
+		menuFadingOut = true;
+		int increment = 100;
+		int steps = millis / increment;
+
+		if (steps <= 1) {
+			setMenuVisibility(0);
+			return;
+		}
+
+		final int reductionPerStep = 100 / steps;
+
+		new CountDownTimer(millis, increment) {
+			private int percentVisible = 100;
+
+			public void onTick(long millisUntilFinished) {
+				if (!menuFadingOut) {
+					this.cancel();
+					return;
+				} else {
+					percentVisible -= reductionPerStep;
+					setMenuVisibility(percentVisible);
+				}
+			}
+
+			public void onFinish() {
+				if (menuFadingOut) {
+					setMenuVisibility(0);
+				}
+				
+				menuFadingOut = false;
+			}
+		}.start();
 	}
 
 	/**

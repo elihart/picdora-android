@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.Fullscreen;
@@ -29,6 +30,7 @@ import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.imageloader.PicdoraImageLoader.OnDownloadSpaceAvailableListener;
 import com.picdora.models.Channel;
 import com.picdora.models.ChannelImage;
+import com.picdora.models.ChannelImage.LIKE_STATUS;
 import com.picdora.models.Image;
 import com.picdora.player.ChannelPlayer.ChannelError;
 import com.picdora.player.ChannelPlayer.OnGetChannelImageResultListener;
@@ -124,12 +126,18 @@ public class ChannelViewActivity extends FragmentActivity implements
 	 */
 	private void setupMenu() {
 		List<SatelliteMenuItem> items = new ArrayList<SatelliteMenuItem>();
-		items.add(new SatelliteMenuItem(R.id.sat_item_6, R.drawable.ic_launcher));
-		items.add(new SatelliteMenuItem(R.id.sat_item_5, R.drawable.ic_launcher));
-		items.add(new SatelliteMenuItem(R.id.sat_item_4, R.drawable.ic_launcher));
-		items.add(new SatelliteMenuItem(R.id.sat_item_3, R.drawable.ic_launcher));
-		items.add(new SatelliteMenuItem(R.id.sat_item_2, R.drawable.ic_launcher));
-		items.add(new SatelliteMenuItem(R.id.sat_item_1, R.drawable.ic_launcher));
+		items.add(new SatelliteMenuItem(R.id.sat_item_report,
+				R.drawable.ic_sat_menu_item_report));
+		items.add(new SatelliteMenuItem(R.id.sat_item_download,
+				R.drawable.ic_sat_menu_item_download));
+		items.add(new SatelliteMenuItem(R.id.sat_item_star,
+				R.drawable.ic_sat_menu_item_star));
+		items.add(new SatelliteMenuItem(R.id.sat_item_share,
+				R.drawable.ic_sat_menu_item_share));
+		items.add(new SatelliteMenuItem(R.id.sat_item_dislike,
+				R.drawable.ic_sat_menu_item_dislike));
+		items.add(new SatelliteMenuItem(R.id.sat_item_liked,
+				R.drawable.ic_sat_menu_item_like));
 
 		menu.addItems(items);
 
@@ -137,9 +145,82 @@ public class ChannelViewActivity extends FragmentActivity implements
 
 			@Override
 			public void eventOccured(int id) {
-				Util.log("clicked " + id);
+				switch (id) {
+				case R.id.sat_item_liked:
+					likeClicked();
+					break;
+				case R.id.sat_item_dislike:
+					dislikeClicked();
+					break;
+				case R.id.sat_item_share:
+					shareClicked();
+					break;
+				case R.id.sat_item_star:
+					starClicked();
+					break;
+				case R.id.sat_item_download:
+					downloadClicked();
+					break;
+				case R.id.sat_item_report:
+					reportClicked();
+					break;
+				}
 			}
 		});
+	}
+
+	protected void reportClicked() {
+		// TODO Auto-generated method stub
+
+	}
+
+	protected void downloadClicked() {
+		// TODO Auto-generated method stub
+
+	}
+
+	protected void starClicked() {
+		// TODO Auto-generated method stub
+
+	}
+
+	protected void shareClicked() {
+		// TODO Auto-generated method stub
+
+	}
+
+	protected void dislikeClicked() {
+		// TODO: Change button image to indicate status
+		toggleLikedStatus(pager.getCurrentItem(), LIKE_STATUS.DISLIKED);
+	}
+
+	protected void likeClicked() {
+		// TODO: Change button image to indicate status
+		toggleLikedStatus(pager.getCurrentItem(), LIKE_STATUS.LIKED);
+	}
+
+	/**
+	 * Toggle the like status of the image at the given position. If the image already
+	 * has the that status then return the status to neutral, otherwise give
+	 * the image the new status.
+	 * 
+	 * @param imagePos
+	 *            The position of the image to toggle
+	 * @param disliked
+	 *            The state to toggle
+	 */
+	@Background
+	protected void toggleLikedStatus(int imagePos, final LIKE_STATUS status) {
+		ChannelImage image = mChannelPlayer.getImage(imagePos, false);
+		
+		if(image.getLikeStatus() == status){
+			image.setLikeStatus(LIKE_STATUS.NEUTRAL);
+		} else {
+			image.setLikeStatus(status);
+		}
+		image.save();
+		
+		// TODO: Update the icons in the menu
 	}
 
 	private void resumeState(CachedPlayerState state) {
@@ -179,7 +260,7 @@ public class ChannelViewActivity extends FragmentActivity implements
 
 	public void getImage(int position, boolean replacement,
 			final OnGetImageResultListener listener) {
-		mChannelPlayer.getImage(position, replacement,
+		mChannelPlayer.getImageAsync(position, replacement,
 				new OnGetChannelImageResultListener() {
 
 					@Override
@@ -206,6 +287,8 @@ public class ChannelViewActivity extends FragmentActivity implements
 				if (shouldCache) {
 					cachedState.position = pos;
 				}
+				// close menu when image changes
+				menu.close();
 			}
 
 			@Override
@@ -330,7 +413,7 @@ public class ChannelViewActivity extends FragmentActivity implements
 
 		int next = pager.getCurrentItem() + 1;
 		for (int i = next; i < next + NUM_IMAGES_TO_PRELOAD; i++) {
-			mChannelPlayer.getImage(i, false,
+			mChannelPlayer.getImageAsync(i, false,
 					new OnGetChannelImageResultListener() {
 
 						@Override

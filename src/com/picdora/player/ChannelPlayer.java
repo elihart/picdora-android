@@ -82,16 +82,20 @@ public class ChannelPlayer {
 	}
 
 	@Background
-	public void getImage(int index, boolean replace,
+	public void getImageAsync(int index, boolean replace,
 			OnGetChannelImageResultListener listener) {
-		// synchronize access so we don't have multiple loads going for the same
-		// image. Also simplifies the threading and db access
-		getImageSync(index, replace, listener);
-		// TODO: Consider async options if performance is laggy
+		ChannelImage result = getImage(index, replace);
+
+		// return the image on the ui thread
+		returnGetImageAsyncResult(result, listener);
+	}
+	
+	@UiThread
+	protected void returnGetImageAsyncResult(ChannelImage image, OnGetChannelImageResultListener listener){
+		listener.onGetChannelImageResult(image);
 	}
 
-	private synchronized void getImageSync(int index, boolean replace,
-			OnGetChannelImageResultListener listener) {
+	public synchronized ChannelImage getImage(int index, boolean replace) {
 		// can't replace an image we haven't loaded yet
 		if (index >= mImages.size()) {
 			replace = false;
@@ -125,16 +129,7 @@ public class ChannelPlayer {
 			result = mImages.get(index % mImages.size());
 		}
 
-		// return the image result on the ui thread
-		returnGetImageResult(result, listener);
-	}
-
-	@UiThread
-	protected void returnGetImageResult(ChannelImage image,
-			OnGetChannelImageResultListener listener) {
-		if (listener != null) {
-			listener.onGetChannelImageResult(image);
-		}
+		return result;
 	}
 
 	private boolean allImagesUsed = false;
@@ -201,9 +196,10 @@ public class ChannelPlayer {
 			// don't add a duplicate image
 			// TODO: Better way to manage duplicates in the db before we
 			// retrieve them
-			if (!mImages.contains(image) && !imageQueue.contains(image)) {
-				ChannelImage channelImage = new ChannelImage(mChannel, image);
-				// don't save if we're previewing. 
+			ChannelImage channelImage = new ChannelImage(mChannel, image);
+			if (!mImages.contains(channelImage)
+					&& !imageQueue.contains(channelImage)) {
+				// don't save if we're previewing.
 				if (!ChannelPreview.isPreview(mChannel)) {
 					channelImage.save();
 				}
