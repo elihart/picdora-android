@@ -1,4 +1,4 @@
-package android.view.ext;
+package com.picdora.ui.SatelliteMenu;
 
 import android.content.Context;
 import android.view.animation.AlphaAnimation;
@@ -7,7 +7,8 @@ import android.view.animation.AnimationSet;
 import android.view.animation.AnimationUtils;
 import android.view.animation.RotateAnimation;
 import android.view.animation.TranslateAnimation;
-import android.view.ext.R;
+
+import com.picdora.R;
 
 /**
  * Factory class for creating satellite in/out animations

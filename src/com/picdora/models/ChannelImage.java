@@ -1,6 +1,7 @@
 package com.picdora.models;
 
 import java.util.Date;
+import java.util.Locale;
 
 import se.emilsjolander.sprinkles.Model;
 import se.emilsjolander.sprinkles.annotations.AutoIncrementPrimaryKey;
@@ -34,6 +35,11 @@ public class ChannelImage extends Model {
 	@NotNull
 	private String mImgurId;
 	private Image mImage;
+	/*
+	 * TODO: We should move toward using the image id instead. For that we need
+	 * to have no duplicates, and images should be able to have multiple
+	 * categories
+	 */
 
 	@Column("count")
 	private int mViewCount;
@@ -45,10 +51,8 @@ public class ChannelImage extends Model {
 	@NotNull
 	private int mLikeStatus;
 
-	/****************************************************/
-
-	/*
-	 * The image can be liked or disliked by the user. It's default state is
+	/***************************************************
+	 * /* The image can be liked or disliked by the user. It's default state is
 	 * neutral until the user rates it. Use constant ints to hold the value of
 	 * the ENUM fields so we can easily store them in the db, but convert the
 	 * ints to the ENUM value when giving out the status externally.
@@ -76,7 +80,8 @@ public class ChannelImage extends Model {
 	}
 
 	/**
-	 * Create an image with 1 view, neutral status, and last seen at the current time
+	 * Create an image with 1 view, neutral status, and last seen at the current
+	 * time
 	 * 
 	 * @param channel
 	 * @param image
@@ -131,6 +136,28 @@ public class ChannelImage extends Model {
 	public Image getImage() {
 		// TODO: Get image from db if necessary
 		return mImage;
+	}
+	
+	public int getChannelId(){
+		return (int) mChannelId;
+	}
+	
+	@Override
+	public int hashCode() {
+		return mImgurId.toLowerCase(Locale.US).hashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null)
+			return false;
+		if (obj == this)
+			return true;
+		if (!(obj instanceof ChannelImage))
+			return false;
+
+		ChannelImage img = (ChannelImage) obj;
+		return img.mImgurId.equalsIgnoreCase(mImgurId) && img.mChannelId == mChannelId;
 	}
 
 }

@@ -1,6 +1,8 @@
 package com.picdora.player;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Bean;
@@ -31,6 +33,9 @@ import com.picdora.models.Image;
 import com.picdora.player.ChannelPlayer.ChannelError;
 import com.picdora.player.ChannelPlayer.OnGetChannelImageResultListener;
 import com.picdora.player.ChannelPlayer.OnLoadListener;
+import com.picdora.ui.SatelliteMenu.SatelliteMenu;
+import com.picdora.ui.SatelliteMenu.SatelliteMenu.SateliteClickedListener;
+import com.picdora.ui.SatelliteMenu.SatelliteMenuItem;
 
 @Fullscreen
 @EActivity(R.layout.activity_channel_view)
@@ -46,6 +51,8 @@ public class ChannelViewActivity extends FragmentActivity implements
 
 	@ViewById
 	protected PicdoraViewPager pager;
+	@ViewById
+	protected SatelliteMenu menu;
 	@Bean
 	protected ChannelPlayer mChannelPlayer;
 
@@ -66,6 +73,8 @@ public class ChannelViewActivity extends FragmentActivity implements
 		// show loading screen
 		showBusyDialog("Loading Channel...");
 
+		setupMenu();
+
 		// We don't use the Universal Image loader here, it's only used for
 		// thumbnails, so lets clear out so memory and clear it's cache
 		ImageLoader.getInstance().clearMemoryCache();
@@ -79,6 +88,7 @@ public class ChannelViewActivity extends FragmentActivity implements
 		Channel channel = Util.fromJson(json, Channel.class);
 
 		channel.setLastUsed(new Date());
+		channel.saveAsync();
 
 		// check if we can use the cached player, if not create a new one
 		if (mOnConfigChangeState != null) {
@@ -107,6 +117,29 @@ public class ChannelViewActivity extends FragmentActivity implements
 				}
 			});
 		}
+	}
+
+	/**
+	 * Create a satellite menu to provide access to options for each picture
+	 */
+	private void setupMenu() {
+		List<SatelliteMenuItem> items = new ArrayList<SatelliteMenuItem>();
+		items.add(new SatelliteMenuItem(R.id.sat_item_6, R.drawable.ic_launcher));
+		items.add(new SatelliteMenuItem(R.id.sat_item_5, R.drawable.ic_launcher));
+		items.add(new SatelliteMenuItem(R.id.sat_item_4, R.drawable.ic_launcher));
+		items.add(new SatelliteMenuItem(R.id.sat_item_3, R.drawable.ic_launcher));
+		items.add(new SatelliteMenuItem(R.id.sat_item_2, R.drawable.ic_launcher));
+		items.add(new SatelliteMenuItem(R.id.sat_item_1, R.drawable.ic_launcher));
+
+		menu.addItems(items);
+
+		menu.setOnItemClickedListener(new SateliteClickedListener() {
+
+			@Override
+			public void eventOccured(int id) {
+				Util.log("clicked " + id);
+			}
+		});
 	}
 
 	private void resumeState(CachedPlayerState state) {
@@ -255,6 +288,13 @@ public class ChannelViewActivity extends FragmentActivity implements
 		} else {
 			mOnConfigChangeState = new CachedPlayerState(mChannelPlayer,
 					pager.getCurrentItem());
+		}
+
+		// close the menu manually, otherwise it'll think it's still open when
+		// it is recreated but actually it will be closed (bug). We could try to
+		// save the open state and restore it as open
+		if (menu != null) {
+			menu.close();
 		}
 	}
 

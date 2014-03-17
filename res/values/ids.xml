@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Satellite Menu Items -->
+    <item name="sat_item_6" type="id"/>
+    <item name="sat_item_5" type="id"/>
+    <item name="sat_item_4" type="id"/>
+    <item name="sat_item_3" type="id"/>
+    <item name="sat_item_2" type="id"/>
+    <item name="sat_item_1" type="id"/>
+</resources>

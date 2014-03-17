@@ -1,4 +1,4 @@
-package android.view.ext;
+package com.picdora.ui.SatelliteMenu;
 
 /**
  * Interface for providing degrees between satellites. 

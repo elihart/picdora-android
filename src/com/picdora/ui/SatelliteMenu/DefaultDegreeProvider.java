@@ -1,4 +1,4 @@
-package android.view.ext;
+package com.picdora.ui.SatelliteMenu;
 
 /**
  * Default provider for degrees between satellites. For number of satellites up to 3

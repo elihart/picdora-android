@@ -47,6 +47,9 @@
     <string name="channel_detail_images_seen">Images Seen: %1$d</string>
     <string name="channel_detail_name_dialog_positive">Change Name</string>
     <string name="channel_detail_name_dialog_title">Change Channel Name</string>
+    
+    <!-- Satellite Menu -->
+    <string name="sat_menu_main">Menu</string>
 
     
 </resources>

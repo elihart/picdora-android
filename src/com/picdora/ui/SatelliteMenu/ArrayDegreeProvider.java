@@ -1,4 +1,4 @@
-package android.view.ext;
+package com.picdora.ui.SatelliteMenu;
 
 /**
  * Provide the degree between each satellite as an array of degrees. Can be provided to 

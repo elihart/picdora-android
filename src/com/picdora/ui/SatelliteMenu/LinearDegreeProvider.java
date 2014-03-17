@@ -1,4 +1,4 @@
-package android.view.ext;
+package com.picdora.ui.SatelliteMenu;
 
 /**
  * Linearly distributes satellites in the given total degree.
