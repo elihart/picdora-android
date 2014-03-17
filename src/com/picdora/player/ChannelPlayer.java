@@ -89,10 +89,13 @@ public class ChannelPlayer {
 		// return the image on the ui thread
 		returnGetImageAsyncResult(result, listener);
 	}
-	
+
 	@UiThread
-	protected void returnGetImageAsyncResult(ChannelImage image, OnGetChannelImageResultListener listener){
-		listener.onGetChannelImageResult(image);
+	protected void returnGetImageAsyncResult(ChannelImage image,
+			OnGetChannelImageResultListener listener) {
+		if (listener != null) {
+			listener.onGetChannelImageResult(image);
+		}
 	}
 
 	public synchronized ChannelImage getImage(int index, boolean replace) {

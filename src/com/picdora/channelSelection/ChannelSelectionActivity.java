@@ -12,8 +12,10 @@ import android.app.Activity;
 import android.content.Intent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnTouchListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageButton;
@@ -145,6 +147,7 @@ public class ChannelSelectionActivity extends PicdoraActivity implements
 		mSelectedView = (ChannelSelectionGridItem) view;
 		mSelectedView.showButtons(true);
 		
+		// on double click act like the play button was pressed
 		mSelectedView.setOnClickListener(doubleClickListener);
 
 		// set up listeners for the buttons
@@ -169,12 +172,14 @@ public class ChannelSelectionActivity extends PicdoraActivity implements
 				});
 	}
 	
+	// on double click act like the play button was pressed
 	private OnClickListener doubleClickListener = new OnClickListener() {
 		
 		@Override
 		public void onClick(View v) {
-			ChannelUtils.playChannel(mSelectedChannel, true,
-					mActivity);
+			ImageButton playButton = (ImageButton) mSelectedView.findViewById(R.id.playButton);
+			playButton.setPressed(true);
+			playButton.performClick();
 		}
 	};
 

@@ -1,5 +1,6 @@
 package com.picdora;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,12 +9,18 @@ import org.json.JSONObject;
 
 import se.emilsjolander.sprinkles.Sprinkles;
 import se.emilsjolander.sprinkles.Transaction;
+import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDoneException;
 import android.database.sqlite.SQLiteStatement;
+import android.net.Uri;
+import android.os.Environment;
 import android.text.TextUtils;
 
+import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.ion.Ion;
 import com.picdora.models.Image;
 
 public abstract class ImageUtils {
@@ -68,16 +75,32 @@ public abstract class ImageUtils {
 			return key;
 		}
 	}
-	
+
+	/**
+	 * Get the url to the given imgur image
+	 * 
+	 * @param imgurId
+	 *            The id of the imgur image
+	 * @param size
+	 *            The size of the image to get
+	 * @return
+	 */
 	public static String getImgurLink(String imgurId, IMGUR_SIZE size) {
 		return IMGUR_BASE_URL + imgurId + size.key + IMGUR_BASE_EXTENSION;
 	}
 
+	/**
+	 * Get the url to the given imgur image
+	 * 
+	 * @param image
+	 *            The image to get
+	 * @param size
+	 *            The size of the image to get
+	 * @return
+	 */
 	public static String getImgurLink(Image image, IMGUR_SIZE size) {
 		return getImgurLink(image.getImgurId(), size);
 	}
-
-	
 
 	/**
 	 * Get a list of image ids as strings for use in telling the server which
@@ -166,5 +189,44 @@ public abstract class ImageUtils {
 		public void onSuccess(JSONObject json);
 
 		public void onFailure();
+	}
+
+	/**
+	 * Download the full size version of the imgur image with the given id and
+	 * save it to the user's public images
+	 * 
+	 * @param imgurId
+	 */
+	public static void saveImgurImage(final Context context, String imgurId) {
+		// store the image in the public pictures directory
+		File pictureDirectory = Environment
+				.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+
+		File folder = new File(pictureDirectory, "Picdora/");
+		// Make sure the Pictures directory exists.
+		folder.mkdirs();
+
+		File file = new File(folder, imgurId + ".jpg");
+
+		String url = getImgurLink(imgurId, IMGUR_SIZE.FULL);
+
+		Ion.with(context, url).write(file)
+				.setCallback(new FutureCallback<File>() {
+					@Override
+					public void onCompleted(Exception e, File file) {
+						if (e == null) {
+							Util.makeBasicToast(context, "Image downloaded!");
+							// alert media gallery to new file
+							Uri uri = Uri.fromFile(file);
+						    Intent scanFileIntent = new Intent(
+						            Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri);
+						    context.sendBroadcast(scanFileIntent);
+						} else {
+							Util.makeBasicToast(context,
+									"Image download failed");
+						}
+					}
+				});
+
 	}
 }

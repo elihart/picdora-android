@@ -24,6 +24,7 @@ import android.view.Menu;
 import android.widget.TextView;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
+import com.picdora.ImageUtils;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.imageloader.PicdoraImageLoader;
@@ -44,6 +45,9 @@ import com.picdora.ui.SatelliteMenu.SatelliteMenuItem;
 public class ChannelViewActivity extends FragmentActivity implements
 		OnDownloadSpaceAvailableListener {
 	private static final int NUM_IMAGES_TO_PRELOAD = 5;
+
+	// TODO: Show icon notification icon in bottom right, such as like status,
+	// download progress/completion, etc.
 
 	// Cache the last player used and remember the user's spot so they can
 	// resume quickly
@@ -175,7 +179,17 @@ public class ChannelViewActivity extends FragmentActivity implements
 	}
 
 	protected void downloadClicked() {
-		// TODO Auto-generated method stub
+		Util.makeBasicToast(getApplicationContext(), "Downloading image...");
+		// get the image currently being viewed
+		mChannelPlayer.getImageAsync(pager.getCurrentItem(), false,
+				new OnGetChannelImageResultListener() {
+
+					@Override
+					public void onGetChannelImageResult(ChannelImage image) {
+						ImageUtils.saveImgurImage(getApplicationContext(),
+								image.getImgurId());
+					}
+				});
 
 	}
 
@@ -200,9 +214,9 @@ public class ChannelViewActivity extends FragmentActivity implements
 	}
 
 	/**
-	 * Toggle the like status of the image at the given position. If the image already
-	 * has the that status then return the status to neutral, otherwise give
-	 * the image the new status.
+	 * Toggle the like status of the image at the given position. If the image
+	 * already has the that status then return the status to neutral, otherwise
+	 * give the image the new status.
 	 * 
 	 * @param imagePos
 	 *            The position of the image to toggle
@@ -212,14 +226,14 @@ public class ChannelViewActivity extends FragmentActivity implements
 	@Background
 	protected void toggleLikedStatus(int imagePos, final LIKE_STATUS status) {
 		ChannelImage image = mChannelPlayer.getImage(imagePos, false);
-		
-		if(image.getLikeStatus() == status){
+
+		if (image.getLikeStatus() == status) {
 			image.setLikeStatus(LIKE_STATUS.NEUTRAL);
 		} else {
 			image.setLikeStatus(status);
 		}
 		image.save();
-		
+
 		// TODO: Update the icons in the menu
 	}
 
@@ -379,7 +393,7 @@ public class ChannelViewActivity extends FragmentActivity implements
 		if (menu != null) {
 			menu.close();
 		}
-		
+
 		dismissBusyDialog();
 	}
 
