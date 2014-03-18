@@ -76,32 +76,4 @@ public class ChannelViewHelper {
 
 				});
 	}
-
-	@UiThread
-	public void indicateLikeStatus(LIKE_STATUS likeStatus) {
-		Rect bounds = getCurrentImageBounds();
-		Util.log(bounds.toString());
-	}
-
-	/**
-	 * Get the absolute location of the image currently displayed image.
-	 * @return
-	 */
-	private Rect getCurrentImageBounds() {
-		ImageSwipeFragment frag = mActivity.getCurrentFragment();
-
-		if (frag != null) {
-			Rect imgBounds = frag.getImageBounds();
-			
-			if (imgBounds != null) {
-				return imgBounds;
-			}
-		}
-
-		// if we are unable to get image bounds, return the bounds for the whole layout
-		ViewGroup root = mActivity.getRootView();
-		return UiUtil.getPositionOnScreen(root);
-
-	}
-
 }

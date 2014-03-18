@@ -40,11 +40,9 @@ import com.picdora.imageloader.PicdoraImageLoader.OnDownloadSpaceAvailableListen
 import com.picdora.models.Channel;
 import com.picdora.models.ChannelImage;
 import com.picdora.models.ChannelImage.LIKE_STATUS;
-import com.picdora.models.Image;
 import com.picdora.player.ChannelPlayer.ChannelError;
 import com.picdora.player.ChannelPlayer.OnGetChannelImageResultListener;
 import com.picdora.player.ChannelPlayer.OnLoadListener;
-import com.picdora.ui.GlowView;
 import com.picdora.ui.PicdoraDialog;
 import com.picdora.ui.SatelliteMenu.SatelliteMenu;
 import com.picdora.ui.SatelliteMenu.SatelliteMenu.SateliteClickedListener;
@@ -71,8 +69,6 @@ public class ChannelViewActivity extends FragmentActivity implements
 	protected PicdoraViewPager pager;
 	@ViewById
 	protected SatelliteMenu menu;
-	@ViewById
-	protected GlowView glow;
 	@Bean
 	protected ChannelPlayer mChannelPlayer;
 	@Bean
@@ -167,10 +163,6 @@ public class ChannelViewActivity extends FragmentActivity implements
 	public void setWindowHeight(int height) {
 		mScreenHeight = height;
 	}
-	
-	public GlowView getGlowView(){
-		return glow;
-	}
 
 	/**
 	 * Get the height in pixels of the window showing this activity
@@ -226,12 +218,12 @@ public class ChannelViewActivity extends FragmentActivity implements
 			else if (e1.getY() - e2.getY() > SWIPE_MIN_DISTANCE
 					&& Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY) {
 
-				setLikeStatus(pager.getCurrentItem(), LIKE_STATUS.LIKED);
+				setLikeStatus(getCurrentFragment(), LIKE_STATUS.LIKED);
 			}
 			// up to down
 			else if (e2.getY() - e1.getY() > SWIPE_MIN_DISTANCE
 					&& Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY) {
-				setLikeStatus(pager.getCurrentItem(), LIKE_STATUS.DISLIKED);
+				setLikeStatus(getCurrentFragment(), LIKE_STATUS.DISLIKED);
 			}
 
 			return true;
@@ -391,15 +383,22 @@ public class ChannelViewActivity extends FragmentActivity implements
 	 * Toggle the like status of the image at the given position. If the image
 	 * already has the status then nothing is changed. However, the status won't
 	 * move directly from liked to disliked, it will be set to neutral first.
-	 * 
-	 * @param imagePos
-	 *            The position of the image to change
+	 * @param frag The fragment holding the image that was liked
+
 	 * @param status
 	 *            The state to set
 	 */
 	@Background
-	protected void setLikeStatus(int imagePos, final LIKE_STATUS status) {
-		ChannelImage image = mChannelPlayer.getImage(imagePos, false);
+	protected void setLikeStatus(ImageSwipeFragment frag, final LIKE_STATUS status) {
+		if(frag == null){
+			return;
+		}
+		ChannelImage image = frag.getImage();
+		
+		if(image == null){
+			return;
+		}
+		
 		LIKE_STATUS curr = image.getLikeStatus();
 
 		// Don't have to change anything if the status is the same
@@ -419,7 +418,7 @@ public class ChannelViewActivity extends FragmentActivity implements
 		}
 
 		// show an indication on screen of the current status
-		mHelper.indicateLikeStatus(image.getLikeStatus());
+		frag.doLikeGlow(status);
 	}
 
 	private void resumeState(CachedPlayerState state) {
@@ -458,20 +457,9 @@ public class ChannelViewActivity extends FragmentActivity implements
 	}
 
 	public void getImage(int position, boolean replacement,
-			final OnGetImageResultListener listener) {
+			final OnGetChannelImageResultListener listener) {
 		mChannelPlayer.getImageAsync(position, replacement,
-				new OnGetChannelImageResultListener() {
-
-					@Override
-					public void onGetChannelImageResult(ChannelImage image) {
-						listener.onGetImageResult(image.getImage());
-
-					}
-				});
-	}
-
-	public interface OnGetImageResultListener {
-		public void onGetImageResult(Image image);
+				listener);
 	}
 
 	protected void startChannel(int startingPosition) {

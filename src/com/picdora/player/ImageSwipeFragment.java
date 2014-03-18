@@ -5,7 +5,9 @@ import java.util.Date;
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.FragmentArg;
+import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
+import org.androidannotations.annotations.res.ColorRes;
 
 import uk.co.senab.photoview.PhotoView;
 import android.graphics.Rect;
@@ -20,13 +22,22 @@ import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.imageloader.PicdoraImageLoader.LoadError;
-import com.picdora.models.Image;
-import com.picdora.player.ChannelViewActivity.OnGetImageResultListener;
-import com.picdora.ui.UiUtil;
+import com.picdora.models.ChannelImage;
+import com.picdora.models.ChannelImage.LIKE_STATUS;
+import com.picdora.player.ChannelPlayer.OnGetChannelImageResultListener;
+import com.picdora.ui.GlowView;
 
 @EFragment(R.layout.fragment_swipable_image)
 public class ImageSwipeFragment extends Fragment implements
 		PicdoraImageLoader.LoadCallbacks {
+	@ColorRes(R.color.transparent)
+	protected int mColorTransparent;
+	@ColorRes(R.color.glow_liked)
+	protected int mColorLiked;
+	@ColorRes(R.color.glow_neutral)
+	protected int mColorNeutral;
+	@ColorRes(R.color.glow_disliked)
+	protected int mColorDisliked;
 
 	@ViewById(R.id.image)
 	PhotoView mPhotoView;
@@ -36,13 +47,15 @@ public class ImageSwipeFragment extends Fragment implements
 	TextView mProgressText;
 	@ViewById
 	TextView deletedText;
+	@ViewById
+	GlowView glow;
 
 	// The position of the fragment in the view pager. Use this to retrieve what
 	// image we should show
 	@FragmentArg
 	int fragPosition;
 
-	protected Image mImage;
+	protected ChannelImage mImage;
 	protected ChannelViewActivity mActivity;
 	private boolean mVisible;
 
@@ -76,10 +89,10 @@ public class ImageSwipeFragment extends Fragment implements
 		} else {
 			// final Date start = new Date();
 			mActivity.getImage(fragPosition, false,
-					new OnGetImageResultListener() {
+					new OnGetChannelImageResultListener() {
 
 						@Override
-						public void onGetImageResult(Image image) {
+						public void onGetChannelImageResult(ChannelImage image) {
 							mImage = image;
 							// Util.log("Getting " + image.getImgurId() +
 							// " took "
@@ -158,13 +171,13 @@ public class ImageSwipeFragment extends Fragment implements
 			showLoadingCircle();
 			// TODO: Maybe show an error image?
 			return;
-		} else if (mImage.isDeleted()) {
+		} else if (mImage.getImage().isDeleted()) {
 			handleDeletedImage();
 		} else {
 			loadStart = new Date();
 			downloading = false;
 			// Util.log("Load " + mImage.getImgurId());
-			PicdoraImageLoader.instance().loadImage(mImage, this);
+			PicdoraImageLoader.instance().loadImage(mImage.getImage(), this);
 		}
 	}
 
@@ -279,7 +292,7 @@ public class ImageSwipeFragment extends Fragment implements
 
 	private void handleDeletedImage() {
 		// TODO: Set up reporting to server and save to db
-		mImage.setDeleted(true);
+		mImage.getImage().setDeleted(true);
 
 		if (!viewActive) {
 			return;
@@ -287,10 +300,10 @@ public class ImageSwipeFragment extends Fragment implements
 
 		// try to load a different image
 		showLoadingCircle();
-		mActivity.getImage(fragPosition, true, new OnGetImageResultListener() {
+		mActivity.getImage(fragPosition, true, new OnGetChannelImageResultListener() {
 
 			@Override
-			public void onGetImageResult(Image image) {
+			public void onGetChannelImageResult(ChannelImage image) {
 				if (image == null || image.equals(mImage)) {
 					// couldn't get a replacement :(
 					mImage = image;
@@ -314,31 +327,46 @@ public class ImageSwipeFragment extends Fragment implements
 	}
 
 	/**
-	 * Get the absolute positions of the image on screen, or null if no image
+	 * Make the image glow in response to a like event
 	 * 
-	 * @return The display rect of our image, or null if no image is available
+	 * @param status
+	 *            The new status type that the glow should reflect
 	 */
-	public Rect getImageBounds() {
-		if (mPhotoView != null) {
-			Rect viewPosition = UiUtil.getPositionOnScreen(mPhotoView);
-			// the x and y offset of the view in relation to the screen
-			int x = viewPosition.left;
-			int y = viewPosition.top;
-
-			// get the bounds of the image relative to the view
-			RectF r = mPhotoView.getDisplayRect();
-
-			if (r == null) {
-				return viewPosition;
-			}
-			// create a new rect with ints instead of floats and with the photo
-			// coords adjusted to be absolute
-			else {
-				return new Rect((int) (x + r.left), (int) (y + r.top),
-						(int) (x + r.right), (int) (y + r.bottom));
-			}
-		} else {
-			return null;
+	@UiThread
+	public void doLikeGlow(LIKE_STATUS status) {
+		if (mPhotoView == null) {
+			return;
 		}
+
+		// get the bounds of the image relative to the view
+		RectF r = mPhotoView.getDisplayRect();
+		if (r == null) {
+			return;
+		}
+
+		// create an int rect from the RectF
+		Rect bounds = new Rect((int) r.left, (int) r.top, (int) r.right,
+				(int) r.bottom);
+
+		int color;
+		switch (status) {
+		case DISLIKED:
+			color = mColorDisliked;
+			break;
+		case LIKED:
+			color = mColorLiked;
+			break;
+		case NEUTRAL:
+			color = mColorNeutral;
+			break;
+		default:
+			color = mColorTransparent;
+		}
+
+		glow.animateGlowRect(bounds, color);
+	}
+
+	public ChannelImage getImage() {
+		return mImage;
 	}
 }

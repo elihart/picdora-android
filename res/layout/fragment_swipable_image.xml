@@ -48,5 +48,10 @@
         android:adjustViewBounds="true"
         android:background="@color/transparent"
         android:visibility="gone" />
+    
+    <com.picdora.ui.GlowView
+        android:id="@+id/glow"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
 </RelativeLayout>
