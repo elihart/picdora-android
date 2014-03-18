@@ -20,9 +20,13 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.view.GestureDetectorCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
+import android.view.GestureDetector;
 import android.view.Menu;
+import android.view.MotionEvent;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -60,12 +64,24 @@ public class ChannelViewActivity extends FragmentActivity implements
 	private PicdoraImageLoader loader;
 
 	@ViewById
+	protected RelativeLayout root;
+	@ViewById
 	protected PicdoraViewPager pager;
 	@ViewById
 	protected SatelliteMenu menu;
 	@Bean
 	protected ChannelPlayer mChannelPlayer;
+
 	protected Activity mContext;
+
+	// Gesture detection constants
+	private static final int SWIPE_MIN_DISTANCE = 120;
+	private static final int SWIPE_MAX_OFF_PATH = 250;
+	private static final int SWIPE_THRESHOLD_VELOCITY = 200;
+	private GestureDetectorCompat mDetector;
+
+	// the fragment currently being viewed
+	private ImageSwipeFragment mCurrFragment;
 
 	// hold a copy of the player when orientation changes and the activity
 	// recreates
@@ -86,6 +102,8 @@ public class ChannelViewActivity extends FragmentActivity implements
 		showBusyDialog("Loading Channel...");
 
 		setupMenu();
+
+		mDetector = new GestureDetectorCompat(this, new MyGestureListener());
 
 		// We don't use the Universal Image loader here, it's only used for
 		// thumbnails, so lets clear out so memory and clear it's cache
@@ -129,6 +147,76 @@ public class ChannelViewActivity extends FragmentActivity implements
 				}
 			});
 		}
+	}
+
+	@Override
+	public boolean dispatchTouchEvent(MotionEvent ev) {
+		this.mDetector.onTouchEvent(ev);
+
+		return super.dispatchTouchEvent(ev);
+	}
+
+	/**
+	 * Check if the currently visible image is zoomed
+	 * 
+	 * @return
+	 */
+	private boolean isZoomed() {
+		if (mCurrFragment == null) {
+			Util.log("no frag");
+			return false;
+		} else {
+			Util.log("frag");
+			return mCurrFragment.isZoomed();
+		}
+	}
+
+	class MyGestureListener extends GestureDetector.SimpleOnGestureListener {
+
+		@Override
+		public boolean onDown(MotionEvent event) {
+			return true;
+		}
+
+		// @Override
+		// public boolean onScroll(MotionEvent e1, MotionEvent e2,
+		// float distanceX, float distanceY) {
+		// Util.log("Scroll");
+		// return false;
+		// }
+
+		@Override
+		public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
+				float velocityY) {
+
+			// if the line isn't vertical enough then abort
+			if (Math.abs(e1.getX() - e2.getX()) > SWIPE_MAX_OFF_PATH) {
+				return false;
+			}
+
+			// don't register a fling if we're zoomed in
+			if (isZoomed()) {
+				Util.log("zoomed");
+				return false;
+			} 
+			// down to up
+			else if (e1.getY() - e2.getY() > SWIPE_MIN_DISTANCE
+					&& Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY) {
+
+				Util.log("Swipe up");
+			}
+			// up to down
+			else if (e2.getY() - e1.getY() > SWIPE_MIN_DISTANCE
+					&& Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY) {
+				Util.log("Swipe down");
+			}
+
+			return true;
+		}
+	}
+
+	public void setCurrentFragment(ImageSwipeFragment frag) {
+		mCurrFragment = frag;
 	}
 
 	/**
@@ -193,15 +281,20 @@ public class ChannelViewActivity extends FragmentActivity implements
 	}
 
 	protected void reportClicked() {
-		new PicdoraDialog.Builder(mContext).setTitle(R.string.channel_view_report_dialog_title).
-		setMessage(R.string.channel_view_report_dialog_message).setNegativeButton(R.string.dialog_default_negative, null)
-		.setPositiveButton(R.string.channel_view_report_dialog_positive_button, new OnClickListener() {
-			
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				reportCurrentImage();				
-			}
-		}).show();
+		new PicdoraDialog.Builder(mContext)
+				.setTitle(R.string.channel_view_report_dialog_title)
+				.setMessage(R.string.channel_view_report_dialog_message)
+				.setNegativeButton(R.string.dialog_default_negative, null)
+				.setPositiveButton(
+						R.string.channel_view_report_dialog_positive_button,
+						new OnClickListener() {
+
+							@Override
+							public void onClick(DialogInterface dialog,
+									int which) {
+								reportCurrentImage();
+							}
+						}).show();
 
 	}
 
@@ -211,7 +304,7 @@ public class ChannelViewActivity extends FragmentActivity implements
 	protected void reportCurrentImage() {
 		// TODO: Mark image as reported in the database
 		// TODO: Add image to server sync table
-		// TODO: Attempt sync 		
+		// TODO: Attempt sync
 	}
 
 	protected void downloadClicked() {
@@ -239,17 +332,23 @@ public class ChannelViewActivity extends FragmentActivity implements
 
 	protected void starClicked() {
 		// TODO: Create collection select view
-		
-		new PicdoraDialog.Builder(mContext).setTitle(R.string.channel_view_star_dialog_title).
-		setMessage(R.string.channel_view_star_dialog_message).setNegativeButton(R.string.dialog_default_negative, null)
-		.setPositiveButton(R.string.channel_view_star_dialog_positive_button, new OnClickListener() {
-			
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				// TODO: Add current image to selected collections
-				
-			}
-		}).show();
+
+		new PicdoraDialog.Builder(mContext)
+				.setTitle(R.string.channel_view_star_dialog_title)
+				.setMessage(R.string.channel_view_star_dialog_message)
+				.setNegativeButton(R.string.dialog_default_negative, null)
+				.setPositiveButton(
+						R.string.channel_view_star_dialog_positive_button,
+						new OnClickListener() {
+
+							@Override
+							public void onClick(DialogInterface dialog,
+									int which) {
+								// TODO: Add current image to selected
+								// collections
+
+							}
+						}).show();
 	}
 
 	protected void shareClicked() {
