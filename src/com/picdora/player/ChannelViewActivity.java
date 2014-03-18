@@ -26,6 +26,7 @@ import android.widget.TextView;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.picdora.ImageUtils;
+import com.picdora.ImageUtils.OnDownloadCompleteListener;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.imageloader.PicdoraImageLoader;
@@ -182,7 +183,7 @@ public class ChannelViewActivity extends FragmentActivity implements
 	}
 
 	protected void downloadClicked() {
-		Util.makeBasicToast(getApplicationContext(), "Downloading image...");
+		// TODO: Notify download start
 		// get the image currently being viewed
 		mChannelPlayer.getImageAsync(pager.getCurrentItem(), false,
 				new OnGetChannelImageResultListener() {
@@ -190,7 +191,15 @@ public class ChannelViewActivity extends FragmentActivity implements
 					@Override
 					public void onGetChannelImageResult(ChannelImage image) {
 						ImageUtils.saveImgurImage(getApplicationContext(),
-								image.getImgurId());
+								image.getImgurId(),
+								new OnDownloadCompleteListener() {
+
+									@Override
+									public void onDownloadComplete(
+											boolean success) {
+										// TODO: Notify download complete
+									}
+								});
 					}
 				});
 
@@ -208,8 +217,7 @@ public class ChannelViewActivity extends FragmentActivity implements
 
 					@Override
 					public void onGetChannelImageResult(ChannelImage image) {
-						ImageUtils.shareImage(mContext,
-								image.getImgurId());
+						ImageUtils.shareImage(mContext, image.getImgurId());
 					}
 				});
 

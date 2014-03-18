@@ -197,10 +197,10 @@ public abstract class ImageUtils {
 	 * save it to the user's public images
 	 * 
 	 * @param imgurId
+	 * @param listener Optional listener that will be called when the download completes
 	 */
-	public static void saveImgurImage(final Context context, String imgurId) {
-		// TODO: On complete callback
-		
+	public static void saveImgurImage(final Context context, String imgurId,
+			final OnDownloadCompleteListener listener) {
 		// store the image in the public pictures directory
 		File pictureDirectory = Environment
 				.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
@@ -218,30 +218,47 @@ public abstract class ImageUtils {
 					@Override
 					public void onCompleted(Exception e, File file) {
 						if (e == null) {
-							Util.makeBasicToast(context, "Image downloaded!");
 							// alert media gallery to new file
 							Uri uri = Uri.fromFile(file);
-						    Intent scanFileIntent = new Intent(
-						            Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri);
-						    context.sendBroadcast(scanFileIntent);
+							Intent scanFileIntent = new Intent(
+									Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri);
+							context.sendBroadcast(scanFileIntent);
+							// alert listener
+							if (listener != null) {
+								listener.onDownloadComplete(true);
+							}
 						} else {
-							Util.makeBasicToast(context,
-									"Image download failed");
+							if (listener != null) {
+								listener.onDownloadComplete(false);
+							}
 						}
 					}
 				});
 
 	}
-	
+
+	/**
+	 * Callback for when an image download completes
+	 */
+	public interface OnDownloadCompleteListener {
+		/**
+		 * Called when the image downloads.
+		 * @param success True if the download was downloaded successfully and false otherwise
+		 */
+		public void onDownloadComplete(boolean success);
+	}
+
 	/**
 	 * Launch a chooser dialog to select an app to share the image with
+	 * 
 	 * @param activity
 	 * @param imgurId
 	 */
-	public static void shareImage(Activity activity, String imgurId){
+	public static void shareImage(Activity activity, String imgurId) {
 		Intent sendIntent = new Intent();
 		sendIntent.setAction(Intent.ACTION_SEND);
-		sendIntent.putExtra(Intent.EXTRA_TEXT, getImgurLink(imgurId, IMGUR_SIZE.FULL));
+		sendIntent.putExtra(Intent.EXTRA_TEXT,
+				getImgurLink(imgurId, IMGUR_SIZE.FULL));
 		sendIntent.setType("text/plain");
 		activity.startActivity(Intent.createChooser(sendIntent, "Share image"));
 	}
