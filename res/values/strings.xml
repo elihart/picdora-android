@@ -50,6 +50,14 @@
     
     <!-- Satellite Menu -->
     <string name="sat_menu_main">Menu</string>
+    
+    <!--  Channel View Activity -->
+    <string name="channel_view_report_dialog_title">Report image?</string>
+    <string name="channel_view_report_dialog_message">Is this image totally out of place? Report it to us and we\'ll get it sorted out!</string>
+    <string name="channel_view_report_dialog_positive_button">Report</string>
+    <string name="channel_view_star_dialog_title">Add to collection</string>
+    <string name="channel_view_star_dialog_message">Add this image to your collection?</string>
+    <string name="channel_view_star_dialog_positive_button">Add</string>
 
     
 </resources>

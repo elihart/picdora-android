@@ -22,7 +22,9 @@ public class Channel extends Model {
 	/*
 	 * TODO: What happens to liked ChannelImages when the channel is deleted? We
 	 * may want to save them, or ask the user if they still want them. Maybe add
-	 * a delete flag and never fully remove the channel
+	 * a delete flag and never fully remove the channel. This could help not
+	 * show duplicate images in the future, and keep the liking history for
+	 * future reference.
 	 */
 
 	public enum GifSetting {

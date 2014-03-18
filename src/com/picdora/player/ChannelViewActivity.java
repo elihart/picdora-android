@@ -15,6 +15,7 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
+import android.content.DialogInterface.OnClickListener;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -38,6 +39,7 @@ import com.picdora.models.Image;
 import com.picdora.player.ChannelPlayer.ChannelError;
 import com.picdora.player.ChannelPlayer.OnGetChannelImageResultListener;
 import com.picdora.player.ChannelPlayer.OnLoadListener;
+import com.picdora.ui.PicdoraDialog;
 import com.picdora.ui.SatelliteMenu.SatelliteMenu;
 import com.picdora.ui.SatelliteMenu.SatelliteMenu.SateliteClickedListener;
 import com.picdora.ui.SatelliteMenu.SatelliteMenuItem;
@@ -191,8 +193,25 @@ public class ChannelViewActivity extends FragmentActivity implements
 	}
 
 	protected void reportClicked() {
-		// TODO Auto-generated method stub
+		new PicdoraDialog.Builder(mContext).setTitle(R.string.channel_view_report_dialog_title).
+		setMessage(R.string.channel_view_report_dialog_message).setNegativeButton(R.string.dialog_default_negative, null)
+		.setPositiveButton(R.string.channel_view_report_dialog_positive_button, new OnClickListener() {
+			
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				reportCurrentImage();				
+			}
+		}).show();
 
+	}
+
+	/**
+	 * Report the current image as being miscategorized
+	 */
+	protected void reportCurrentImage() {
+		// TODO: Mark image as reported in the database
+		// TODO: Add image to server sync table
+		// TODO: Attempt sync 		
 	}
 
 	protected void downloadClicked() {
@@ -219,7 +238,18 @@ public class ChannelViewActivity extends FragmentActivity implements
 	}
 
 	protected void starClicked() {
-
+		// TODO: Create collection select view
+		
+		new PicdoraDialog.Builder(mContext).setTitle(R.string.channel_view_star_dialog_title).
+		setMessage(R.string.channel_view_star_dialog_message).setNegativeButton(R.string.dialog_default_negative, null)
+		.setPositiveButton(R.string.channel_view_star_dialog_positive_button, new OnClickListener() {
+			
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				// TODO: Add current image to selected collections
+				
+			}
+		}).show();
 	}
 
 	protected void shareClicked() {
