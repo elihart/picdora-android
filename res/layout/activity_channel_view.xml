@@ -3,19 +3,31 @@
     xmlns:sat="http://schemas.android.com/apk/res-auto"
     android:id="@+id/root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" >
+    android:layout_height="match_parent"
+    android:background="@color/black" >
+
+    
 
     <com.picdora.player.PicdoraViewPager
         android:id="@+id/pager"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:background="@color/transparent" />
+    
+    <ImageView
+        android:id="@+id/glow"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="@color/transparent"
+        android:padding="8dp"
+        android:background="@color/buttonLightBlue" />
 
     <com.picdora.ui.SatelliteMenu.SatelliteMenu
         android:id="@+id/menu"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
         android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
         android:layout_margin="8dp"
         sat:closeOnClick="true"
         sat:expandDuration="500"

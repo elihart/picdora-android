@@ -63,8 +63,8 @@ public class ImageSwipeFragment extends Fragment implements
 		showLoadingCircle();
 
 		mActivity = (ChannelViewActivity) getActivity();
-		
-		if(mVisible){
+
+		if (mVisible) {
 			mActivity.setCurrentFragment(this);
 		}
 
@@ -95,20 +95,34 @@ public class ImageSwipeFragment extends Fragment implements
 		}
 		// compare the current display coords to our original
 		RectF curr = mPhotoView.getDisplayRect();
+		/*
+		 * Strategy #1: Compare the bounds of the original image to the current
+		 * one. If the current one is larger than we know it was zoomed in.
+		 * However, the current one could be just slightly zoomed, where we
+		 * would want to consider it not zoomed for our purposes, but this
+		 * wouldn't catch it.
+		 */
+		// // sum the differences between each corner
+		// float dBottom = Math.abs(curr.bottom - mOriginalImageRect.bottom);
+		// float dTop = Math.abs(curr.top - mOriginalImageRect.top);
+		// float dLeft = Math.abs(curr.left - mOriginalImageRect.left);
+		// float dRight = Math.abs(curr.right - mOriginalImageRect.right);
+		//
+		// float dSum = dTop + dBottom + dLeft + dRight;
+		//
+		// // if the total difference is greater than our threshold then we are
+		// // zoomed. Not checking exact equality gives flexibility when the
+		// float
+		// // differences can be off by very small amounts and we are for all
+		// // intents and purposes zoomed out
+		// return dSum > ZOOM_DIFFERENCE_THRESHOLD;
 
-		// sum the differences between each corner
-		float dBottom = Math.abs(curr.bottom - mOriginalImageRect.bottom);
-		float dTop = Math.abs(curr.top - mOriginalImageRect.top);
-		float dLeft = Math.abs(curr.left - mOriginalImageRect.left);
-		float dRight = Math.abs(curr.right - mOriginalImageRect.right);
-
-		float dSum = dTop + dBottom + dLeft + dRight;
-
-		// if the total difference is greater than our threshold then we are
-		// zoomed. Not checking exact equality gives flexibility when the float
-		// differences can be off by very small amounts and we are for all
-		// intents and purposes zoomed out
-		return dSum > ZOOM_DIFFERENCE_THRESHOLD;
+		// Strategy #2
+		// Check if the picture is larger than the window vertically. If not
+		// then a vertical swipe won't move it and we can interpret the gesture
+		// as a like action instead. The image may still be zoomed but it's not
+		// zoomed enough to cause a gesture collision
+		return mActivity.getWindowHeight() < (curr.bottom - curr.top);
 	}
 
 	private void showLoadingCircle() {
@@ -171,7 +185,7 @@ public class ImageSwipeFragment extends Fragment implements
 			if (mActivity != null) {
 				mActivity.setCurrentFragment(this);
 			}
-			
+
 			if (mImage != null) {
 				Util.log("Showing " + mImage.getImgurId());
 			}

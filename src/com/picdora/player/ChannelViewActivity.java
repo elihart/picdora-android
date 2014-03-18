@@ -11,11 +11,13 @@ import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.Fullscreen;
 import org.androidannotations.annotations.ViewById;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnClickListener;
+import android.graphics.Point;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -23,9 +25,12 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
+import android.view.Display;
 import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MotionEvent;
+import android.view.ViewTreeObserver;
+import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -71,6 +76,8 @@ public class ChannelViewActivity extends FragmentActivity implements
 	protected SatelliteMenu menu;
 	@Bean
 	protected ChannelPlayer mChannelPlayer;
+	@Bean
+	protected ChannelViewHelper mHelper;
 
 	protected Activity mContext;
 
@@ -82,6 +89,8 @@ public class ChannelViewActivity extends FragmentActivity implements
 
 	// the fragment currently being viewed
 	private ImageSwipeFragment mCurrFragment;
+	// screen height in pixels
+	private int mScreenHeight;
 
 	// hold a copy of the player when orientation changes and the activity
 	// recreates
@@ -100,6 +109,8 @@ public class ChannelViewActivity extends FragmentActivity implements
 		mContext = this;
 		// show loading screen
 		showBusyDialog("Loading Channel...");
+
+		mHelper.initScreenHeight(root);
 
 		setupMenu();
 
@@ -149,10 +160,29 @@ public class ChannelViewActivity extends FragmentActivity implements
 		}
 	}
 
+	/**
+	 * Set the height in pixels of the window showing this activity
+	 * 
+	 * @param height
+	 */
+	public void setWindowHeight(int height) {
+		mScreenHeight = height;
+	}
+
+	/**
+	 * Get the height in pixels of the window showing this activity
+	 * 
+	 * @return
+	 */
+	public int getWindowHeight() {
+		return mScreenHeight;
+	}
+
 	@Override
 	public boolean dispatchTouchEvent(MotionEvent ev) {
+		// Give the touch event to our gesture detector first before passing it
+		// on
 		this.mDetector.onTouchEvent(ev);
-
 		return super.dispatchTouchEvent(ev);
 	}
 
@@ -163,10 +193,8 @@ public class ChannelViewActivity extends FragmentActivity implements
 	 */
 	private boolean isZoomed() {
 		if (mCurrFragment == null) {
-			Util.log("no frag");
 			return false;
 		} else {
-			Util.log("frag");
 			return mCurrFragment.isZoomed();
 		}
 	}
@@ -177,13 +205,6 @@ public class ChannelViewActivity extends FragmentActivity implements
 		public boolean onDown(MotionEvent event) {
 			return true;
 		}
-
-		// @Override
-		// public boolean onScroll(MotionEvent e1, MotionEvent e2,
-		// float distanceX, float distanceY) {
-		// Util.log("Scroll");
-		// return false;
-		// }
 
 		@Override
 		public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
@@ -196,19 +217,18 @@ public class ChannelViewActivity extends FragmentActivity implements
 
 			// don't register a fling if we're zoomed in
 			if (isZoomed()) {
-				Util.log("zoomed");
 				return false;
-			} 
+			}
 			// down to up
 			else if (e1.getY() - e2.getY() > SWIPE_MIN_DISTANCE
 					&& Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY) {
 
-				Util.log("Swipe up");
+				setLikeStatus(pager.getCurrentItem(), LIKE_STATUS.LIKED);
 			}
 			// up to down
 			else if (e2.getY() - e1.getY() > SWIPE_MIN_DISTANCE
 					&& Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY) {
-				Util.log("Swipe down");
+				setLikeStatus(pager.getCurrentItem(), LIKE_STATUS.DISLIKED);
 			}
 
 			return true;
@@ -364,38 +384,39 @@ public class ChannelViewActivity extends FragmentActivity implements
 
 	}
 
-	protected void dislikeClicked() {
-		// TODO: Change button image to indicate status
-		toggleLikedStatus(pager.getCurrentItem(), LIKE_STATUS.DISLIKED);
-	}
-
-	protected void likeClicked() {
-		// TODO: Change button image to indicate status
-		toggleLikedStatus(pager.getCurrentItem(), LIKE_STATUS.LIKED);
-	}
-
 	/**
 	 * Toggle the like status of the image at the given position. If the image
-	 * already has the that status then return the status to neutral, otherwise
-	 * give the image the new status.
+	 * already has the status then nothing is changed. However, the status won't
+	 * move directly from liked to disliked, it will be set to neutral first.
 	 * 
 	 * @param imagePos
-	 *            The position of the image to toggle
-	 * @param disliked
-	 *            The state to toggle
+	 *            The position of the image to change
+	 * @param status
+	 *            The state to set
 	 */
 	@Background
-	protected void toggleLikedStatus(int imagePos, final LIKE_STATUS status) {
+	protected void setLikeStatus(int imagePos, final LIKE_STATUS status) {
 		ChannelImage image = mChannelPlayer.getImage(imagePos, false);
+		LIKE_STATUS curr = image.getLikeStatus();
 
+		// Don't have to change anything if the status is the same
 		if (image.getLikeStatus() == status) {
-			image.setLikeStatus(LIKE_STATUS.NEUTRAL);
-		} else {
-			image.setLikeStatus(status);
-		}
-		image.save();
 
-		// TODO: Update the icons in the menu
+		}
+		// if we're currently neutral then change to the new status
+		else if (curr == LIKE_STATUS.NEUTRAL) {
+			image.setLikeStatus(status);
+			image.save();
+		}
+		// otherwise we're going from one extreme to the another, so set to
+		// neutral
+		else {
+			image.setLikeStatus(LIKE_STATUS.NEUTRAL);
+			image.save();
+		}
+
+		// show an indication on screen of the current status
+		mHelper.indicateLikeStatus(image.getLikeStatus());
 	}
 
 	private void resumeState(CachedPlayerState state) {
