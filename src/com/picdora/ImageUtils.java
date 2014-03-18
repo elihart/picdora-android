@@ -9,6 +9,7 @@ import org.json.JSONObject;
 
 import se.emilsjolander.sprinkles.Sprinkles;
 import se.emilsjolander.sprinkles.Transaction;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -198,6 +199,8 @@ public abstract class ImageUtils {
 	 * @param imgurId
 	 */
 	public static void saveImgurImage(final Context context, String imgurId) {
+		// TODO: On complete callback
+		
 		// store the image in the public pictures directory
 		File pictureDirectory = Environment
 				.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
@@ -228,5 +231,18 @@ public abstract class ImageUtils {
 					}
 				});
 
+	}
+	
+	/**
+	 * Launch a chooser dialog to select an app to share the image with
+	 * @param activity
+	 * @param imgurId
+	 */
+	public static void shareImage(Activity activity, String imgurId){
+		Intent sendIntent = new Intent();
+		sendIntent.setAction(Intent.ACTION_SEND);
+		sendIntent.putExtra(Intent.EXTRA_TEXT, getImgurLink(imgurId, IMGUR_SIZE.FULL));
+		sendIntent.setType("text/plain");
+		activity.startActivity(Intent.createChooser(sendIntent, "Share image"));
 	}
 }

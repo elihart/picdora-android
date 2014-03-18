@@ -11,6 +11,7 @@ import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.Fullscreen;
 import org.androidannotations.annotations.ViewById;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
@@ -61,6 +62,7 @@ public class ChannelViewActivity extends FragmentActivity implements
 	protected SatelliteMenu menu;
 	@Bean
 	protected ChannelPlayer mChannelPlayer;
+	protected Activity mContext;
 
 	// hold a copy of the player when orientation changes and the activity
 	// recreates
@@ -76,6 +78,7 @@ public class ChannelViewActivity extends FragmentActivity implements
 
 	@AfterViews
 	void initChannel() {
+		mContext = this;
 		// show loading screen
 		showBusyDialog("Loading Channel...");
 
@@ -199,7 +202,16 @@ public class ChannelViewActivity extends FragmentActivity implements
 	}
 
 	protected void shareClicked() {
-		// TODO Auto-generated method stub
+		// get the image currently being viewed
+		mChannelPlayer.getImageAsync(pager.getCurrentItem(), false,
+				new OnGetChannelImageResultListener() {
+
+					@Override
+					public void onGetChannelImageResult(ChannelImage image) {
+						ImageUtils.shareImage(mContext,
+								image.getImgurId());
+					}
+				});
 
 	}
 
