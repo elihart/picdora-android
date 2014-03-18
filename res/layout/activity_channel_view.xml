@@ -6,21 +6,16 @@
     android:layout_height="match_parent"
     android:background="@color/black" >
 
-    
-
     <com.picdora.player.PicdoraViewPager
         android:id="@+id/pager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/transparent" />
-    
-    <ImageView
+
+    <com.picdora.ui.GlowView
         android:id="@+id/glow"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:src="@color/transparent"
-        android:padding="8dp"
-        android:background="@color/buttonLightBlue" />
+        android:layout_height="match_parent" />
 
     <com.picdora.ui.SatelliteMenu.SatelliteMenu
         android:id="@+id/menu"

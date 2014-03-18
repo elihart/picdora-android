@@ -6,11 +6,14 @@ import org.androidannotations.annotations.UiThread;
 
 import android.annotation.SuppressLint;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.view.Display;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 
+import com.picdora.Util;
 import com.picdora.models.ChannelImage.LIKE_STATUS;
+import com.picdora.ui.UiUtil;
 
 /**
  * Holds helper methods for the ChannelViewActivity in order to keep that
@@ -76,8 +79,29 @@ public class ChannelViewHelper {
 
 	@UiThread
 	public void indicateLikeStatus(LIKE_STATUS likeStatus) {
-		// TODO Auto-generated method stub
-		
+		Rect bounds = getCurrentImageBounds();
+		Util.log(bounds.toString());
+	}
+
+	/**
+	 * Get the absolute location of the image currently displayed image.
+	 * @return
+	 */
+	private Rect getCurrentImageBounds() {
+		ImageSwipeFragment frag = mActivity.getCurrentFragment();
+
+		if (frag != null) {
+			Rect imgBounds = frag.getImageBounds();
+			
+			if (imgBounds != null) {
+				return imgBounds;
+			}
+		}
+
+		// if we are unable to get image bounds, return the bounds for the whole layout
+		ViewGroup root = mActivity.getRootView();
+		return UiUtil.getPositionOnScreen(root);
+
 	}
 
 }

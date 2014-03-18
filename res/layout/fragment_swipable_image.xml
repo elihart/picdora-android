@@ -37,8 +37,8 @@
         android:gravity="center"
         android:text="Image Deleted"
         android:textColor="@color/white"
-        android:visibility="gone"
-        android:textSize="20sp" />
+        android:textSize="20sp"
+        android:visibility="gone" />
 
     <uk.co.senab.photoview.PhotoView
         android:id="@+id/image"

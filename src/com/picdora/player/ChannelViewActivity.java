@@ -11,13 +11,11 @@ import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.Fullscreen;
 import org.androidannotations.annotations.ViewById;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnClickListener;
-import android.graphics.Point;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -25,12 +23,10 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
-import android.view.Display;
 import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MotionEvent;
-import android.view.ViewTreeObserver;
-import android.view.ViewTreeObserver.OnGlobalLayoutListener;
+import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -48,6 +44,7 @@ import com.picdora.models.Image;
 import com.picdora.player.ChannelPlayer.ChannelError;
 import com.picdora.player.ChannelPlayer.OnGetChannelImageResultListener;
 import com.picdora.player.ChannelPlayer.OnLoadListener;
+import com.picdora.ui.GlowView;
 import com.picdora.ui.PicdoraDialog;
 import com.picdora.ui.SatelliteMenu.SatelliteMenu;
 import com.picdora.ui.SatelliteMenu.SatelliteMenu.SateliteClickedListener;
@@ -74,6 +71,8 @@ public class ChannelViewActivity extends FragmentActivity implements
 	protected PicdoraViewPager pager;
 	@ViewById
 	protected SatelliteMenu menu;
+	@ViewById
+	protected GlowView glow;
 	@Bean
 	protected ChannelPlayer mChannelPlayer;
 	@Bean
@@ -167,6 +166,10 @@ public class ChannelViewActivity extends FragmentActivity implements
 	 */
 	public void setWindowHeight(int height) {
 		mScreenHeight = height;
+	}
+	
+	public GlowView getGlowView(){
+		return glow;
 	}
 
 	/**
@@ -620,6 +623,22 @@ public class ChannelViewActivity extends FragmentActivity implements
 						}
 					});
 		}
+	}
+
+	/**
+	 * Get the image fragment currently visible
+	 * @return
+	 */
+	public ImageSwipeFragment getCurrentFragment() {
+		return mCurrFragment;		
+	}
+
+	/**
+	 * Get the root viewgroup of the activity
+	 * @return
+	 */
+	public ViewGroup getRootView() {
+		return root;
 	}
 
 }

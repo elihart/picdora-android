@@ -8,6 +8,7 @@ import org.androidannotations.annotations.FragmentArg;
 import org.androidannotations.annotations.ViewById;
 
 import uk.co.senab.photoview.PhotoView;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.support.v4.app.Fragment;
@@ -21,6 +22,7 @@ import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.imageloader.PicdoraImageLoader.LoadError;
 import com.picdora.models.Image;
 import com.picdora.player.ChannelViewActivity.OnGetImageResultListener;
+import com.picdora.ui.UiUtil;
 
 @EFragment(R.layout.fragment_swipable_image)
 public class ImageSwipeFragment extends Fragment implements
@@ -90,11 +92,16 @@ public class ImageSwipeFragment extends Fragment implements
 	}
 
 	public boolean isZoomed() {
-		if (mPhotoView == null) {
+		if (mPhotoView == null || mActivity == null) {
 			return false;
 		}
 		// compare the current display coords to our original
 		RectF curr = mPhotoView.getDisplayRect();
+
+		if (curr == null) {
+			return false;
+		}
+
 		/*
 		 * Strategy #1: Compare the bounds of the original image to the current
 		 * one. If the current one is larger than we know it was zoomed in.
@@ -303,6 +310,35 @@ public class ImageSwipeFragment extends Fragment implements
 			mPhotoView.setVisibility(View.GONE);
 		} catch (NullPointerException e) {
 
+		}
+	}
+
+	/**
+	 * Get the absolute positions of the image on screen, or null if no image
+	 * 
+	 * @return The display rect of our image, or null if no image is available
+	 */
+	public Rect getImageBounds() {
+		if (mPhotoView != null) {
+			Rect viewPosition = UiUtil.getPositionOnScreen(mPhotoView);
+			// the x and y offset of the view in relation to the screen
+			int x = viewPosition.left;
+			int y = viewPosition.top;
+
+			// get the bounds of the image relative to the view
+			RectF r = mPhotoView.getDisplayRect();
+
+			if (r == null) {
+				return viewPosition;
+			}
+			// create a new rect with ints instead of floats and with the photo
+			// coords adjusted to be absolute
+			else {
+				return new Rect((int) (x + r.left), (int) (y + r.top),
+						(int) (x + r.right), (int) (y + r.bottom));
+			}
+		} else {
+			return null;
 		}
 	}
 }

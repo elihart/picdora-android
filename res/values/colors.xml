@@ -31,5 +31,10 @@
     <color name="picdora_dialog_title">@color/black</color>
     <color name="picdora_dialog_title_background">@color/white</color>
     <color name="picdora_dialog_message">@color/black</color>
+    
+    <!-- Glow View -->
+    <color name="glow_liked">@color/buttonLightBlue</color>
+    <color name="glow_neutral">@color/white</color>
+    <color name="glow_disliked">@color/red</color>
 
 </resources>
