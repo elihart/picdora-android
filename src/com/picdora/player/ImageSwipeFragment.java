@@ -10,6 +10,7 @@ import org.androidannotations.annotations.ViewById;
 import org.androidannotations.annotations.res.ColorRes;
 
 import uk.co.senab.photoview.PhotoView;
+import uk.co.senab.photoview.PhotoViewAttacher.OnMatrixChangedListener;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
@@ -142,7 +143,7 @@ public class ImageSwipeFragment extends Fragment implements
 		// then a vertical swipe won't move it and we can interpret the gesture
 		// as a like action instead. The image may still be zoomed but it's not
 		// zoomed enough to cause a gesture collision
-		return mActivity.getWindowHeight() < (curr.bottom - curr.top);
+		return mActivity.getWindowHeight() < Math.abs(curr.bottom - curr.top);
 	}
 
 	private void showLoadingCircle() {
@@ -252,6 +253,13 @@ public class ImageSwipeFragment extends Fragment implements
 			// create a copy of the original image rect so we can tell when
 			// we're zoomed
 			mOriginalImageRect = new RectF(mPhotoView.getDisplayRect());
+			mPhotoView.setOnMatrixChangeListener(new OnMatrixChangedListener() {
+
+				@Override
+				public void onMatrixChanged(RectF arg0) {
+					glow.clearAnimation();
+				}
+			});
 		}
 	}
 
@@ -300,20 +308,21 @@ public class ImageSwipeFragment extends Fragment implements
 
 		// try to load a different image
 		showLoadingCircle();
-		mActivity.getImage(fragPosition, true, new OnGetChannelImageResultListener() {
+		mActivity.getImage(fragPosition, true,
+				new OnGetChannelImageResultListener() {
 
-			@Override
-			public void onGetChannelImageResult(ChannelImage image) {
-				if (image == null || image.equals(mImage)) {
-					// couldn't get a replacement :(
-					mImage = image;
-					showDeletedText();
-				} else {
-					mImage = image;
-					loadImage();
-				}
-			}
-		});
+					@Override
+					public void onGetChannelImageResult(ChannelImage image) {
+						if (image == null || image.equals(mImage)) {
+							// couldn't get a replacement :(
+							mImage = image;
+							showDeletedText();
+						} else {
+							mImage = image;
+							loadImage();
+						}
+					}
+				});
 	}
 
 	private void showDeletedText() {
@@ -333,7 +342,13 @@ public class ImageSwipeFragment extends Fragment implements
 	 *            The new status type that the glow should reflect
 	 */
 	@UiThread
-	public void doLikeGlow(LIKE_STATUS status) {
+	public void setLikeStatus(LIKE_STATUS status) {
+		if (mImage != null) {
+			mImage.setLikeStatus(status);
+		} else {
+			return;
+		}
+
 		if (mPhotoView == null) {
 			return;
 		}
@@ -363,7 +378,7 @@ public class ImageSwipeFragment extends Fragment implements
 			color = mColorTransparent;
 		}
 
-		glow.animateGlowRect(bounds, color);
+		glow.doGlow(bounds, color);
 	}
 
 	public ChannelImage getImage() {

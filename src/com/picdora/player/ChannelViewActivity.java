@@ -418,7 +418,7 @@ public class ChannelViewActivity extends FragmentActivity implements
 		}
 
 		// show an indication on screen of the current status
-		frag.doLikeGlow(status);
+		frag.setLikeStatus(image.getLikeStatus());
 	}
 
 	private void resumeState(CachedPlayerState state) {
