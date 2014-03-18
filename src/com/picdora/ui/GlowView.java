@@ -19,8 +19,12 @@ import android.view.animation.Animation.AnimationListener;
 import android.view.animation.AnimationSet;
 import android.view.animation.DecelerateInterpolator;
 
+import com.nineoldandroids.view.ViewHelper;
+import com.picdora.Util;
+
 @EView
 public class GlowView extends View {
+	private View mThis;
 
 	// We need 8 edge gradient shapes, so that we have an inside and outside
 	// glow for each of the four edges
@@ -29,18 +33,16 @@ public class GlowView extends View {
 
 	private AnimationSet mAnimation;
 
-	// how long to spend fading in in millis
-	private static final int FADE_IN_DURATION = 500;
-	// how long to pause once faded in before starting to fade out
-	private static final int FADE_PAUSE = 2000;
-	// how long to spend fading out
-	private static final int FADE_OUT_DURATION = 500;
+	// how long to spend fading each way
+	private static final int FADE_DURATION = 350;
 
 	private static int GLOW_WIDTH_PX;
-	private static final int GLOW_WIDTH_DP = 30;
+	private static final int GLOW_WIDTH_DP = 17;
+
+	private boolean mQueueAnimation;
 
 	// the tile mode to use with the gradients
-	private static final TileMode TILE_MODE = android.graphics.Shader.TileMode.CLAMP;
+	private static final TileMode TILE_MODE = android.graphics.Shader.TileMode.MIRROR;
 
 	public GlowView(Context context, AttributeSet attrs, int defStyleAttr) {
 		super(context, attrs, defStyleAttr);
@@ -61,6 +63,7 @@ public class GlowView extends View {
 	 * Create the paints we will need, and set the view to hidden to begin with.
 	 */
 	private void init() {
+		mThis = this;
 		setVisible(false);
 
 		// convert our desired glow size to pixels based on the device screen
@@ -84,14 +87,17 @@ public class GlowView extends View {
 	 *            The color to make the glow
 	 */
 	public void doGlow(Rect bounds, int color) {
+		ViewHelper.setAlpha(mThis, 0.1f);
+		//ViewHelper.setAlpha(mThis, 0.4f);
+		setVisible(true);
+		Util.log("Glow");
 		// cancel any existing animation
 		clearAnimation();
-
 		setEdges(color, bounds);
 
-		invalidate();
+		mQueueAnimation = true;
 
-		startAnimation(mAnimation);
+		invalidate();
 	}
 
 	/**
@@ -109,46 +115,57 @@ public class GlowView extends View {
 		// above the top
 		r = new Rect(t.left, t.top - w, t.right, t.top);
 		mEdges[0].setRect(r);
-		mEdges[0].setGradient(createGradient(r, color));
+		mEdges[0].setGradient(createGradient(r, color, false));
 
 		// below the top
-		r = new Rect(t.left, t.top + w, t.right, t.top);
+		r = new Rect(t.left, t.top, t.right, t.top + w);
 		mEdges[1].setRect(r);
-		mEdges[1].setGradient(createGradient(r, color));
+		mEdges[1].setGradient(createGradient(r, color, true));
 
 		// outside the right
 		r = new Rect(t.right, t.top, t.right + w, t.bottom);
 		mEdges[2].setRect(r);
-		mEdges[2].setGradient(createGradient(r, color));
+		mEdges[2].setGradient(createGradient(r, color, false));
 
 		// inside the right
-		r = new Rect(t.right, t.top, t.right - w, t.bottom);
+		r = new Rect(t.right - w, t.top, t.right, t.bottom);
 		mEdges[3].setRect(r);
-		mEdges[3].setGradient(createGradient(r, color));
+		mEdges[3].setGradient(createGradient(r, color, true));
 
 		// below the bottom
-		r = new Rect(t.left, t.bottom - w, t.right, t.bottom);
+		r = new Rect(t.left, t.bottom, t.right, t.bottom + w);
 		mEdges[4].setRect(r);
-		mEdges[4].setGradient(createGradient(r, color));
+		mEdges[4].setGradient(createGradient(r, color, true));
 
 		// above the bottom
-		r = new Rect(t.left, t.bottom + w, t.right, t.bottom);
+		r = new Rect(t.left, t.bottom - w, t.right, t.bottom);
 		mEdges[5].setRect(r);
-		mEdges[5].setGradient(createGradient(r, color));
+		mEdges[5].setGradient(createGradient(r, color, false));
 
 		// outside the left
-		r = new Rect(t.left, t.top, t.left - w, t.bottom);
+		r = new Rect(t.left - w, t.top, t.left, t.bottom);
 		mEdges[6].setRect(r);
-		mEdges[6].setGradient(createGradient(r, color));
+		mEdges[6].setGradient(createGradient(r, color, true));
 
 		// inside the left
 		r = new Rect(t.left, t.top, t.left + w, t.bottom);
 		mEdges[7].setRect(r);
-		mEdges[7].setGradient(createGradient(r, color));
+		mEdges[7].setGradient(createGradient(r, color, false));
 
 	}
 
-	public Shader createGradient(Rect r, int color) {
+	public Shader createGradient(Rect r, int color, boolean invert) {
+		// create a copy and invert it if necessary
+		r = new Rect(r);
+		if(invert){
+			int top = r.top;
+			int left = r.left;
+			r.left = r.right;
+			r.right = left;
+			r.top = r.bottom;
+			r.bottom = top;
+		}
+		
 		// if the rect is wider than it is tall then the gradient should run
 		// vertically
 		boolean vertical = Math.abs(r.left - r.right) > Math.abs(r.top
@@ -169,12 +186,12 @@ public class GlowView extends View {
 	private void createAnimation() {
 		Animation fadeIn = new AlphaAnimation(0, 1);
 		fadeIn.setInterpolator(new DecelerateInterpolator());
-		fadeIn.setDuration(FADE_IN_DURATION);
+		fadeIn.setDuration(FADE_DURATION);
 
 		Animation fadeOut = new AlphaAnimation(1, 0);
 		fadeOut.setInterpolator(new AccelerateInterpolator());
-		fadeOut.setStartOffset(FADE_IN_DURATION + FADE_PAUSE);
-		fadeOut.setDuration(FADE_OUT_DURATION);
+		fadeOut.setStartOffset(FADE_DURATION);
+		fadeOut.setDuration(FADE_DURATION);
 
 		mAnimation = new AnimationSet(false);
 		mAnimation.addAnimation(fadeIn);
@@ -182,8 +199,10 @@ public class GlowView extends View {
 
 		mAnimation.setAnimationListener(new AnimationListener() {
 			public void onAnimationEnd(Animation animation) {
+				Util.log("On animate end");
 				// hide again
 				setVisible(false);
+				ViewHelper.setAlpha(mThis, 0.1f);
 			}
 
 			public void onAnimationRepeat(Animation animation) {
@@ -191,8 +210,10 @@ public class GlowView extends View {
 			}
 
 			public void onAnimationStart(Animation animation) {
+				Util.log("On animate start");
 				// show
 				setVisible(true);
+				ViewHelper.setAlpha(mThis, 1f);
 			}
 		});
 
@@ -200,9 +221,16 @@ public class GlowView extends View {
 
 	@Override
 	protected void onDraw(Canvas canvas) {
+		Util.log("Draw");
 		// draw each of the edges around the target
 		for (EdgeGradient e : mEdges) {
 			canvas.drawRect(e.r, e.p);
+		}
+		
+		if(mQueueAnimation){
+			mQueueAnimation = false;
+			Util.log("animate");
+			startAnimation(mAnimation);
 		}
 	}
 
