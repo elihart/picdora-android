@@ -142,10 +142,8 @@ public class ChannelViewActivity extends FragmentActivity implements
 				R.drawable.ic_sat_menu_item_star));
 		items.add(new SatelliteMenuItem(R.id.sat_item_share,
 				R.drawable.ic_sat_menu_item_share));
-		items.add(new SatelliteMenuItem(R.id.sat_item_dislike,
-				R.drawable.ic_sat_menu_item_dislike));
-		items.add(new SatelliteMenuItem(R.id.sat_item_liked,
-				R.drawable.ic_sat_menu_item_like));
+		items.add(new SatelliteMenuItem(R.id.sat_item_search,
+				R.drawable.ic_sat_menu_item_search));
 
 		menu.addItems(items);
 
@@ -154,11 +152,14 @@ public class ChannelViewActivity extends FragmentActivity implements
 			@Override
 			public void eventOccured(int id) {
 				switch (id) {
-				case R.id.sat_item_liked:
-					likeClicked();
-					break;
-				case R.id.sat_item_dislike:
-					dislikeClicked();
+				// case R.id.sat_item_liked:
+				// likeClicked();
+				// break;
+				// case R.id.sat_item_dislike:
+				// dislikeClicked();
+				// break;
+				case R.id.sat_item_search:
+					searchClicked();
 					break;
 				case R.id.sat_item_share:
 					shareClicked();
@@ -175,6 +176,18 @@ public class ChannelViewActivity extends FragmentActivity implements
 				}
 			}
 		});
+	}
+
+	protected void searchClicked() {
+		mChannelPlayer.getImageAsync(pager.getCurrentItem(), false,
+				new OnGetChannelImageResultListener() {
+
+					@Override
+					public void onGetChannelImageResult(ChannelImage image) {
+						ImageUtils.lookupImage(mContext, image.getImgurId());
+					}
+				});
+
 	}
 
 	protected void reportClicked() {
@@ -206,7 +219,6 @@ public class ChannelViewActivity extends FragmentActivity implements
 	}
 
 	protected void starClicked() {
-		// TODO Auto-generated method stub
 
 	}
 

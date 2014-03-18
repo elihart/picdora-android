@@ -236,6 +236,14 @@ public abstract class ImageUtils {
 				});
 
 	}
+	
+	public static void lookupImage(Activity context, String imgurId){
+		String query = "https://www.google.com/searchbyimage?&image_url=" + getImgurLink(imgurId, IMGUR_SIZE.FULL);
+
+		Intent i = new Intent(Intent.ACTION_VIEW);
+		i.setData(Uri.parse(query));
+		context.startActivity(i);
+	}
 
 	/**
 	 * Callback for when an image download completes

@@ -5,6 +5,7 @@
     <item name="sat_item_download" type="id"/>
     <item name="sat_item_star" type="id"/>
     <item name="sat_item_share" type="id"/>
+    <item name="sat_item_search" type="id"/>
     <item name="sat_item_dislike" type="id"/>
     <item name="sat_item_liked" type="id"/>
 </resources>
