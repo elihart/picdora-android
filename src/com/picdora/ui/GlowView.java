@@ -20,6 +20,7 @@ import android.view.animation.AnimationSet;
 import android.view.animation.DecelerateInterpolator;
 
 import com.nineoldandroids.view.ViewHelper;
+import com.picdora.Util;
 
 /**
  * Creates a rectangular glow that fades in and then out. You pass the Rect that
@@ -138,8 +139,6 @@ public class GlowView extends View {
 	 * 
 	 */
 	public void doGlow() {
-		// cancel any existing animation
-		clearAnimation();
 		setGlowVisibility(true);
 		startAnimation(mAnimation);
 	}
@@ -271,6 +270,7 @@ public class GlowView extends View {
 		mAnimation.setAnimationListener(new AnimationListener() {
 			public void onAnimationEnd(Animation animation) {
 				setGlowVisibility(false);
+				Util.log("glow finish");
 			}
 
 			public void onAnimationRepeat(Animation animation) {
@@ -278,6 +278,7 @@ public class GlowView extends View {
 			}
 
 			public void onAnimationStart(Animation animation) {
+				Util.log("glow start");
 			}
 		});
 	}

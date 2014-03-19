@@ -1,7 +1,6 @@
 package com.picdora.player;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import org.androidannotations.annotations.AfterViews;
@@ -53,8 +52,10 @@ import com.picdora.ui.SatelliteMenu.SatelliteMenuItem;
 public class ChannelViewActivity extends FragmentActivity implements
 		OnDownloadSpaceAvailableListener {
 	private static final int NUM_IMAGES_TO_PRELOAD = 5;
+	
+	// TODO: Like detected sometimes on pinch to zoom
 
-	// TODO: Show icon notification icon in bottom right, such as like status,
+	// TODO: Show icon notification icon in top right, such as like status,
 	// download progress/completion, etc.
 
 	// Cache the last player used and remember the user's spot so they can
@@ -201,7 +202,6 @@ public class ChannelViewActivity extends FragmentActivity implements
 		@Override
 		public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
 				float velocityY) {
-
 			// if the line isn't vertical enough then abort
 			if (Math.abs(e1.getX() - e2.getX()) > SWIPE_MAX_OFF_PATH) {
 				return false;
@@ -214,16 +214,17 @@ public class ChannelViewActivity extends FragmentActivity implements
 			// down to up
 			else if (e1.getY() - e2.getY() > SWIPE_MIN_DISTANCE
 					&& Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY) {
-
 				setLikeStatus(getCurrentFragment(), LIKE_STATUS.LIKED);
+				return true;
 			}
 			// up to down
 			else if (e2.getY() - e1.getY() > SWIPE_MIN_DISTANCE
 					&& Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY) {
 				setLikeStatus(getCurrentFragment(), LIKE_STATUS.DISLIKED);
+				return true;
 			}
 
-			return true;
+			return false;
 		}
 	}
 
