@@ -124,13 +124,13 @@ public class ImageSwipeFragment extends Fragment implements
 		if (curr == null) {
 			return false;
 		}
-		
-		/* Check if we are zoomed out, if we are zoomed out at all return true
-		 * 
+
+		/*
+		 * Check if we are zoomed out, if we are zoomed out at all return true
 		 */
-//		if((curr.top - mOriginalImageRect.top) > 5){
-//			return true;
-//		}
+		// if((curr.top - mOriginalImageRect.top) > 5){
+		// return true;
+		// }
 
 		/*
 		 * Strategy #1: Compare the bounds of the original image to the current
@@ -269,10 +269,15 @@ public class ImageSwipeFragment extends Fragment implements
 			// create a copy of the original image rect so we can tell when
 			// we're zoomed
 			mOriginalImageRect = new RectF(mPhotoView.getDisplayRect());
+			/*
+			 * When the user zooms we can update our glow bounds to follow the
+			 * image as it changes.
+			 */
 			mPhotoView.setOnMatrixChangeListener(new OnMatrixChangedListener() {
 
 				@Override
 				public void onMatrixChanged(RectF rect) {
+					// set the new bounds
 					glow.setGlowBounds(UiUtil.rect(rect));
 				}
 			});

@@ -7,6 +7,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
+import android.graphics.RadialGradient;
 import android.graphics.Rect;
 import android.graphics.Shader;
 import android.graphics.Shader.TileMode;
@@ -29,13 +30,16 @@ import com.nineoldandroids.view.ViewHelper;
  * one gradient points away as an outer glow and another points in as an inner
  * glow. Combined together these give the appearance of a uniform glow around
  * the edge.
+ * <p>
+ * A RadialGradient is added to each corner to fill it and smooth out the corner
+ * glow.
  */
 @EView
 public class GlowView extends View {
 	// We need 8 edge gradient shapes, so that we have an inside and outside
-	// glow for each of the four edges
-	private static final int EDGE_ARRAY_SIZE = 8;
-	private EdgeGradient[] mEdges;
+	// glow for each of the four edges, plus 4 more for the corners
+	private static final int GRADIENT_ARRAY_SIZE = 12;
+	private GlowGradient[] mGradients;
 
 	private AnimationSet mAnimation;
 
@@ -91,9 +95,9 @@ public class GlowView extends View {
 
 		// Create 8 gradients, an inner and outer glow for each of the four
 		// edges
-		mEdges = new EdgeGradient[EDGE_ARRAY_SIZE];
-		for (int i = 0; i < EDGE_ARRAY_SIZE; i++) {
-			mEdges[i] = new EdgeGradient();
+		mGradients = new GlowGradient[GRADIENT_ARRAY_SIZE];
+		for (int i = 0; i < GRADIENT_ARRAY_SIZE; i++) {
+			mGradients[i] = new GlowGradient();
 		}
 
 		createAnimation();
@@ -109,7 +113,7 @@ public class GlowView extends View {
 		mGlowBounds = new Rect(bounds);
 
 		if (mIsGlowing) {
-			remakeEdges();
+			calculateGradients();
 		}
 
 		return this;
@@ -126,7 +130,7 @@ public class GlowView extends View {
 		mGlowEndColor = UiUtil.adjustAlpha(color, 0);
 
 		if (mIsGlowing) {
-			remakeEdges();
+			calculateGradients();
 		}
 
 		return this;
@@ -138,7 +142,7 @@ public class GlowView extends View {
 	 * 
 	 */
 	public void doGlow() {
-		remakeEdges();
+		calculateGradients();
 		setGlowVisibility(true);
 		startAnimation(mAnimation);
 	}
@@ -147,7 +151,7 @@ public class GlowView extends View {
 	 * Set the edges to match our target bounds and color
 	 * 
 	 */
-	private void remakeEdges() {
+	private void calculateGradients() {
 		Rect rect;
 		// the width of each edge. Use this for shorthand
 		int w = GLOW_WIDTH_PX;
@@ -159,43 +163,71 @@ public class GlowView extends View {
 
 		// above the top
 		rect = new Rect(l, t - w, r, t);
-		mEdges[0].setRect(rect);
-		mEdges[0].setGradient(createGradient(rect, false));
+		mGradients[0].setRect(rect);
+		mGradients[0].setGradient(createGradient(rect, false));
 
 		// below the top
 		rect = new Rect(l, t, r, t + w);
-		mEdges[1].setRect(rect);
-		mEdges[1].setGradient(createGradient(rect, true));
+		mGradients[1].setRect(rect);
+		mGradients[1].setGradient(createGradient(rect, true));
 
 		// outside the right
 		rect = new Rect(r, t, r + w, b);
-		mEdges[2].setRect(rect);
-		mEdges[2].setGradient(createGradient(rect, false));
+		mGradients[2].setRect(rect);
+		mGradients[2].setGradient(createGradient(rect, false));
 
 		// inside the right
 		rect = new Rect(r - w, t, r, b);
-		mEdges[3].setRect(rect);
-		mEdges[3].setGradient(createGradient(rect, true));
+		mGradients[3].setRect(rect);
+		mGradients[3].setGradient(createGradient(rect, true));
 
 		// below the bottom
 		rect = new Rect(l, b, r, b + w);
-		mEdges[4].setRect(rect);
-		mEdges[4].setGradient(createGradient(rect, true));
+		mGradients[4].setRect(rect);
+		mGradients[4].setGradient(createGradient(rect, true));
 
 		// above the bottom
 		rect = new Rect(l, b - w, r, b);
-		mEdges[5].setRect(rect);
-		mEdges[5].setGradient(createGradient(rect, false));
+		mGradients[5].setRect(rect);
+		mGradients[5].setGradient(createGradient(rect, false));
 
 		// outside the left
 		rect = new Rect(l - w, t, l, b);
-		mEdges[6].setRect(rect);
-		mEdges[6].setGradient(createGradient(rect, true));
+		mGradients[6].setRect(rect);
+		mGradients[6].setGradient(createGradient(rect, true));
 
 		// inside the left
 		rect = new Rect(l, t, l + w, b);
-		mEdges[7].setRect(rect);
-		mEdges[7].setGradient(createGradient(rect, false));
+		mGradients[7].setRect(rect);
+		mGradients[7].setGradient(createGradient(rect, false));
+
+		/*
+		 * Make the corners with radial glow
+		 */
+
+		// top left
+		rect = new Rect(l - w, t - w, l, t);
+		mGradients[8].setRect(rect);
+		mGradients[8].setGradient(new RadialGradient(l, t, w, mGlowStartColor,
+				mGlowEndColor, TILE_MODE));
+
+		// top right
+		rect = new Rect(r, t - w, r + w, t);
+		mGradients[9].setRect(rect);
+		mGradients[9].setGradient(new RadialGradient(r, t, w, mGlowStartColor,
+				mGlowEndColor, TILE_MODE));
+
+		// bottom left
+		rect = new Rect(l - w, b, l, b + w);
+		mGradients[10].setRect(rect);
+		mGradients[10].setGradient(new RadialGradient(l, b, w, mGlowStartColor,
+				mGlowEndColor, TILE_MODE));
+
+		// bottom right
+		rect = new Rect(r, b, r + w, b + w);
+		mGradients[11].setRect(rect);
+		mGradients[11].setGradient(new RadialGradient(r, b, w, mGlowStartColor,
+				mGlowEndColor, TILE_MODE));
 
 		// Invalidate the view since our edges have been changed
 		invalidate();
@@ -281,7 +313,7 @@ public class GlowView extends View {
 	@Override
 	protected void onDraw(Canvas canvas) {
 		// Draw each edge only if it has been set to show
-		for (EdgeGradient e : mEdges) {
+		for (GlowGradient e : mGradients) {
 			if (e.show) {
 				canvas.drawRect(e.r, e.p);
 			}
@@ -308,13 +340,13 @@ public class GlowView extends View {
 	 * Helper class to hold the glow for an edge. Holds the Rect that the glow
 	 * will be held over and the Paint to draw it's gradient.
 	 */
-	private class EdgeGradient {
+	private class GlowGradient {
 		public final Rect r;
 		public final Paint p;
 		// whether this edge should be used. Default to true.
 		public boolean show;
 
-		public EdgeGradient() {
+		public GlowGradient() {
 			p = new Paint(Paint.ANTI_ALIAS_FLAG);
 			p.setDither(true);
 			p.setFilterBitmap(true);
