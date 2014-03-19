@@ -245,7 +245,8 @@ public class ChannelCreationActivity extends PicdoraActivity {
 
 		Channel channel = null;
 		if (preview) {
-			channel = new ChannelPreview(categories, channelInfoState.gifSetting);
+			channel = new ChannelPreview(categories,
+					channelInfoState.gifSetting);
 		} else {
 			channel = new Channel(channelInfoState.channelName, categories,
 					channelInfoState.gifSetting);
@@ -321,8 +322,9 @@ public class ChannelCreationActivity extends PicdoraActivity {
 			setLoadingStatus(false);
 		}
 
-		// if the user chose to create the channel then validate, save, and
-		// finish the activity before showing it
+		// if the user chose to create the channel then validate, clear the
+		// saved channel info we have, and tell the activity to finish after the
+		// new channel starts
 		if (!preview) {
 			if (!channel.isValid()) {
 				Util.makeBasicToast(this, "Uh oh, invalid channel!");
@@ -330,11 +332,13 @@ public class ChannelCreationActivity extends PicdoraActivity {
 			}
 
 			clearSavedState();
-			channel.saveAsync();
 			finish();
 		}
 
-		ChannelUtils.playChannel(channel, !preview, this);
+		/* If we're doing a preview then don't cache or save the channel
+		 * 
+		 */
+		ChannelUtils.playChannel(channel, !preview, this, !preview);
 	}
 
 	@UiThread

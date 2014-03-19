@@ -209,6 +209,7 @@ public class ChannelPlayer {
 				images.add(channelImage);
 			}
 		}
+		
 		list.close();
 
 		return resultCount;

@@ -26,6 +26,8 @@ public class PicdoraApp extends Application {
 	protected PicdoraSyncManager mSyncManager;
 	@Pref
 	protected PicdoraPreferences_ mPrefs;
+	
+	public static final boolean DEBUG = true;
 
 	@Override
 	public void onCreate() {

@@ -123,9 +123,6 @@ public class ChannelViewActivity extends FragmentActivity implements
 		String json = getIntent().getStringExtra("channel");
 		Channel channel = Util.fromJson(json, Channel.class);
 
-		channel.setLastUsed(new Date());
-		channel.saveAsync();
-
 		// check if we can use the cached player, if not create a new one
 		if (mOnConfigChangeState != null) {
 			resumeState(mOnConfigChangeState);

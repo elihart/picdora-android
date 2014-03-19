@@ -3,6 +3,7 @@ package com.picdora;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 import org.androidannotations.annotations.EBean;
@@ -30,14 +31,25 @@ public class ChannelUtils {
 	@RootContext
 	Context context;
 
-	
-
+	/**
+	 * Launch the ChannelViewActivity with the given channel.
+	 * 
+	 * @param channel The channel to play.
+	 * @param cache Whether the ChannelViewActivity should cache the channel for future use.
+	 * @param activity The activity context to start from.
+	 * @param save Whether the channel should be saved and it's Last Used field updated to now. Save is synchronous!
+	 */
 	public static void playChannel(Channel channel, boolean cache,
-			Activity activity) {
-		if(channel == null){
+			Activity activity, boolean save) {
+		if (channel == null) {
 			throw new IllegalArgumentException("Channel can't be null");
 		}
-		
+
+		if (save) {
+			channel.setLastUsed(new Date());
+			channel.save();
+		}
+
 		Intent intent = new Intent(activity, ChannelViewActivity_.class);
 		intent.putExtra("channel", Util.toJson(channel));
 		intent.putExtra("cache", cache);
