@@ -20,7 +20,6 @@ import android.view.animation.AnimationSet;
 import android.view.animation.DecelerateInterpolator;
 
 import com.nineoldandroids.view.ViewHelper;
-import com.picdora.Util;
 
 /**
  * Creates a rectangular glow that fades in and then out. You pass the Rect that
@@ -58,7 +57,7 @@ public class GlowView extends View {
 	private int mGlowColor;
 
 	// the tile mode to use with the gradients
-	private static final TileMode TILE_MODE = android.graphics.Shader.TileMode.MIRROR;
+	private static final TileMode TILE_MODE = android.graphics.Shader.TileMode.CLAMP;
 
 	public GlowView(Context context, AttributeSet attrs, int defStyleAttr) {
 		super(context, attrs, defStyleAttr);
@@ -139,7 +138,6 @@ public class GlowView extends View {
 	 * 
 	 */
 	public void doGlow() {
-		Util.log("Glow");
 		// cancel any existing animation
 		clearAnimation();
 		setGlowVisibility(true);
@@ -272,7 +270,6 @@ public class GlowView extends View {
 		 */
 		mAnimation.setAnimationListener(new AnimationListener() {
 			public void onAnimationEnd(Animation animation) {
-				Util.log("animation end");
 				setGlowVisibility(false);
 			}
 
@@ -281,7 +278,6 @@ public class GlowView extends View {
 			}
 
 			public void onAnimationStart(Animation animation) {
-				Util.log("animation start");
 			}
 		});
 	}
