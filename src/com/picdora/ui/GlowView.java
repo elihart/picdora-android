@@ -33,8 +33,6 @@ import com.picdora.Util;
  */
 @EView
 public class GlowView extends View {
-	private View mThis;
-
 	// We need 8 edge gradient shapes, so that we have an inside and outside
 	// glow for each of the four edges
 	private static final int EDGE_ARRAY_SIZE = 8;
@@ -42,19 +40,22 @@ public class GlowView extends View {
 
 	private AnimationSet mAnimation;
 
+	private static final int DEFAULT_COLOR = Color.RED;
+
 	// how long to spend fading each way
 	private static final int FADE_IN_DURATION = 200;
 	private static final int FADE_OUT_DURATION = 400;
+	// How long to pause at maximum glow between fading in and fading out
 	private static final int FADE_PAUSE_DURATION = 200;
-	
 
 	private static int GLOW_WIDTH_PX;
 	private static final int GLOW_WIDTH_DP = 30;
-
+	// The maximum transparency to use when showing the glow
 	private static final float ALPHA = .7f;
 
-	// Set to true to indicate we should start the animation after the next draw
-	private boolean mQueueAnimation;
+	private Rect mGlowBounds;
+
+	private int mGlowColor;
 
 	// the tile mode to use with the gradients
 	private static final TileMode TILE_MODE = android.graphics.Shader.TileMode.MIRROR;
@@ -78,12 +79,13 @@ public class GlowView extends View {
 	 * Create the paints we will need, and set the view to hidden to begin with.
 	 */
 	private void init() {
-		mThis = this;
-		setVisible(false, true);
+		setGlowVisibility(false);
 
 		// convert our desired glow size to pixels based on the device screen
 		// density
 		GLOW_WIDTH_PX = UiUtil.dpToPixel(GLOW_WIDTH_DP);
+
+		mGlowColor = DEFAULT_COLOR;
 
 		// Create 8 gradients, an inner and outer glow for each of the four
 		// edges
@@ -96,79 +98,112 @@ public class GlowView extends View {
 	}
 
 	/**
-	 * Animate a glowing rectangle of the given color that fades in and then out
+	 * Set the rectangle that the glow should highlight. Will redraw glow but
+	 * not change visibility or animation.
 	 * 
 	 * @param bounds
-	 *            The bounds to create the rectangle with relative to this view
-	 * @param color
-	 *            The color to make the glow
 	 */
-	public void doGlow(Rect bounds, int color) {
-
-		// ViewHelper.setAlpha(mThis, 0.4f);
-		setVisible(true, true);
-		Util.log("Glow");
-		// cancel any existing animation
-		clearAnimation();
-		setEdges(color, bounds);
-
-		mQueueAnimation = true;
-
-		invalidate();
+	public void setGlowBounds(Rect bounds) {
+		mGlowBounds = bounds;
+		remakeEdges();
 	}
 
 	/**
-	 * Set the edges to match the given Rect bounds and use the given color
+	 * Set the color to use for the glow. Will redraw glow but not change
+	 * visibility or animation.
 	 * 
 	 * @param color
-	 * @param t
-	 *            The target rectangle whose edges we should cover
 	 */
-	private void setEdges(int color, Rect t) {
+	public void setGlowColor(int color) {
+		mGlowColor = color;
+		remakeEdges();
+	}
+
+	/**
+	 * Set the color and bounds to use for the glow. Will redraw glow but not
+	 * change visibility or animation. If you need to change both this is more
+	 * efficient that separately setting the color and bounds as this will only
+	 * redraw once instead of twice.
+	 * 
+	 * @param color
+	 */
+	public void setGlowBoundsAndColor(Rect bounds, int color) {
+		mGlowBounds = bounds;
+		mGlowColor = color;
+		remakeEdges();
+	}
+
+	/**
+	 * Start the glowing animation with whatever bounds and color have been set.
+	 * Cancels any current animation to start this one.
+	 * 
+	 */
+	public void doGlow() {
+		Util.log("Glow");
+		// cancel any existing animation
+		clearAnimation();
+		startAnimation(mAnimation);
+	}
+
+	/**
+	 * Set the edges to match our target bounds and color
+	 * 
+	 */
+	private void remakeEdges() {
 		Rect r;
 		// the width of each edge. Use this for shorthand
 		int w = GLOW_WIDTH_PX;
 
 		// above the top
-		r = new Rect(t.left, t.top - w, t.right, t.top);
+		r = new Rect(mGlowBounds.left, mGlowBounds.top - w, mGlowBounds.right,
+				mGlowBounds.top);
 		mEdges[0].setRect(r);
-		mEdges[0].setGradient(createGradient(r, color, false));
+		mEdges[0].setGradient(createGradient(r, mGlowColor, false));
 
 		// below the top
-		r = new Rect(t.left, t.top, t.right, t.top + w);
+		r = new Rect(mGlowBounds.left, mGlowBounds.top, mGlowBounds.right,
+				mGlowBounds.top + w);
 		mEdges[1].setRect(r);
-		mEdges[1].setGradient(createGradient(r, color, true));
+		mEdges[1].setGradient(createGradient(r, mGlowColor, true));
 
 		// outside the right
-		r = new Rect(t.right, t.top, t.right + w, t.bottom);
+		r = new Rect(mGlowBounds.right, mGlowBounds.top, mGlowBounds.right + w,
+				mGlowBounds.bottom);
 		mEdges[2].setRect(r);
-		mEdges[2].setGradient(createGradient(r, color, false));
+		mEdges[2].setGradient(createGradient(r, mGlowColor, false));
 
 		// inside the right
-		r = new Rect(t.right - w, t.top, t.right, t.bottom);
+		r = new Rect(mGlowBounds.right - w, mGlowBounds.top, mGlowBounds.right,
+				mGlowBounds.bottom);
 		mEdges[3].setRect(r);
-		mEdges[3].setGradient(createGradient(r, color, true));
+		mEdges[3].setGradient(createGradient(r, mGlowColor, true));
 
 		// below the bottom
-		r = new Rect(t.left, t.bottom, t.right, t.bottom + w);
+		r = new Rect(mGlowBounds.left, mGlowBounds.bottom, mGlowBounds.right,
+				mGlowBounds.bottom + w);
 		mEdges[4].setRect(r);
-		mEdges[4].setGradient(createGradient(r, color, true));
+		mEdges[4].setGradient(createGradient(r, mGlowColor, true));
 
 		// above the bottom
-		r = new Rect(t.left, t.bottom - w, t.right, t.bottom);
+		r = new Rect(mGlowBounds.left, mGlowBounds.bottom - w,
+				mGlowBounds.right, mGlowBounds.bottom);
 		mEdges[5].setRect(r);
-		mEdges[5].setGradient(createGradient(r, color, false));
+		mEdges[5].setGradient(createGradient(r, mGlowColor, false));
 
 		// outside the left
-		r = new Rect(t.left - w, t.top, t.left, t.bottom);
+		r = new Rect(mGlowBounds.left - w, mGlowBounds.top, mGlowBounds.left,
+				mGlowBounds.bottom);
 		mEdges[6].setRect(r);
-		mEdges[6].setGradient(createGradient(r, color, true));
+		mEdges[6].setGradient(createGradient(r, mGlowColor, true));
 
 		// inside the left
-		r = new Rect(t.left, t.top, t.left + w, t.bottom);
+		r = new Rect(mGlowBounds.left, mGlowBounds.top, mGlowBounds.left + w,
+				mGlowBounds.bottom);
 		mEdges[7].setRect(r);
-		mEdges[7].setGradient(createGradient(r, color, false));
+		mEdges[7].setGradient(createGradient(r, mGlowColor, false));
 
+		// Invalidate the view since our edges have been changed
+		invalidate();
 	}
 
 	/**
@@ -230,13 +265,11 @@ public class GlowView extends View {
 		mAnimation.addAnimation(fadeIn);
 		mAnimation.addAnimation(fadeOut);
 
-		// We need to turn the view visibility on for onDraw to be called,
-		// however, to prevent the glow flickering while it draws we set the
-		// alpha very low so it is barely visible
+		// Turn the glow visibility on when the animation starts and hide it
+		// again at the end
 		mAnimation.setAnimationListener(new AnimationListener() {
 			public void onAnimationEnd(Animation animation) {
-				// hide again
-				setVisible(false, true);
+				setGlowVisibility(false);
 			}
 
 			public void onAnimationRepeat(Animation animation) {
@@ -244,45 +277,34 @@ public class GlowView extends View {
 			}
 
 			public void onAnimationStart(Animation animation) {
-				// show
-				setVisible(true, false);
+				setGlowVisibility(true);
 			}
 		});
 	}
 
 	@Override
 	protected void onDraw(Canvas canvas) {
-		// draw each of the edges around the target
+		// Draw each edge only if it has been set to show
 		for (EdgeGradient e : mEdges) {
-			canvas.drawRect(e.r, e.p);
-		}
-
-		// start the animation if it's in queue
-		if (mQueueAnimation) {
-			mQueueAnimation = false;
-			startAnimation(mAnimation);
+			if (e.show) {
+				canvas.drawRect(e.r, e.p);
+			}
 		}
 	}
 
 	/**
-	 * Set whether we should be visible or not.
+	 * Set whether the glow should be visible. If set to false the alpha level
+	 * will be set to 0, so it is still drawn but transparent. On true the alpha
+	 * level will be set to {@value #ALPHA}.
 	 * 
-	 * @param transparent True if the image should be made completely transparent, false otherwise
-	 * 
-	 * @param hidden
+	 * @param visible
 	 *            True to show this view, false to hide it.
 	 */
-	private void setVisible(boolean visible, boolean transparent) {
-		if (transparent) {
-			ViewHelper.setAlpha(mThis, 0.1f);
-		} else {
-			ViewHelper.setAlpha(mThis, ALPHA);
-		}
-		
+	private void setGlowVisibility(boolean visible) {
 		if (visible) {
-			setVisibility(View.VISIBLE);
+			ViewHelper.setAlpha(this, ALPHA);
 		} else {
-			setVisibility(View.INVISIBLE);
+			ViewHelper.setAlpha(this, 0f);
 		}
 	}
 
@@ -293,11 +315,13 @@ public class GlowView extends View {
 	private class EdgeGradient {
 		public final Rect r;
 		public final Paint p;
+		// whether this edge should be used. Default to true.
+		public boolean show;
 
 		public EdgeGradient() {
 			p = new Paint(Paint.ANTI_ALIAS_FLAG);
 			p.setDither(true);
-
+			show = true;
 			r = new Rect();
 		}
 

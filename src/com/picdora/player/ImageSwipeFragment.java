@@ -27,6 +27,7 @@ import com.picdora.models.ChannelImage;
 import com.picdora.models.ChannelImage.LIKE_STATUS;
 import com.picdora.player.ChannelPlayer.OnGetChannelImageResultListener;
 import com.picdora.ui.GlowView;
+import com.picdora.ui.UiUtil;
 
 /**
  * Display an image for the ChannelViewActivity
@@ -186,8 +187,7 @@ public class ImageSwipeFragment extends Fragment implements
 			loadStart = new Date();
 			downloading = false;
 			// Util.log("Load " + mImage.getImgurId());
-			// PicdoraImageLoader.instance().loadImage(mImage.getImage(), this);
-			onSuccess(getResources().getDrawable(R.drawable.test));
+			PicdoraImageLoader.instance().loadImage(mImage.getImage(), this);
 		}
 	}
 
@@ -265,8 +265,8 @@ public class ImageSwipeFragment extends Fragment implements
 			mPhotoView.setOnMatrixChangeListener(new OnMatrixChangedListener() {
 
 				@Override
-				public void onMatrixChanged(RectF arg0) {
-					glow.clearAnimation();
+				public void onMatrixChanged(RectF rect) {
+					glow.setGlowBounds(UiUtil.rect(rect));
 				}
 			});
 		}
@@ -373,8 +373,7 @@ public class ImageSwipeFragment extends Fragment implements
 		}
 
 		// create an int rect from the RectF
-		Rect bounds = new Rect((int) r.left, (int) r.top, (int) r.right,
-				(int) r.bottom);
+		Rect bounds = UiUtil.rect(r);
 
 		int color;
 		switch (status) {
@@ -391,7 +390,8 @@ public class ImageSwipeFragment extends Fragment implements
 			color = mColorTransparent;
 		}
 
-		glow.doGlow(bounds, color);
+		glow.setGlowBoundsAndColor(bounds, color);
+		glow.doGlow();
 	}
 
 	public ChannelImage getImage() {
