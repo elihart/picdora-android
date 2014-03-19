@@ -28,6 +28,9 @@ import com.picdora.models.ChannelImage.LIKE_STATUS;
 import com.picdora.player.ChannelPlayer.OnGetChannelImageResultListener;
 import com.picdora.ui.GlowView;
 
+/**
+ * Display an image for the ChannelViewActivity
+ */
 @EFragment(R.layout.fragment_swipable_image)
 public class ImageSwipeFragment extends Fragment implements
 		PicdoraImageLoader.LoadCallbacks {
@@ -105,6 +108,11 @@ public class ImageSwipeFragment extends Fragment implements
 
 	}
 
+	/**
+	 * Check whether our image is zoomed in or not.
+	 * 
+	 * @return
+	 */
 	public boolean isZoomed() {
 		if (mPhotoView == null || mActivity == null) {
 			return false;
@@ -178,7 +186,8 @@ public class ImageSwipeFragment extends Fragment implements
 			loadStart = new Date();
 			downloading = false;
 			// Util.log("Load " + mImage.getImgurId());
-			PicdoraImageLoader.instance().loadImage(mImage.getImage(), this);
+			// PicdoraImageLoader.instance().loadImage(mImage.getImage(), this);
+			onSuccess(getResources().getDrawable(R.drawable.test));
 		}
 	}
 
@@ -292,14 +301,17 @@ public class ImageSwipeFragment extends Fragment implements
 			handleDeletedImage();
 			break;
 		default:
-			// TODO: Show error imge
+			// TODO: Show error image
 			showLoadingCircle();
 			break;
 		}
 	}
 
+	/**
+	 * When our image turns out to be deleted we can request another, and if
+	 * that fails we can show a message on screen.
+	 */
 	private void handleDeletedImage() {
-		// TODO: Set up reporting to server and save to db
 		mImage.getImage().setDeleted(true);
 
 		if (!viewActive) {
@@ -336,7 +348,8 @@ public class ImageSwipeFragment extends Fragment implements
 	}
 
 	/**
-	 * Make the image glow in response to a like event
+	 * Set our image with the given like status, and make it glow in response to
+	 * a like event.
 	 * 
 	 * @param status
 	 *            The new status type that the glow should reflect
