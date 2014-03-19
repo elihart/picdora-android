@@ -142,6 +142,7 @@ public class GlowView extends View {
 		Util.log("Glow");
 		// cancel any existing animation
 		clearAnimation();
+		setGlowVisibility(true);
 		startAnimation(mAnimation);
 	}
 
@@ -265,10 +266,13 @@ public class GlowView extends View {
 		mAnimation.addAnimation(fadeIn);
 		mAnimation.addAnimation(fadeOut);
 
-		// Turn the glow visibility on when the animation starts and hide it
-		// again at the end
+		/*
+		 * Turn the glow visibility on when the animation starts and hide it
+		 * again at the end
+		 */
 		mAnimation.setAnimationListener(new AnimationListener() {
 			public void onAnimationEnd(Animation animation) {
+				Util.log("animation end");
 				setGlowVisibility(false);
 			}
 
@@ -277,7 +281,7 @@ public class GlowView extends View {
 			}
 
 			public void onAnimationStart(Animation animation) {
-				setGlowVisibility(true);
+				Util.log("animation start");
 			}
 		});
 	}
