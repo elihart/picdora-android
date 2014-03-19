@@ -66,8 +66,10 @@ public class SatelliteMenu extends FrameLayout {
 	private int expandDuration = DEFAULT_EXPAND_DURATION;
 	private boolean closeItemsOnClick = DEFAULT_CLOSE_ON_CLICK;
 
-	// if the menu image is undergoing a fade out animation
-	private boolean menuFadingOut;
+	/**
+	 * if the menu image is undergoing a fade out animation
+	 */
+	private boolean menuFadingOut = false;
 
 	public SatelliteMenu(Context context) {
 		super(context);
@@ -117,6 +119,7 @@ public class SatelliteMenu extends FrameLayout {
 		Animation.AnimationListener plusAnimationListener = new Animation.AnimationListener() {
 			@Override
 			public void onAnimationStart(Animation animation) {
+
 			}
 
 			@Override
@@ -148,9 +151,9 @@ public class SatelliteMenu extends FrameLayout {
 	}
 
 	private void onClick() {
-		showMenu();
-
 		if (plusAnimationActive.compareAndSet(false, true)) {
+			showMenu();
+
 			if (!rotated) {
 				imgMain.startAnimation(mainRotateLeft);
 				for (SatelliteMenuItem item : menuItems) {
@@ -536,10 +539,14 @@ public class SatelliteMenu extends FrameLayout {
 
 		animation.setAnimationListener(new AnimationListener() {
 			public void onAnimationEnd(Animation animation) {
+				/*
+				 * if our fading hasn't been interrupted then set the menu as
+				 * invisible when we finish
+				 */
 				if (menuFadingOut) {
 					setMenuVisible(false);
+					menuFadingOut = false;
 				}
-				menuFadingOut = false;
 			}
 
 			public void onAnimationStart(Animation animation) {
