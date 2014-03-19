@@ -1,6 +1,7 @@
 package com.picdora.ui;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.TypedValue;
@@ -48,6 +49,20 @@ public class UiUtil {
 	public static Rect rect(RectF r) {
 		return new Rect(Math.round(r.left), Math.round(r.top),
 				Math.round(r.right), Math.round(r.bottom));
+	}
+	
+	/**
+	 * Scale the alpha level of the given color. Preserves all rgb values and only changes alpha.
+	 * @param color The color to adjust
+	 * @param factor Alpha value from 0 to 1. The current alpha level will be scaled by this amount
+	 * @return
+	 */
+	public static int adjustAlpha(int color, float factor) {
+	    int alpha = Math.round(Color.alpha(color) * factor);
+	    int red = Color.red(color);
+	    int green = Color.green(color);
+	    int blue = Color.blue(color);
+	    return Color.argb(alpha, red, green, blue);
 	}
 
 }

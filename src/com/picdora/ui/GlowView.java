@@ -20,7 +20,6 @@ import android.view.animation.AnimationSet;
 import android.view.animation.DecelerateInterpolator;
 
 import com.nineoldandroids.view.ViewHelper;
-import com.picdora.Util;
 
 /**
  * Creates a rectangular glow that fades in and then out. You pass the Rect that
@@ -43,19 +42,22 @@ public class GlowView extends View {
 	private static final int DEFAULT_COLOR = Color.RED;
 
 	// how long to spend fading each way
-	private static final int FADE_IN_DURATION = 200;
-	private static final int FADE_OUT_DURATION = 400;
+	private static final int FADE_IN_DURATION = 2000;
+	private static final int FADE_OUT_DURATION = 4000;
 	// How long to pause at maximum glow between fading in and fading out
 	private static final int FADE_PAUSE_DURATION = 200;
 
 	private static int GLOW_WIDTH_PX;
-	private static final int GLOW_WIDTH_DP = 30;
+	private static final int GLOW_WIDTH_DP = 20;
 	// The maximum transparency to use when showing the glow
 	private static final float ALPHA = .7f;
 
 	private Rect mGlowBounds;
 
-	private int mGlowColor;
+	private int mGlowStartColor;
+	private int mGlowEndColor;
+	// whether the glow animation is currently running
+	private boolean mIsGlowing;
 
 	// the tile mode to use with the gradients
 	private static final TileMode TILE_MODE = android.graphics.Shader.TileMode.CLAMP;
@@ -85,7 +87,7 @@ public class GlowView extends View {
 		// density
 		GLOW_WIDTH_PX = UiUtil.dpToPixel(GLOW_WIDTH_DP);
 
-		mGlowColor = DEFAULT_COLOR;
+		mGlowStartColor = DEFAULT_COLOR;
 
 		// Create 8 gradients, an inner and outer glow for each of the four
 		// edges
@@ -98,39 +100,36 @@ public class GlowView extends View {
 	}
 
 	/**
-	 * Set the rectangle that the glow should highlight. Will redraw glow but
-	 * not change visibility or animation.
+	 * Set the rectangle that the glow should highlight. Will update glow if the
+	 * animation is currently going.
 	 * 
 	 * @param bounds
 	 */
-	public void setGlowBounds(Rect bounds) {
-		mGlowBounds = bounds;
-		remakeEdges();
+	public GlowView setGlowBounds(Rect bounds) {
+		mGlowBounds = new Rect(bounds);
+
+		if (mIsGlowing) {
+			remakeEdges();
+		}
+
+		return this;
 	}
 
 	/**
-	 * Set the color to use for the glow. Will redraw glow but not change
-	 * visibility or animation.
+	 * Set the color to use for the glow. Will update glow if the animation is
+	 * currently going.
 	 * 
 	 * @param color
 	 */
-	public void setGlowColor(int color) {
-		mGlowColor = color;
-		remakeEdges();
-	}
+	public GlowView setGlowColor(int color) {
+		mGlowStartColor = color;
+		mGlowEndColor = UiUtil.adjustAlpha(color, 0);
 
-	/**
-	 * Set the color and bounds to use for the glow. Will redraw glow but not
-	 * change visibility or animation. If you need to change both this is more
-	 * efficient that separately setting the color and bounds as this will only
-	 * redraw once instead of twice.
-	 * 
-	 * @param color
-	 */
-	public void setGlowBoundsAndColor(Rect bounds, int color) {
-		mGlowBounds = bounds;
-		mGlowColor = color;
-		remakeEdges();
+		if (mIsGlowing) {
+			remakeEdges();
+		}
+
+		return this;
 	}
 
 	/**
@@ -139,6 +138,7 @@ public class GlowView extends View {
 	 * 
 	 */
 	public void doGlow() {
+		remakeEdges();
 		setGlowVisibility(true);
 		startAnimation(mAnimation);
 	}
@@ -148,57 +148,54 @@ public class GlowView extends View {
 	 * 
 	 */
 	private void remakeEdges() {
-		Rect r;
+		Rect rect;
 		// the width of each edge. Use this for shorthand
 		int w = GLOW_WIDTH_PX;
+		// short hand for each coordinate
+		int l = mGlowBounds.left;
+		int r = mGlowBounds.right;
+		int t = mGlowBounds.top;
+		int b = mGlowBounds.bottom;
 
 		// above the top
-		r = new Rect(mGlowBounds.left, mGlowBounds.top - w, mGlowBounds.right,
-				mGlowBounds.top);
-		mEdges[0].setRect(r);
-		mEdges[0].setGradient(createGradient(r, mGlowColor, false));
+		rect = new Rect(l, t - w, r, t);
+		mEdges[0].setRect(rect);
+		mEdges[0].setGradient(createGradient(rect, false));
 
 		// below the top
-		r = new Rect(mGlowBounds.left, mGlowBounds.top, mGlowBounds.right,
-				mGlowBounds.top + w);
-		mEdges[1].setRect(r);
-		mEdges[1].setGradient(createGradient(r, mGlowColor, true));
+		rect = new Rect(l, t, r, t + w);
+		mEdges[1].setRect(rect);
+		mEdges[1].setGradient(createGradient(rect, true));
 
 		// outside the right
-		r = new Rect(mGlowBounds.right, mGlowBounds.top, mGlowBounds.right + w,
-				mGlowBounds.bottom);
-		mEdges[2].setRect(r);
-		mEdges[2].setGradient(createGradient(r, mGlowColor, false));
+		rect = new Rect(r, t, r + w, b);
+		mEdges[2].setRect(rect);
+		mEdges[2].setGradient(createGradient(rect, false));
 
 		// inside the right
-		r = new Rect(mGlowBounds.right - w, mGlowBounds.top, mGlowBounds.right,
-				mGlowBounds.bottom);
-		mEdges[3].setRect(r);
-		mEdges[3].setGradient(createGradient(r, mGlowColor, true));
+		rect = new Rect(r - w, t, r, b);
+		mEdges[3].setRect(rect);
+		mEdges[3].setGradient(createGradient(rect, true));
 
 		// below the bottom
-		r = new Rect(mGlowBounds.left, mGlowBounds.bottom, mGlowBounds.right,
-				mGlowBounds.bottom + w);
-		mEdges[4].setRect(r);
-		mEdges[4].setGradient(createGradient(r, mGlowColor, true));
+		rect = new Rect(l, b, r, b + w);
+		mEdges[4].setRect(rect);
+		mEdges[4].setGradient(createGradient(rect, true));
 
 		// above the bottom
-		r = new Rect(mGlowBounds.left, mGlowBounds.bottom - w,
-				mGlowBounds.right, mGlowBounds.bottom);
-		mEdges[5].setRect(r);
-		mEdges[5].setGradient(createGradient(r, mGlowColor, false));
+		rect = new Rect(l, b - w, r, b);
+		mEdges[5].setRect(rect);
+		mEdges[5].setGradient(createGradient(rect, false));
 
 		// outside the left
-		r = new Rect(mGlowBounds.left - w, mGlowBounds.top, mGlowBounds.left,
-				mGlowBounds.bottom);
-		mEdges[6].setRect(r);
-		mEdges[6].setGradient(createGradient(r, mGlowColor, true));
+		rect = new Rect(l - w, t, l, b);
+		mEdges[6].setRect(rect);
+		mEdges[6].setGradient(createGradient(rect, true));
 
 		// inside the left
-		r = new Rect(mGlowBounds.left, mGlowBounds.top, mGlowBounds.left + w,
-				mGlowBounds.bottom);
-		mEdges[7].setRect(r);
-		mEdges[7].setGradient(createGradient(r, mGlowColor, false));
+		rect = new Rect(l, t, l + w, b);
+		mEdges[7].setRect(rect);
+		mEdges[7].setGradient(createGradient(rect, false));
 
 		// Invalidate the view since our edges have been changed
 		invalidate();
@@ -208,28 +205,26 @@ public class GlowView extends View {
 	 * Create a linear gradient based on the given rect. The direction will be
 	 * perpendicular to the length of the rectangle. By default the direction
 	 * will be from left to right or top to bottom, but you can set invert to
-	 * true to reverse this. The gradient will start with the given color and go
-	 * to transparent.
+	 * true to reverse this. The gradient will start with
+	 * {@link #mGlowStartColor} and go to transparent.
 	 * 
 	 * @param r
 	 *            The coords to set the gradient with
-	 * @param color
-	 *            The starting color.
 	 * @param invert
 	 *            Set to true to have the gradient go right to left or top to
 	 *            bottom.
 	 * @return
 	 */
-	private Shader createGradient(Rect r, int color, boolean invert) {
-		// create a copy and invert it if necessary
-		r = new Rect(r);
+	private Shader createGradient(Rect r, boolean invert) {
+		// invert colors if necessary
+		int start, end;
+
 		if (invert) {
-			int top = r.top;
-			int left = r.left;
-			r.left = r.right;
-			r.right = left;
-			r.top = r.bottom;
-			r.bottom = top;
+			start = mGlowEndColor;
+			end = mGlowStartColor;
+		} else {
+			start = mGlowStartColor;
+			end = mGlowEndColor;
 		}
 
 		// if the rect is wider than it is tall then the gradient should run
@@ -238,11 +233,11 @@ public class GlowView extends View {
 				- r.bottom);
 
 		if (vertical) {
-			return new LinearGradient(r.left, r.bottom, r.left, r.top, color,
-					Color.TRANSPARENT, TILE_MODE);
+			return new LinearGradient(r.left, (vertical ? r.bottom : r.left),
+					r.left, r.top, start, end, TILE_MODE);
 		} else {
-			return new LinearGradient(r.left, r.top, r.right, r.top, color,
-					Color.TRANSPARENT, TILE_MODE);
+			return new LinearGradient(r.left, r.top, r.right, r.top, start,
+					end, TILE_MODE);
 		}
 	}
 
@@ -270,7 +265,7 @@ public class GlowView extends View {
 		mAnimation.setAnimationListener(new AnimationListener() {
 			public void onAnimationEnd(Animation animation) {
 				setGlowVisibility(false);
-				Util.log("glow finish");
+				mIsGlowing = false;
 			}
 
 			public void onAnimationRepeat(Animation animation) {
@@ -278,7 +273,7 @@ public class GlowView extends View {
 			}
 
 			public void onAnimationStart(Animation animation) {
-				Util.log("glow start");
+				mIsGlowing = true;
 			}
 		});
 	}
@@ -322,6 +317,7 @@ public class GlowView extends View {
 		public EdgeGradient() {
 			p = new Paint(Paint.ANTI_ALIAS_FLAG);
 			p.setDither(true);
+			p.setFilterBitmap(true);
 			show = true;
 			r = new Rect();
 		}

@@ -124,6 +124,13 @@ public class ImageSwipeFragment extends Fragment implements
 		if (curr == null) {
 			return false;
 		}
+		
+		/* Check if we are zoomed out, if we are zoomed out at all return true
+		 * 
+		 */
+//		if((curr.top - mOriginalImageRect.top) > 5){
+//			return true;
+//		}
 
 		/*
 		 * Strategy #1: Compare the bounds of the original image to the current
@@ -390,8 +397,7 @@ public class ImageSwipeFragment extends Fragment implements
 			color = mColorTransparent;
 		}
 
-		glow.setGlowBoundsAndColor(bounds, color);
-		glow.doGlow();
+		glow.setGlowBounds(bounds).setGlowColor(color).doGlow();
 	}
 
 	public ChannelImage getImage() {
