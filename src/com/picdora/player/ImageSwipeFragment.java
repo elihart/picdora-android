@@ -132,7 +132,8 @@ public class ImageSwipeFragment extends Fragment implements
 		/**
 		 * Strategy #1: Compare the height of the original image to the current
 		 * one. If the difference is significant, (greater than
-		 * {@link #ZOOM_DIFFERENCE_THRESHOLD}), then we are zoomed either out or in.
+		 * {@link #ZOOM_DIFFERENCE_THRESHOLD}), then we are zoomed either out or
+		 * in.
 		 */
 		float dif = Math.abs(Math.abs(curr.height())
 				- Math.abs(mOriginalImageRect.height()));
@@ -262,7 +263,14 @@ public class ImageSwipeFragment extends Fragment implements
 
 				@Override
 				public void onMatrixChanged(RectF rect) {
-					// set the new bounds
+					/*
+					 * If our image had 0 size when first set then set the bounds now. This
+					 * seems to happen for gifs, maybe because they aren't immediately drawn.
+					 */
+					if (mOriginalImageRect.height() == 0) {
+						mOriginalImageRect = new RectF(rect);
+					}
+					// set the new bounds for the glow
 					glow.setGlowBounds(UiUtil.rect(rect));
 				}
 			});
