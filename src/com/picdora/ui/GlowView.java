@@ -3,6 +3,7 @@ package com.picdora.ui;
 import org.androidannotations.annotations.EView;
 
 import android.content.Context;
+import android.graphics.BlurMaskFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
@@ -350,6 +351,8 @@ public class GlowView extends View {
 			p = new Paint(Paint.ANTI_ALIAS_FLAG);
 			p.setDither(true);
 			p.setFilterBitmap(true);
+			p.setMaskFilter(new BlurMaskFilter(15, BlurMaskFilter.Blur.NORMAL));
+			
 			show = true;
 			r = new Rect();
 		}
