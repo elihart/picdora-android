@@ -46,8 +46,8 @@ public class GlowView extends View {
 	private static final int DEFAULT_COLOR = Color.RED;
 
 	// how long to spend fading each way
-	private static final int FADE_IN_DURATION = 2000;
-	private static final int FADE_OUT_DURATION = 4000;
+	private static final int FADE_IN_DURATION = 200;
+	private static final int FADE_OUT_DURATION = 400;
 	// How long to pause at maximum glow between fading in and fading out
 	private static final int FADE_PAUSE_DURATION = 200;
 

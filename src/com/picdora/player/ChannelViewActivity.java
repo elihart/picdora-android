@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.androidannotations.annotations.AfterViews;
-import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.Fullscreen;
@@ -19,10 +18,8 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
-import android.support.v4.view.GestureDetectorCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
-import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.ViewGroup;
@@ -38,7 +35,6 @@ import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.imageloader.PicdoraImageLoader.OnDownloadSpaceAvailableListener;
 import com.picdora.models.Channel;
 import com.picdora.models.ChannelImage;
-import com.picdora.models.ChannelImage.LIKE_STATUS;
 import com.picdora.player.ChannelPlayer.ChannelError;
 import com.picdora.player.ChannelPlayer.OnGetChannelImageResultListener;
 import com.picdora.player.ChannelPlayer.OnLoadListener;
@@ -52,7 +48,9 @@ import com.picdora.ui.SatelliteMenu.SatelliteMenuItem;
 public class ChannelViewActivity extends FragmentActivity implements
 		OnDownloadSpaceAvailableListener {
 	private static final int NUM_IMAGES_TO_PRELOAD = 5;
+
 	
+
 	// TODO: Like detected sometimes on pinch to zoom
 
 	// TODO: Show icon notification icon in top right, such as like status,
@@ -75,18 +73,10 @@ public class ChannelViewActivity extends FragmentActivity implements
 	@Bean
 	protected ChannelViewHelper mHelper;
 
-	protected Activity mContext;
-
-	// Gesture detection constants
-	private static final int SWIPE_MIN_DISTANCE = 120;
-	private static final int SWIPE_MAX_OFF_PATH = 250;
-	private static final int SWIPE_THRESHOLD_VELOCITY = 200;
-	private GestureDetectorCompat mDetector;
+	protected Activity mContext;	
 
 	// the fragment currently being viewed
 	private ImageSwipeFragment mCurrFragment;
-	// screen height in pixels
-	private int mScreenHeight;
 
 	// hold a copy of the player when orientation changes and the activity
 	// recreates
@@ -99,6 +89,13 @@ public class ChannelViewActivity extends FragmentActivity implements
 
 	// Loading dialog to show while channel initializes
 	private Dialog busyDialog;
+	
+	/**
+	 * Used when the user indicates a like or dislike on an image.
+	 */
+	public enum LIKE_EVENT {
+		LIKED, DISLIKED;
+	}
 
 	@AfterViews
 	void initChannel() {
@@ -106,11 +103,7 @@ public class ChannelViewActivity extends FragmentActivity implements
 		// show loading screen
 		showBusyDialog("Loading Channel...");
 
-		mHelper.initScreenHeight(root);
-
-		setupMenu();
-
-		mDetector = new GestureDetectorCompat(this, new MyGestureListener());
+		setupMenu();		
 
 		// We don't use the Universal Image loader here, it's only used for
 		// thumbnails, so lets clear out so memory and clear it's cache
@@ -153,30 +146,11 @@ public class ChannelViewActivity extends FragmentActivity implements
 		}
 	}
 
-	/**
-	 * Set the height in pixels of the window showing this activity
-	 * 
-	 * @param height
-	 */
-	public void setWindowHeight(int height) {
-		mScreenHeight = height;
-	}
-
-	/**
-	 * Get the height in pixels of the window showing this activity
-	 * 
-	 * @return
-	 */
-	public int getWindowHeight() {
-		return mScreenHeight;
-	}
-
 	@Override
-	public boolean dispatchTouchEvent(MotionEvent ev) {
+	public boolean dispatchTouchEvent(MotionEvent ev) {		
 		// Give the touch event to our gesture detector first before passing it
 		// on
-		this.mDetector.onTouchEvent(ev);
-		return super.dispatchTouchEvent(ev);
+		return mHelper.handleTouch(ev) | super.dispatchTouchEvent(ev);
 	}
 
 	/**
@@ -184,50 +158,18 @@ public class ChannelViewActivity extends FragmentActivity implements
 	 * 
 	 * @return
 	 */
-	private boolean isZoomed() {
+	public boolean isZoomed() {
 		if (mCurrFragment == null) {
 			return false;
 		} else {
 			return mCurrFragment.isZoomed();
 		}
-	}
+	}	
 
-	class MyGestureListener extends GestureDetector.SimpleOnGestureListener {
-
-		@Override
-		public boolean onDown(MotionEvent event) {
-			return true;
-		}
-
-		@Override
-		public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
-				float velocityY) {
-			// if the line isn't vertical enough then abort
-			if (Math.abs(e1.getX() - e2.getX()) > SWIPE_MAX_OFF_PATH) {
-				return false;
-			}
-
-			// don't register a fling if we're zoomed in
-			if (isZoomed()) {
-				return false;
-			}
-			// down to up
-			else if (e1.getY() - e2.getY() > SWIPE_MIN_DISTANCE
-					&& Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY) {
-				setLikeStatus(getCurrentFragment(), LIKE_STATUS.LIKED);
-				return true;
-			}
-			// up to down
-			else if (e2.getY() - e1.getY() > SWIPE_MIN_DISTANCE
-					&& Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY) {
-				setLikeStatus(getCurrentFragment(), LIKE_STATUS.DISLIKED);
-				return true;
-			}
-
-			return false;
-		}
-	}
-
+	/**
+	 * Set the current fragment being viewed. This should be called from the ImageSwipeFragment.
+	 * @param frag
+	 */
 	public void setCurrentFragment(ImageSwipeFragment frag) {
 		mCurrFragment = frag;
 	}
@@ -377,47 +319,7 @@ public class ChannelViewActivity extends FragmentActivity implements
 
 	}
 
-	/**
-	 * Toggle the like status of the image at the given position. If the image
-	 * already has the status then nothing is changed. However, the status won't
-	 * move directly from liked to disliked, it will be set to neutral first.
-	 * @param frag The fragment holding the image that was liked
-
-	 * @param status
-	 *            The state to set
-	 */
-	@Background
-	protected void setLikeStatus(ImageSwipeFragment frag, final LIKE_STATUS status) {
-		if(frag == null){
-			return;
-		}
-		ChannelImage image = frag.getImage();
-		
-		if(image == null){
-			return;
-		}
-		
-		LIKE_STATUS curr = image.getLikeStatus();
-
-		// Don't have to change anything if the status is the same
-		if (image.getLikeStatus() == status) {
-
-		}
-		// if we're currently neutral then change to the new status
-		else if (curr == LIKE_STATUS.NEUTRAL) {
-			image.setLikeStatus(status);
-			image.save();
-		}
-		// otherwise we're going from one extreme to the another, so set to
-		// neutral
-		else {
-			image.setLikeStatus(LIKE_STATUS.NEUTRAL);
-			image.save();
-		}
-
-		// show an indication on screen of the current status
-		frag.setLikeStatus(image.getLikeStatus());
-	}
+	
 
 	private void resumeState(CachedPlayerState state) {
 		mChannelPlayer = state.player;
@@ -456,8 +358,7 @@ public class ChannelViewActivity extends FragmentActivity implements
 
 	public void getImage(int position, boolean replacement,
 			final OnGetChannelImageResultListener listener) {
-		mChannelPlayer.getImageAsync(position, replacement,
-				listener);
+		mChannelPlayer.getImageAsync(position, replacement, listener);
 	}
 
 	protected void startChannel(int startingPosition) {
@@ -558,13 +459,6 @@ public class ChannelViewActivity extends FragmentActivity implements
 					pager.getCurrentItem());
 		}
 
-		// close the menu manually, otherwise it'll think it's still open when
-		// it is recreated but actually it will be closed (bug). We could try to
-		// save the open state and restore it as open
-		if (menu != null) {
-			menu.close();
-		}
-
 		dismissBusyDialog();
 	}
 
@@ -613,14 +507,16 @@ public class ChannelViewActivity extends FragmentActivity implements
 
 	/**
 	 * Get the image fragment currently visible
+	 * 
 	 * @return
 	 */
 	public ImageSwipeFragment getCurrentFragment() {
-		return mCurrFragment;		
+		return mCurrFragment;
 	}
 
 	/**
 	 * Get the root viewgroup of the activity
+	 * 
 	 * @return
 	 */
 	public ViewGroup getRootView() {

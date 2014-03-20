@@ -68,7 +68,11 @@ public class ImageSwipeFragment extends Fragment implements
 	private boolean viewActive;
 	// keep track of the original photo coords so we can tell when we are zoomed
 	private RectF mOriginalImageRect;
-	private static final int ZOOM_DIFFERENCE_THRESHOLD = 100;
+	/*
+	 * when comparing the current image bounds to the original we'll give some
+	 * leeway of a few pixels in case it's just slightly off.
+	 */
+	private static final int ZOOM_DIFFERENCE_THRESHOLD = 10;
 
 	// the number of times we have tried to load the image unsuccessfully
 	private int mLoadAttempts;
@@ -125,41 +129,22 @@ public class ImageSwipeFragment extends Fragment implements
 			return false;
 		}
 
-		/*
-		 * Check if we are zoomed out, if we are zoomed out at all return true
+		/**
+		 * Strategy #1: Compare the height of the original image to the current
+		 * one. If the difference is significant, (greater than
+		 * {@link #ZOOM_DIFFERENCE_THRESHOLD}), then we are zoomed either out or in.
 		 */
-		// if((curr.top - mOriginalImageRect.top) > 5){
-		// return true;
-		// }
+		float dif = Math.abs(Math.abs(curr.height())
+				- Math.abs(mOriginalImageRect.height()));
+		return dif > ZOOM_DIFFERENCE_THRESHOLD;
 
 		/*
-		 * Strategy #1: Compare the bounds of the original image to the current
-		 * one. If the current one is larger than we know it was zoomed in.
-		 * However, the current one could be just slightly zoomed, where we
-		 * would want to consider it not zoomed for our purposes, but this
-		 * wouldn't catch it.
+		 * Strategy #2: Check if the picture is larger than the window
+		 * vertically. If not then a vertical swipe won't move it and we can
+		 * interpret the gesture as a like action instead. The image may still
+		 * be zoomed but it's not zoomed enough to cause a gesture collision.
 		 */
-		// // sum the differences between each corner
-		// float dBottom = Math.abs(curr.bottom - mOriginalImageRect.bottom);
-		// float dTop = Math.abs(curr.top - mOriginalImageRect.top);
-		// float dLeft = Math.abs(curr.left - mOriginalImageRect.left);
-		// float dRight = Math.abs(curr.right - mOriginalImageRect.right);
-		//
-		// float dSum = dTop + dBottom + dLeft + dRight;
-		//
-		// // if the total difference is greater than our threshold then we are
-		// // zoomed. Not checking exact equality gives flexibility when the
-		// float
-		// // differences can be off by very small amounts and we are for all
-		// // intents and purposes zoomed out
-		// return dSum > ZOOM_DIFFERENCE_THRESHOLD;
-
-		// Strategy #2
-		// Check if the picture is larger than the window vertically. If not
-		// then a vertical swipe won't move it and we can interpret the gesture
-		// as a like action instead. The image may still be zoomed but it's not
-		// zoomed enough to cause a gesture collision
-		return mActivity.getWindowHeight() < Math.abs(curr.bottom - curr.top);
+		// return mActivity.getWindowHeight() < Math.abs(curr.height());
 	}
 
 	private void showLoadingCircle() {
