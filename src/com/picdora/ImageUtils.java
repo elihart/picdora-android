@@ -22,6 +22,7 @@ import android.text.TextUtils;
 
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
+import com.picdora.models.ChannelImage;
 import com.picdora.models.Image;
 
 public abstract class ImageUtils {
@@ -269,5 +270,14 @@ public abstract class ImageUtils {
 				getImgurLink(imgurId, IMGUR_SIZE.FULL));
 		sendIntent.setType("text/plain");
 		activity.startActivity(Intent.createChooser(sendIntent, "Share image"));
+	}
+
+	/**
+	 * Mark the given image as reported and notify the server of the report.
+	 * @param currentImage
+	 */
+	public static void reportImage(ChannelImage currentImage) {
+		// TODO Auto-generated method stub
+		
 	}
 }

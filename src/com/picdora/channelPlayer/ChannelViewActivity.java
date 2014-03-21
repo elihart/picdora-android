@@ -1,8 +1,5 @@
 package com.picdora.channelPlayer;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EActivity;
@@ -13,7 +10,6 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
-import android.content.DialogInterface.OnClickListener;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -27,8 +23,6 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
-import com.picdora.ImageUtils;
-import com.picdora.ImageUtils.OnDownloadCompleteListener;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.channelPlayer.ChannelPlayer.ChannelError;
@@ -38,10 +32,7 @@ import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.imageloader.PicdoraImageLoader.OnDownloadSpaceAvailableListener;
 import com.picdora.models.Channel;
 import com.picdora.models.ChannelImage;
-import com.picdora.ui.PicdoraDialog;
 import com.picdora.ui.SatelliteMenu.SatelliteMenu;
-import com.picdora.ui.SatelliteMenu.SatelliteMenu.SateliteClickedListener;
-import com.picdora.ui.SatelliteMenu.SatelliteMenuItem;
 
 @Fullscreen
 @EActivity(R.layout.activity_channel_view)
@@ -66,10 +57,13 @@ public class ChannelViewActivity extends FragmentActivity implements
 	protected PicdoraViewPager pager;
 	@ViewById
 	protected SatelliteMenu menu;
+	
 	@Bean
 	protected ChannelPlayer mChannelPlayer;
 	@Bean
 	protected LikeGestureHandler mLikeGestureHandler;
+	@Bean
+	protected MenuManager mMenuManager;
 
 	protected Activity mContext;
 
@@ -101,7 +95,7 @@ public class ChannelViewActivity extends FragmentActivity implements
 		// show loading screen
 		showBusyDialog("Loading Channel...");
 
-		setupMenu();
+		mMenuManager.initMenu(menu);
 
 		// We don't use the Universal Image loader here, it's only used for
 		// thumbnails, so lets clear out so memory and clear it's cache
@@ -176,150 +170,7 @@ public class ChannelViewActivity extends FragmentActivity implements
 		mCurrFragment = frag;
 	}
 
-	/**
-	 * Create a satellite menu to provide access to options for each picture
-	 */
-	private void setupMenu() {
-		List<SatelliteMenuItem> items = new ArrayList<SatelliteMenuItem>();
-		items.add(new SatelliteMenuItem(R.id.sat_item_report,
-				R.drawable.ic_sat_menu_item_report));
-		items.add(new SatelliteMenuItem(R.id.sat_item_download,
-				R.drawable.ic_sat_menu_item_download));
-		items.add(new SatelliteMenuItem(R.id.sat_item_star,
-				R.drawable.ic_sat_menu_item_star));
-		items.add(new SatelliteMenuItem(R.id.sat_item_share,
-				R.drawable.ic_sat_menu_item_share));
-		items.add(new SatelliteMenuItem(R.id.sat_item_search,
-				R.drawable.ic_sat_menu_item_search));
-
-		menu.addItems(items);
-
-		menu.setOnItemClickedListener(new SateliteClickedListener() {
-
-			@Override
-			public void eventOccured(int id) {
-				switch (id) {
-				// case R.id.sat_item_liked:
-				// likeClicked();
-				// break;
-				// case R.id.sat_item_dislike:
-				// dislikeClicked();
-				// break;
-				case R.id.sat_item_search:
-					searchClicked();
-					break;
-				case R.id.sat_item_share:
-					shareClicked();
-					break;
-				case R.id.sat_item_star:
-					starClicked();
-					break;
-				case R.id.sat_item_download:
-					downloadClicked();
-					break;
-				case R.id.sat_item_report:
-					reportClicked();
-					break;
-				}
-			}
-		});
-	}
-
-	protected void searchClicked() {
-		mChannelPlayer.getImageAsync(pager.getCurrentItem(), false,
-				new OnGetChannelImageResultListener() {
-
-					@Override
-					public void onGetChannelImageResult(ChannelImage image) {
-						ImageUtils.lookupImage(mContext, image.getImgurId());
-					}
-				});
-
-	}
-
-	protected void reportClicked() {
-		new PicdoraDialog.Builder(mContext)
-				.setTitle(R.string.channel_view_report_dialog_title)
-				.setMessage(R.string.channel_view_report_dialog_message)
-				.setNegativeButton(R.string.dialog_default_negative, null)
-				.setPositiveButton(
-						R.string.channel_view_report_dialog_positive_button,
-						new OnClickListener() {
-
-							@Override
-							public void onClick(DialogInterface dialog,
-									int which) {
-								reportCurrentImage();
-							}
-						}).show();
-
-	}
-
-	/**
-	 * Report the current image as being miscategorized
-	 */
-	protected void reportCurrentImage() {
-		// TODO: Mark image as reported in the database
-		// TODO: Add image to server sync table
-		// TODO: Attempt sync
-	}
-
-	protected void downloadClicked() {
-		// TODO: Notify download start
-		// get the image currently being viewed
-		mChannelPlayer.getImageAsync(pager.getCurrentItem(), false,
-				new OnGetChannelImageResultListener() {
-
-					@Override
-					public void onGetChannelImageResult(ChannelImage image) {
-						ImageUtils.saveImgurImage(getApplicationContext(),
-								image.getImgurId(),
-								new OnDownloadCompleteListener() {
-
-									@Override
-									public void onDownloadComplete(
-											boolean success) {
-										// TODO: Notify download complete
-									}
-								});
-					}
-				});
-
-	}
-
-	protected void starClicked() {
-		// TODO: Create collection select view
-
-		new PicdoraDialog.Builder(mContext)
-				.setTitle(R.string.channel_view_star_dialog_title)
-				.setMessage(R.string.channel_view_star_dialog_message)
-				.setNegativeButton(R.string.dialog_default_negative, null)
-				.setPositiveButton(
-						R.string.channel_view_star_dialog_positive_button,
-						new OnClickListener() {
-
-							@Override
-							public void onClick(DialogInterface dialog,
-									int which) {
-								// TODO: Add current image to selected
-								// collections
-
-							}
-						}).show();
-	}
-
-	protected void shareClicked() {
-		// get the image currently being viewed
-		mChannelPlayer.getImageAsync(pager.getCurrentItem(), false,
-				new OnGetChannelImageResultListener() {
-
-					@Override
-					public void onGetChannelImageResult(ChannelImage image) {
-						ImageUtils.shareImage(mContext, image.getImgurId());
-					}
-				});
-
-	}
+	
 
 	private void resumeState(CachedPlayerState state) {
 		mChannelPlayer = state.player;
@@ -374,7 +225,7 @@ public class ChannelViewActivity extends FragmentActivity implements
 					mCachedState.position = pos;
 				}
 				// close menu when image changes
-				menu.close();
+				mMenuManager.closeMenu();
 			}
 
 			@Override
@@ -512,6 +363,19 @@ public class ChannelViewActivity extends FragmentActivity implements
 	 */
 	public ImageSwipeFragment getCurrentFragment() {
 		return mCurrFragment;
+	}
+	
+	/**
+	 * Get the image being shown by the currently visible fragment
+	 * 
+	 * @return The image being shown or null if not available.
+	 */
+	public ChannelImage getCurrentImage() {
+		if(mCurrFragment != null){
+			return mCurrFragment.getImage();
+		}else{
+			return null;
+		}
 	}
 
 	/**
