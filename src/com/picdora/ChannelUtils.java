@@ -160,14 +160,6 @@ public class ChannelUtils {
 		}
 	}
 
-	public static void resumeCachedPlayed(Activity activity) {
-		Intent intent = new Intent(activity, ChannelViewActivity_.class);
-		intent.putExtra("channel",
-				Util.toJson(ChannelViewActivity.getCachedChannel()));
-		intent.putExtra("cache", true);
-		activity.startActivity(intent);
-	}
-
 	public static void showChannelDetail(Channel channel, Activity activity) {
 		Intent intent = new Intent(activity, ChannelDetailActivity_.class);
 		intent.putExtra("channel", Util.toJson(channel));

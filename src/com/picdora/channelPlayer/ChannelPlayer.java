@@ -34,7 +34,6 @@ public class ChannelPlayer {
 	private Channel mChannel;
 	// and then decide on using it
 	private List<ChannelImage> mImages;
-	private OnLoadListener mListener;
 
 	// a reserve of images used to replace deleted ones
 	private LinkedList<ChannelImage> imageQueue;
@@ -49,27 +48,64 @@ public class ChannelPlayer {
 		// empty constructor for enhanced class
 	}
 
+	/**
+	 * Initialize the player with the given channel and start loading images to
+	 * show.
+	 * 
+	 * @param channel
+	 *            The channel to load that we are going to play.
+	 * @param listener
+	 *            Callback for when load completes
+	 */
 	@Background
 	public void loadChannel(Channel channel, OnLoadListener listener) {
-		mListener = listener;
-		mChannel = channel;
-		mImages = new ArrayList<ChannelImage>();
-		imageQueue = new LinkedList<ChannelImage>();
-		loadImageBatch(TARGET_QUEUE_SIZE * 2, imageQueue);
+		ChannelError error = null;
 
-		loadChannelCompleted();
-	}
+		if (channel == null) {
+			error = ChannelError.BAD_CHANNEL;
+		} else {
+			// init arrays and fields
+			mChannel = channel;
+			mImages = new ArrayList<ChannelImage>();
+			imageQueue = new LinkedList<ChannelImage>();
+			// get the initial images to display
+			loadImageBatch(TARGET_QUEUE_SIZE * 2, imageQueue);
 
-	@UiThread
-	public void loadChannelCompleted() {
-		if (mListener == null) {
-			return;
+			// check that the load was able to populate the imageQueue
+			if (mImages.isEmpty() && imageQueue.isEmpty()) {
+				// If our lists are empty then this channel has no images to
+				// display and we have nothing to show
+				error = ChannelError.NO_IMAGES;
+			}
 		}
 
-		if (mImages.isEmpty() && imageQueue.isEmpty()) {
-			mListener.onFailure(ChannelError.NO_IMAGES);
-		} else {
-			mListener.onSuccess();
+		// alert the listener on the ui thread of the result
+		loadChannelCompleted(error, listener);
+	}
+
+	/**
+	 * Return the result of loading the channel on the UI Thread.
+	 * 
+	 * @param error
+	 *            If the load failed then this will be the cause of the fail. On
+	 *            success this should be null.
+	 * @param listener
+	 *            The listener to alert. If null then no callback will be made.
+	 */
+	@UiThread
+	protected void loadChannelCompleted(ChannelError error,
+			OnLoadListener listener) {
+		// if no listener was passed then we have nobody to alert
+		if (listener == null) {
+			return;
+		}
+		// if an error was passed then alert the failure
+		else if (error != null) {
+			listener.onFailure(error);
+		}
+		// No error. Success!
+		else {
+			listener.onSuccess();
 		}
 	}
 
@@ -81,6 +117,17 @@ public class ChannelPlayer {
 		public void onGetChannelImageResult(ChannelImage image);
 	}
 
+	/**
+	 * Get the image at the given index in a background thread.
+	 * 
+	 * @param index
+	 *            The index of the image to retrieve
+	 * @param replace
+	 *            True if a we should replace the image at the given index with
+	 *            a new one, for the case where the first image was bad.
+	 * @param listener
+	 *            Callback for when the image is ready
+	 */
 	@Background
 	public void getImageAsync(int index, boolean replace,
 			OnGetChannelImageResultListener listener) {
@@ -98,6 +145,16 @@ public class ChannelPlayer {
 		}
 	}
 
+	/**
+	 * Get the image at the given index on the ui thread. Careful, this might do
+	 * a db access.
+	 * 
+	 * @param index
+	 *            The index of the image to retrieve
+	 * @param replace
+	 *            True if a we should replace the image at the given index with
+	 *            a new one, for the case where the first image was bad.
+	 */
 	public synchronized ChannelImage getImage(int index, boolean replace) {
 		// can't replace an image we haven't loaded yet
 		if (index >= mImages.size()) {
@@ -209,7 +266,7 @@ public class ChannelPlayer {
 				images.add(channelImage);
 			}
 		}
-		
+
 		list.close();
 
 		return resultCount;
@@ -225,17 +282,12 @@ public class ChannelPlayer {
 		public void onFailure(ChannelError error);
 	}
 
+	/** Error codes for loading a channel */
 	public enum ChannelError {
-		NO_IMAGES
-	}
 
-	/**
-	 * Clean up all resources related to this player
-	 */
-	public void destroy() {
-		// set listener to null so any background threads that end won't do
-		// their callbacks
-		mListener = null;
+		/** The channel doesn't contain any images to show */
+		NO_IMAGES,
+		/** The given channel is null or is non functional */
+		BAD_CHANNEL;
 	}
-
 }

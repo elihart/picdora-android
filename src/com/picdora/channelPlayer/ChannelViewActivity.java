@@ -40,15 +40,12 @@ public class ChannelViewActivity extends FragmentActivity implements
 		OnDownloadSpaceAvailableListener {
 	private static final int NUM_IMAGES_TO_PRELOAD = 5;
 
-	// TODO: Sometimes loading seems to not begin.
+	// TODO: Review the loader for bugs, seems like sometimes things don't start
+	// loading correctly.
 
 	// TODO: Show icon notification icon in top right, such as like status,
 	// download progress/completion, etc.
 
-	// Cache the last player used and remember the user's spot so they can
-	// resume quickly
-	private static CachedPlayerState mCachedState;
-	private boolean mShouldCache;
 	private PicdoraImageLoader mIimageLoader;
 
 	@ViewById
@@ -57,7 +54,7 @@ public class ChannelViewActivity extends FragmentActivity implements
 	protected PicdoraViewPager pager;
 	@ViewById
 	protected SatelliteMenu menu;
-	
+
 	@Bean
 	protected ChannelPlayer mChannelPlayer;
 	@Bean
@@ -70,8 +67,10 @@ public class ChannelViewActivity extends FragmentActivity implements
 	// the fragment currently being viewed
 	private ImageSwipeFragment mCurrFragment;
 
-	// hold a copy of the player when orientation changes and the activity
-	// recreates
+	/**
+	 * Hold a copy of the player when orientation changes and the activity
+	 * recreates
+	 */
 	private static CachedPlayerState mOnConfigChangeState;
 
 	/**
@@ -79,8 +78,8 @@ public class ChannelViewActivity extends FragmentActivity implements
 	 */
 	private PagerAdapter mPagerAdapter;
 
-	// Loading dialog to show while channel initializes
-	private Dialog busyDialog;
+	/** Loading dialog to show while channel initializes */
+	private Dialog mLoadingDialog;
 
 	/**
 	 * Used when the user indicates a like or dislike on an image.
@@ -99,44 +98,34 @@ public class ChannelViewActivity extends FragmentActivity implements
 
 		// We don't use the Universal Image loader here, it's only used for
 		// thumbnails, so lets clear out so memory and clear it's cache
-		ImageLoader.getInstance().clearMemoryCache();
+		ImageLoader.getInstance().clearMemoryCache();		
 
 		mIimageLoader = PicdoraImageLoader.instance();
-
-		mShouldCache = getIntent().getBooleanExtra("cache", false);
 
 		// Load bundled channel and play when ready
 		String json = getIntent().getStringExtra("channel");
 		Channel channel = Util.fromJson(json, Channel.class);
-
-		// check if we can use the cached player, if not create a new one
-		if (mOnConfigChangeState != null) {
+		
+		/* If we have a saved state from before then resume it */
+		if(mOnConfigChangeState != null){
 			resumeState(mOnConfigChangeState);
-		} else if (mShouldCache && mCachedState != null
-				&& mCachedState.player.getChannel().equals(channel)) {
-			resumeState(mCachedState);
-		} else {
-			/*
-			 * We don't always want to cache what we're playing, as in the case
-			 * of apreview. Cache the player if requested, overriding the old
-			 * one. Otherwise leave the old one intact.
-			 */
-			if (mShouldCache) {
-				mCachedState = new CachedPlayerState(mChannelPlayer, 0);
+			return;
+		}
+
+		/* Otherwise we have to state to return to so start from scratch */
+		mChannelPlayer.loadChannel(channel, new OnLoadListener() {
+			@Override
+			public void onSuccess() {
+				// start on the very first image
+				startChannel(0);
 			}
 
-			mChannelPlayer.loadChannel(channel, new OnLoadListener() {
-				@Override
-				public void onSuccess() {
-					startChannel(0);
-				}
+			@Override
+			public void onFailure(ChannelError error) {
+				handleChannelLoadError(error);
+			}
+		});
 
-				@Override
-				public void onFailure(ChannelError error) {
-					handleChannelLoadError(error);
-				}
-			});
-		}
 	}
 
 	@Override
@@ -170,30 +159,18 @@ public class ChannelViewActivity extends FragmentActivity implements
 		mCurrFragment = frag;
 	}
 
-	
-
+	/**
+	 * Resume the state of a cached player. This will load the given player and
+	 * move to the set page index.
+	 * 
+	 * @param state
+	 */
 	private void resumeState(CachedPlayerState state) {
 		mChannelPlayer = state.player;
 		startChannel(state.position);
 	}
 
-	public static boolean hasCachedChannel() {
-		return mCachedState != null;
-	}
-
-	public static Channel getCachedChannel() {
-		if (hasCachedChannel()) {
-			return mCachedState.player.getChannel();
-		} else {
-			return null;
-		}
-	}
-
 	protected void handleChannelLoadError(ChannelError error) {
-		// don't cache a failed channel
-		if (mShouldCache) {
-			mCachedState = null;
-		}
 
 		String msg = "Sorry! We failed to load your channel :(";
 		switch (error) {
@@ -221,9 +198,6 @@ public class ChannelViewActivity extends FragmentActivity implements
 
 			@Override
 			public void onPageSelected(int pos) {
-				if (mShouldCache) {
-					mCachedState.position = pos;
-				}
 				// close menu when image changes
 				mMenuManager.closeMenu();
 			}
@@ -252,14 +226,15 @@ public class ChannelViewActivity extends FragmentActivity implements
 	}
 
 	public void showBusyDialog(String message) {
-		busyDialog = new Dialog(this, R.style.picdora_dialog_style);
-		busyDialog.setContentView(R.layout.lightbox_dialog);
-		((TextView) busyDialog.findViewById(R.id.dialogText)).setText(message);
+		mLoadingDialog = new Dialog(this, R.style.picdora_dialog_style);
+		mLoadingDialog.setContentView(R.layout.lightbox_dialog);
+		((TextView) mLoadingDialog.findViewById(R.id.dialogText))
+				.setText(message);
 
 		// if the user presses back while the loading dialog is up we want to
 		// cancel the whole activity and go back. Otherwise just the dialog will
 		// be canceled and they'll be left with a blank screen
-		busyDialog.setOnCancelListener(new OnCancelListener() {
+		mLoadingDialog.setOnCancelListener(new OnCancelListener() {
 
 			@Override
 			public void onCancel(DialogInterface dialog) {
@@ -268,18 +243,18 @@ public class ChannelViewActivity extends FragmentActivity implements
 			}
 		});
 
-		busyDialog.show();
+		mLoadingDialog.show();
 	}
 
 	public void dismissBusyDialog() {
-		if (busyDialog != null)
+		if (mLoadingDialog != null)
 			try {
-				busyDialog.dismiss();
+				mLoadingDialog.dismiss();
 			} catch (Exception e) {
 				// catch the "View not attached to Window Manager" errors
 			}
 
-		busyDialog = null;
+		mLoadingDialog = null;
 	}
 
 	@Override
@@ -313,6 +288,11 @@ public class ChannelViewActivity extends FragmentActivity implements
 		dismissBusyDialog();
 	}
 
+	/**
+	 * Pager Adapter for viewing the channel. Return a new image swipe fragment
+	 * for each page. We want to give the appearance of never ending images so
+	 * set the count to MAX_VALUE.
+	 */
 	private class ChannelViewPagerAdapter extends FragmentStatePagerAdapter {
 
 		public ChannelViewPagerAdapter(FragmentManager fm) {
@@ -364,16 +344,16 @@ public class ChannelViewActivity extends FragmentActivity implements
 	public ImageSwipeFragment getCurrentFragment() {
 		return mCurrFragment;
 	}
-	
+
 	/**
 	 * Get the image being shown by the currently visible fragment
 	 * 
 	 * @return The image being shown or null if not available.
 	 */
 	public ChannelImage getCurrentImage() {
-		if(mCurrFragment != null){
+		if (mCurrFragment != null) {
 			return mCurrFragment.getImage();
-		}else{
+		} else {
 			return null;
 		}
 	}

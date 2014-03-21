@@ -6,7 +6,6 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.Menu;
 
-import com.picdora.ChannelUtils;
 import com.picdora.R;
 
 @EActivity
@@ -15,8 +14,8 @@ public class ResumeActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
-		ChannelUtils.resumeCachedPlayed(this);
+
+		/* TODO: Store the last viewed channel somewhere can load it from here */
 		finish();
 	}
 

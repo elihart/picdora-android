@@ -32,12 +32,6 @@ public class SlidingMenuHelper {
 	private static ArrayList<SlidingMenuItem> getMenuEntries() {
 		ArrayList<SlidingMenuItem> items = new ArrayList<SlidingMenuItem>();
 
-		// TODO: Resume doesn't get updated on activity resume
-		if (ChannelViewActivity.hasCachedChannel()) {
-			items.add(new SlidingMenuItem(R.drawable.ic_action_play,
-					ChannelViewActivity.getCachedChannel().getName(),
-					ResumeActivity_.class));
-		}
 		items.add(new SlidingMenuItem(R.drawable.ic_action_channels,
 				"Channels", ChannelSelectionActivity_.class));
 		items.add(new SlidingMenuItem(R.drawable.ic_action_like, "Likes",
