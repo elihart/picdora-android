@@ -39,10 +39,10 @@ public class LikeGestureHandler {
 	/** The length of a swipe before we will recognize it as a like gesture */
 	private static final int SWIPE_MIN_DISTANCE = 120;
 	/**
-	 * The error threshold in a swipe being non vertical before we won't count
-	 * it as a like swipe
+	 * The error threshold of how many degrees off vertical a swipe can be
+	 * before we won't count it as a like swipe.
 	 */
-	private static final int SWIPE_MAX_OFF_PATH = 250;
+	private static final int SWIPE_ANGLE_OFF_PATH = 30;
 	/** Minimum velocity for a like swipe to count */
 	private static final int SWIPE_THRESHOLD_VELOCITY = 200;
 
@@ -173,25 +173,41 @@ public class LikeGestureHandler {
 		@Override
 		public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
 				float velocityY) {
+			LIKE_EVENT event = null;
 
-			// if the line isn't vertical enough then abort
-			if (Math.abs(e1.getX() - e2.getX()) > SWIPE_MAX_OFF_PATH) {
+			// make sure velocity is great enough
+			if (Math.abs(velocityY) < SWIPE_THRESHOLD_VELOCITY) {
 				return false;
 			}
+
+			// Make sure swipe distance is great enough
 			// down to up
-			else if (e1.getY() - e2.getY() > SWIPE_MIN_DISTANCE
-					&& Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY) {
-				handleLikeEvent(LIKE_EVENT.LIKED);
-				return true;
+			if (e1.getY() - e2.getY() > SWIPE_MIN_DISTANCE) {
+				event = LIKE_EVENT.LIKED;
 			}
 			// up to down
-			else if (e2.getY() - e1.getY() > SWIPE_MIN_DISTANCE
-					&& Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY) {
-				handleLikeEvent(LIKE_EVENT.DISLIKED);
-				return true;
+			else if (e2.getY() - e1.getY() > SWIPE_MIN_DISTANCE) {
+				event = LIKE_EVENT.DISLIKED;
 			} else {
 				return false;
 			}
+
+			/*
+			 * Make sure the line is straight vertical enough before registering
+			 * the like. Check dx for 0 to avoid NaN.
+			 */
+			float dx = Math.abs(e1.getX() - e2.getX());
+			float dy = Math.abs(e1.getY() - e2.getY());
+			if (dx == 0
+					|| Math.toDegrees(Math.atan(dx/dy)) < SWIPE_ANGLE_OFF_PATH) {
+				handleLikeEvent(event);
+				return true;
+			}
+			// otherwise abort
+			else {
+				return false;
+			}
+
 		}
 	}
 }
