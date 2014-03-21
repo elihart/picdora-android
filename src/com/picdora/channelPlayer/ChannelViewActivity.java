@@ -32,8 +32,12 @@ import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.imageloader.PicdoraImageLoader.OnDownloadSpaceAvailableListener;
 import com.picdora.models.Channel;
 import com.picdora.models.ChannelImage;
+import com.picdora.ui.PicdoraNotifier;
 import com.picdora.ui.SatelliteMenu.SatelliteMenu;
 
+/**
+ * Main activity for playing a channel.
+ */
 @Fullscreen
 @EActivity(R.layout.activity_channel_view)
 public class ChannelViewActivity extends FragmentActivity implements
@@ -54,6 +58,8 @@ public class ChannelViewActivity extends FragmentActivity implements
 	protected PicdoraViewPager pager;
 	@ViewById
 	protected SatelliteMenu menu;
+	@ViewById
+	protected PicdoraNotifier notifier;
 
 	@Bean
 	protected ChannelPlayer mChannelPlayer;
@@ -98,16 +104,16 @@ public class ChannelViewActivity extends FragmentActivity implements
 
 		// We don't use the Universal Image loader here, it's only used for
 		// thumbnails, so lets clear out so memory and clear it's cache
-		ImageLoader.getInstance().clearMemoryCache();		
+		ImageLoader.getInstance().clearMemoryCache();
 
 		mIimageLoader = PicdoraImageLoader.instance();
 
 		// Load bundled channel and play when ready
 		String json = getIntent().getStringExtra("channel");
 		Channel channel = Util.fromJson(json, Channel.class);
-		
+
 		/* If we have a saved state from before then resume it */
-		if(mOnConfigChangeState != null){
+		if (mOnConfigChangeState != null) {
 			resumeState(mOnConfigChangeState);
 			return;
 		}
@@ -365,6 +371,14 @@ public class ChannelViewActivity extends FragmentActivity implements
 	 */
 	public ViewGroup getRootView() {
 		return root;
+	}
+
+	/** Show the given message as a notification 
+	 * 
+	 * @param msg
+	 */
+	public void showNotification(String msg) {
+		notifier.notify(msg);
 	}
 
 }

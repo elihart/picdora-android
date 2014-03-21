@@ -22,5 +22,8 @@
     <dimen name="dialog_title_separator_height">2dp</dimen>
     <dimen name="dialog_content_margin">8dp</dimen>
     <dimen name="dialog_button_padding">5dp</dimen>
+    
+    <!-- Notifier -->
+    <dimen name="notifier_text_size">14sp</dimen>
 
 </resources>

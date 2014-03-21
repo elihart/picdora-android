@@ -36,7 +36,7 @@ import com.picdora.models.Category;
 import com.picdora.models.Channel;
 import com.picdora.models.Channel.GifSetting;
 import com.picdora.ui.FontHelper;
-import com.picdora.ui.FontHelper.STYLE;
+import com.picdora.ui.FontHelper.FontStyle;
 import com.picdora.ui.PicdoraDialog;
 import com.picdora.ui.grid.ImageGridSelector;
 
@@ -205,7 +205,7 @@ public class ChannelInfoFragment extends Fragment implements
 		final EditText channelName = (EditText) container
 				.findViewById(R.id.edit_text);
 		channelName.setText(mChannel.getName());
-		FontHelper.setTypeFace(channelName, STYLE.REGULAR);
+		FontHelper.setTypeFace(channelName, FontStyle.REGULAR);
 
 		final PicdoraDialog dialog = new PicdoraDialog.Builder(mActivity)
 				.setTitle(R.string.channel_detail_name_dialog_title)

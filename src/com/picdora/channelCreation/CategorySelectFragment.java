@@ -22,7 +22,7 @@ import com.picdora.channelCreation.ChannelCreationActivity.NsfwSetting;
 import com.picdora.channelCreation.ChannelCreationActivity.OnFilterCategoriesListener;
 import com.picdora.models.Category;
 import com.picdora.ui.FontHelper;
-import com.picdora.ui.FontHelper.STYLE;
+import com.picdora.ui.FontHelper.FontStyle;
 import com.picdora.ui.grid.GridItemView;
 import com.picdora.ui.grid.ImageGridSelector;
 import com.picdora.ui.grid.ImageGridSelector.OnGridItemClickListener;
@@ -91,9 +91,9 @@ public class CategorySelectFragment extends Fragment {
 				});
 
 		// set fonts
-		FontHelper.setTypeFace(previewButton, STYLE.MEDIUM);
-		FontHelper.setTypeFace(createButton, STYLE.MEDIUM);
-		FontHelper.setTypeFace(clearButton, STYLE.MEDIUM);
+		FontHelper.setTypeFace(previewButton, FontStyle.MEDIUM);
+		FontHelper.setTypeFace(createButton, FontStyle.MEDIUM);
+		FontHelper.setTypeFace(clearButton, FontStyle.MEDIUM);
 	}
 
 	/**

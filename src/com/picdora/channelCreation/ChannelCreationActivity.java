@@ -335,10 +335,10 @@ public class ChannelCreationActivity extends PicdoraActivity {
 			finish();
 		}
 
-		/* If we're doing a preview then don't cache or save the channel
+		/* If we're doing a preview then don't save the channel
 		 * 
 		 */
-		ChannelUtils.playChannel(channel, !preview, this, !preview);
+		ChannelUtils.playChannel(channel, this, !preview);
 	}
 
 	@UiThread

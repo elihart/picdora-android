@@ -40,7 +40,7 @@ public class ChannelDetailActivity extends PicdoraActivity {
 
 	@OptionsItem
 	protected void playChannel() {
-		ChannelUtils.playChannel(mChannel, true, this,  true);
+		ChannelUtils.playChannel(mChannel, this,  true);
 	}
 
 	@OptionsItem

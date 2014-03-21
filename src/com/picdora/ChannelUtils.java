@@ -21,7 +21,6 @@ import android.database.sqlite.SQLiteStatement;
 import android.text.TextUtils;
 
 import com.picdora.channelDetail.ChannelDetailActivity_;
-import com.picdora.channelPlayer.ChannelViewActivity;
 import com.picdora.channelPlayer.ChannelViewActivity_;
 import com.picdora.models.Category;
 import com.picdora.models.Channel;
@@ -35,12 +34,10 @@ public class ChannelUtils {
 	 * Launch the ChannelViewActivity with the given channel.
 	 * 
 	 * @param channel The channel to play.
-	 * @param cache Whether the ChannelViewActivity should cache the channel for future use.
-	 * @param activity The activity context to start from.
+	 * @param activity The activity context to launch the ChannelViewActivity from.
 	 * @param save Whether the channel should be saved and it's Last Used field updated to now. Save is synchronous!
 	 */
-	public static void playChannel(Channel channel, boolean cache,
-			Activity activity, boolean save) {
+	public static void playChannel(Channel channel, Activity activity, boolean save) {
 		if (channel == null) {
 			throw new IllegalArgumentException("Channel can't be null");
 		}
@@ -52,7 +49,6 @@ public class ChannelUtils {
 
 		Intent intent = new Intent(activity, ChannelViewActivity_.class);
 		intent.putExtra("channel", Util.toJson(channel));
-		intent.putExtra("cache", cache);
 		// only allow one instance of channel view running
 		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		activity.startActivity(intent);

@@ -10,7 +10,7 @@
         android:id="@+id/pager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/transparent" />    
+        android:background="@color/transparent" />
 
     <com.picdora.ui.SatelliteMenu.SatelliteMenu
         android:id="@+id/menu"
@@ -24,5 +24,13 @@
         sat:mainImage="@drawable/ic_action_favorite"
         sat:satelliteDistance="170dp"
         sat:totalSpacingDegree="90" />
+
+    <com.picdora.ui.PicdoraNotifier_
+        android:id="@+id/notifier"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:padding="8dp" />
 
 </RelativeLayout>

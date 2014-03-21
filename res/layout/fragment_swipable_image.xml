@@ -49,7 +49,7 @@
         android:background="@color/transparent"
         android:visibility="gone" />
     
-    <com.picdora.ui.GlowView
+    <com.picdora.ui.GlowView_
         android:id="@+id/glow"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

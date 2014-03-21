@@ -156,8 +156,7 @@ public class ChannelSelectionActivity extends PicdoraActivity implements
 
 					@Override
 					public void onClick(View v) {
-						ChannelUtils.playChannel(mSelectedChannel, true,
-								mActivity, true);
+						ChannelUtils.playChannel(mSelectedChannel,	mActivity, true);
 					}
 				});
 

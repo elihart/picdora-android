@@ -19,7 +19,7 @@ import com.makeramen.RoundedImageView;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.picdora.R;
 import com.picdora.ui.FontHelper;
-import com.picdora.ui.FontHelper.STYLE;
+import com.picdora.ui.FontHelper.FontStyle;
 
 /**
  * Used with the ImageGridSelector and ImageGridAdapter to display an item. A
@@ -82,7 +82,7 @@ public class GridItemView extends RelativeLayout {
 		int pad = dpToPixel(TEXT_PADDING_DP);
 		mText.setPadding(pad, pad, pad, pad);
 		mText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, TEXT_SIZE_DP);
-		FontHelper.setTypeFace(mText, STYLE.REGULAR);
+		FontHelper.setTypeFace(mText, FontStyle.REGULAR);
 
 		addView(mText);		
 	}

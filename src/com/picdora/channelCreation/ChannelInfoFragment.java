@@ -28,7 +28,7 @@ import com.picdora.Util;
 import com.picdora.channelCreation.ChannelCreationActivity.NsfwSetting;
 import com.picdora.models.Channel.GifSetting;
 import com.picdora.ui.FontHelper;
-import com.picdora.ui.FontHelper.STYLE;
+import com.picdora.ui.FontHelper.FontStyle;
 
 /**
  * This fragment allows the user to enter a channel name, a gif setting, and a
@@ -72,17 +72,17 @@ public class ChannelInfoFragment extends Fragment implements
 
 	@AfterViews
 	void initViews() {
-		FontHelper.setTypeFace(channelName, STYLE.REGULAR);
-		FontHelper.setTypeFace(nameLabel, STYLE.MEDIUM);
-		FontHelper.setTypeFace(gifLabel, STYLE.MEDIUM);
-		FontHelper.setTypeFace(nsfwLabel, STYLE.MEDIUM);
-		FontHelper.setTypeFace(gif_none, STYLE.REGULAR);
-		FontHelper.setTypeFace(gif_allowed, STYLE.REGULAR);
-		FontHelper.setTypeFace(gif_only, STYLE.REGULAR);
-		FontHelper.setTypeFace(nsfw_allowed, STYLE.REGULAR);
-		FontHelper.setTypeFace(nsfw_none, STYLE.REGULAR);
-		FontHelper.setTypeFace(nsfw_only, STYLE.REGULAR);
-		FontHelper.setTypeFace(nextButton, STYLE.MEDIUM);
+		FontHelper.setTypeFace(channelName, FontStyle.REGULAR);
+		FontHelper.setTypeFace(nameLabel, FontStyle.MEDIUM);
+		FontHelper.setTypeFace(gifLabel, FontStyle.MEDIUM);
+		FontHelper.setTypeFace(nsfwLabel, FontStyle.MEDIUM);
+		FontHelper.setTypeFace(gif_none, FontStyle.REGULAR);
+		FontHelper.setTypeFace(gif_allowed, FontStyle.REGULAR);
+		FontHelper.setTypeFace(gif_only, FontStyle.REGULAR);
+		FontHelper.setTypeFace(nsfw_allowed, FontStyle.REGULAR);
+		FontHelper.setTypeFace(nsfw_none, FontStyle.REGULAR);
+		FontHelper.setTypeFace(nsfw_only, FontStyle.REGULAR);
+		FontHelper.setTypeFace(nextButton, FontStyle.MEDIUM);
 
 		channelName.setOnFocusChangeListener(new OnFocusChangeListener() {
 
