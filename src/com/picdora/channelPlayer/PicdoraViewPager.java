@@ -1,4 +1,4 @@
-package com.picdora.player;
+package com.picdora.channelPlayer;
 
 import android.content.Context;
 import android.support.v4.view.ViewPager;

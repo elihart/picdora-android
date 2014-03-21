@@ -1,4 +1,4 @@
-package com.picdora.player;
+package com.picdora.channelPlayer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,13 +31,13 @@ import com.picdora.ImageUtils;
 import com.picdora.ImageUtils.OnDownloadCompleteListener;
 import com.picdora.R;
 import com.picdora.Util;
+import com.picdora.channelPlayer.ChannelPlayer.ChannelError;
+import com.picdora.channelPlayer.ChannelPlayer.OnGetChannelImageResultListener;
+import com.picdora.channelPlayer.ChannelPlayer.OnLoadListener;
 import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.imageloader.PicdoraImageLoader.OnDownloadSpaceAvailableListener;
 import com.picdora.models.Channel;
 import com.picdora.models.ChannelImage;
-import com.picdora.player.ChannelPlayer.ChannelError;
-import com.picdora.player.ChannelPlayer.OnGetChannelImageResultListener;
-import com.picdora.player.ChannelPlayer.OnLoadListener;
 import com.picdora.ui.PicdoraDialog;
 import com.picdora.ui.SatelliteMenu.SatelliteMenu;
 import com.picdora.ui.SatelliteMenu.SatelliteMenu.SateliteClickedListener;
@@ -49,18 +49,16 @@ public class ChannelViewActivity extends FragmentActivity implements
 		OnDownloadSpaceAvailableListener {
 	private static final int NUM_IMAGES_TO_PRELOAD = 5;
 
-	
-
-	// TODO: Like detected sometimes on pinch to zoom
+	// TODO: Sometimes loading seems to not begin.
 
 	// TODO: Show icon notification icon in top right, such as like status,
 	// download progress/completion, etc.
 
 	// Cache the last player used and remember the user's spot so they can
 	// resume quickly
-	private static CachedPlayerState cachedState;
-	private boolean shouldCache;
-	private PicdoraImageLoader loader;
+	private static CachedPlayerState mCachedState;
+	private boolean mShouldCache;
+	private PicdoraImageLoader mIimageLoader;
 
 	@ViewById
 	protected RelativeLayout root;
@@ -71,9 +69,9 @@ public class ChannelViewActivity extends FragmentActivity implements
 	@Bean
 	protected ChannelPlayer mChannelPlayer;
 	@Bean
-	protected ChannelViewHelper mHelper;
+	protected LikeGestureHandler mLikeGestureHandler;
 
-	protected Activity mContext;	
+	protected Activity mContext;
 
 	// the fragment currently being viewed
 	private ImageSwipeFragment mCurrFragment;
@@ -89,7 +87,7 @@ public class ChannelViewActivity extends FragmentActivity implements
 
 	// Loading dialog to show while channel initializes
 	private Dialog busyDialog;
-	
+
 	/**
 	 * Used when the user indicates a like or dislike on an image.
 	 */
@@ -103,15 +101,15 @@ public class ChannelViewActivity extends FragmentActivity implements
 		// show loading screen
 		showBusyDialog("Loading Channel...");
 
-		setupMenu();		
+		setupMenu();
 
 		// We don't use the Universal Image loader here, it's only used for
 		// thumbnails, so lets clear out so memory and clear it's cache
 		ImageLoader.getInstance().clearMemoryCache();
 
-		loader = PicdoraImageLoader.instance();
+		mIimageLoader = PicdoraImageLoader.instance();
 
-		shouldCache = getIntent().getBooleanExtra("cache", false);
+		mShouldCache = getIntent().getBooleanExtra("cache", false);
 
 		// Load bundled channel and play when ready
 		String json = getIntent().getStringExtra("channel");
@@ -120,16 +118,17 @@ public class ChannelViewActivity extends FragmentActivity implements
 		// check if we can use the cached player, if not create a new one
 		if (mOnConfigChangeState != null) {
 			resumeState(mOnConfigChangeState);
-		} else if (shouldCache && cachedState != null
-				&& cachedState.player.getChannel().equals(channel)) {
-			resumeState(cachedState);
+		} else if (mShouldCache && mCachedState != null
+				&& mCachedState.player.getChannel().equals(channel)) {
+			resumeState(mCachedState);
 		} else {
-			// we don't always want to cache what we're playing, as in the case
-			// of apreview. Cache the player if requested, overriding the old
-			// one.
-			// Otherwise leave the old one intact
-			if (shouldCache) {
-				cachedState = new CachedPlayerState(mChannelPlayer, 0);
+			/*
+			 * We don't always want to cache what we're playing, as in the case
+			 * of apreview. Cache the player if requested, overriding the old
+			 * one. Otherwise leave the old one intact.
+			 */
+			if (mShouldCache) {
+				mCachedState = new CachedPlayerState(mChannelPlayer, 0);
 			}
 
 			mChannelPlayer.loadChannel(channel, new OnLoadListener() {
@@ -147,10 +146,11 @@ public class ChannelViewActivity extends FragmentActivity implements
 	}
 
 	@Override
-	public boolean dispatchTouchEvent(MotionEvent ev) {		
+	public boolean dispatchTouchEvent(MotionEvent ev) {
 		// Give the touch event to our gesture detector first before passing it
 		// on
-		return mHelper.handleTouch(ev) | super.dispatchTouchEvent(ev);
+		mLikeGestureHandler.checkTouchForLikeGesture(ev);
+		return super.dispatchTouchEvent(ev);
 	}
 
 	/**
@@ -164,10 +164,12 @@ public class ChannelViewActivity extends FragmentActivity implements
 		} else {
 			return mCurrFragment.isZoomed();
 		}
-	}	
+	}
 
 	/**
-	 * Set the current fragment being viewed. This should be called from the ImageSwipeFragment.
+	 * Set the current fragment being viewed. This should be called from the
+	 * ImageSwipeFragment.
+	 * 
 	 * @param frag
 	 */
 	public void setCurrentFragment(ImageSwipeFragment frag) {
@@ -319,20 +321,18 @@ public class ChannelViewActivity extends FragmentActivity implements
 
 	}
 
-	
-
 	private void resumeState(CachedPlayerState state) {
 		mChannelPlayer = state.player;
 		startChannel(state.position);
 	}
 
 	public static boolean hasCachedChannel() {
-		return cachedState != null;
+		return mCachedState != null;
 	}
 
 	public static Channel getCachedChannel() {
 		if (hasCachedChannel()) {
-			return cachedState.player.getChannel();
+			return mCachedState.player.getChannel();
 		} else {
 			return null;
 		}
@@ -340,8 +340,8 @@ public class ChannelViewActivity extends FragmentActivity implements
 
 	protected void handleChannelLoadError(ChannelError error) {
 		// don't cache a failed channel
-		if (shouldCache) {
-			cachedState = null;
+		if (mShouldCache) {
+			mCachedState = null;
 		}
 
 		String msg = "Sorry! We failed to load your channel :(";
@@ -363,15 +363,15 @@ public class ChannelViewActivity extends FragmentActivity implements
 
 	protected void startChannel(int startingPosition) {
 		// Instantiate a ViewPager and a PagerAdapter
-		mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
+		mPagerAdapter = new ChannelViewPagerAdapter(getSupportFragmentManager());
 		pager.setAdapter(mPagerAdapter);
 
 		pager.setOnPageChangeListener(new OnPageChangeListener() {
 
 			@Override
 			public void onPageSelected(int pos) {
-				if (shouldCache) {
-					cachedState.position = pos;
+				if (mShouldCache) {
+					mCachedState.position = pos;
 				}
 				// close menu when image changes
 				menu.close();
@@ -434,13 +434,13 @@ public class ChannelViewActivity extends FragmentActivity implements
 	@Override
 	public void onPause() {
 		super.onPause();
-		loader.unregisterOnDownloadSpaceAvailableListener(this);
+		mIimageLoader.unregisterOnDownloadSpaceAvailableListener(this);
 	}
 
 	@Override
 	public void onResume() {
 		super.onResume();
-		loader.registerOnDownloadSpaceAvailableListener(this);
+		mIimageLoader.registerOnDownloadSpaceAvailableListener(this);
 	}
 
 	@Override
@@ -451,7 +451,7 @@ public class ChannelViewActivity extends FragmentActivity implements
 		// need to clear downloads, otherwise the activity is exiting and we can
 		// clear them to save memory
 		if (isFinishing()) {
-			loader.clearDownloads();
+			mIimageLoader.clearDownloads();
 			mChannelPlayer = null;
 			mOnConfigChangeState = null;
 		} else {
@@ -462,9 +462,9 @@ public class ChannelViewActivity extends FragmentActivity implements
 		dismissBusyDialog();
 	}
 
-	private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
+	private class ChannelViewPagerAdapter extends FragmentStatePagerAdapter {
 
-		public ScreenSlidePagerAdapter(FragmentManager fm) {
+		public ChannelViewPagerAdapter(FragmentManager fm) {
 			super(fm);
 		}
 
@@ -499,7 +499,7 @@ public class ChannelViewActivity extends FragmentActivity implements
 
 						@Override
 						public void onGetChannelImageResult(ChannelImage image) {
-							loader.preloadImage(image.getImage());
+							mIimageLoader.preloadImage(image.getImage());
 						}
 					});
 		}

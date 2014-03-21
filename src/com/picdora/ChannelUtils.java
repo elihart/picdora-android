@@ -21,10 +21,10 @@ import android.database.sqlite.SQLiteStatement;
 import android.text.TextUtils;
 
 import com.picdora.channelDetail.ChannelDetailActivity_;
+import com.picdora.channelPlayer.ChannelViewActivity;
+import com.picdora.channelPlayer.ChannelViewActivity_;
 import com.picdora.models.Category;
 import com.picdora.models.Channel;
-import com.picdora.player.ChannelViewActivity;
-import com.picdora.player.ChannelViewActivity_;
 
 @EBean
 public class ChannelUtils {

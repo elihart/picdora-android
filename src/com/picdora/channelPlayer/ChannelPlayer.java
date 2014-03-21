@@ -1,4 +1,4 @@
-package com.picdora.player;
+package com.picdora.channelPlayer;
 
 import java.util.ArrayList;
 import java.util.Collection;

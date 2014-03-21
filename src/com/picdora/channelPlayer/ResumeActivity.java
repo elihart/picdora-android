@@ -1,4 +1,4 @@
-package com.picdora.player;
+package com.picdora.channelPlayer;
 
 import org.androidannotations.annotations.EActivity;
 

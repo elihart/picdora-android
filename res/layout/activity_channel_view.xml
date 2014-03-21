@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@color/black" >
 
-    <com.picdora.player.PicdoraViewPager
+    <com.picdora.channelPlayer.PicdoraViewPager
         android:id="@+id/pager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

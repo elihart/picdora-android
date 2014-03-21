@@ -1,4 +1,4 @@
-package com.picdora.player;
+package com.picdora.channelPlayer;
 
 import java.util.Date;
 
@@ -21,11 +21,11 @@ import android.widget.TextView;
 
 import com.picdora.R;
 import com.picdora.Util;
+import com.picdora.channelPlayer.ChannelPlayer.OnGetChannelImageResultListener;
 import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.imageloader.PicdoraImageLoader.LoadError;
 import com.picdora.models.ChannelImage;
 import com.picdora.models.ChannelImage.LIKE_STATUS;
-import com.picdora.player.ChannelPlayer.OnGetChannelImageResultListener;
 import com.picdora.ui.GlowView;
 import com.picdora.ui.UiUtil;
 

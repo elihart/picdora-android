@@ -12,11 +12,11 @@ import android.widget.ListView;
 
 import com.picdora.PicdoraActivity;
 import com.picdora.R;
+import com.picdora.channelPlayer.ChannelViewActivity;
+import com.picdora.channelPlayer.ResumeActivity_;
 import com.picdora.channelSelection.ChannelSelectionActivity_;
 import com.picdora.favorites.FavoritesActivity_;
 import com.picdora.likes.LikesActivity_;
-import com.picdora.player.ChannelViewActivity;
-import com.picdora.player.ResumeActivity_;
 import com.picdora.settings.SettingsActivity;
 
 public class SlidingMenuHelper {
