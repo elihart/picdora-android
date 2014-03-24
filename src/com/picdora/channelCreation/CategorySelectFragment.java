@@ -24,8 +24,8 @@ import com.picdora.models.Category;
 import com.picdora.ui.FontHelper;
 import com.picdora.ui.FontHelper.FontStyle;
 import com.picdora.ui.grid.GridItemView;
-import com.picdora.ui.grid.ImageGridSelector;
-import com.picdora.ui.grid.ImageGridSelector.OnGridItemClickListener;
+import com.picdora.ui.grid.ModelGridSelector;
+import com.picdora.ui.grid.ModelGridSelector.OnGridItemClickListener;
 
 /**
  * This fragment allows the user to select categories to use in the channel.
@@ -54,7 +54,7 @@ public class CategorySelectFragment extends Fragment {
 	private List<Category> sfwCategories;
 	private ChannelCreationActivity activity;
 	private NsfwSetting nsfwFilter;
-	protected ImageGridSelector<Category> mCategorySelector;
+	protected ModelGridSelector<Category> mCategorySelector;
 
 	@AfterViews
 	void initViews() {
@@ -73,7 +73,7 @@ public class CategorySelectFragment extends Fragment {
 		// TODO: Async
 		setupCategoryLists();
 
-		mCategorySelector = new ImageGridSelector<Category>(getActivity(),
+		mCategorySelector = new ModelGridSelector<Category>(getActivity(),
 				allCategories, selectedCategories, adapter);
 
 		filterCategories(ChannelCreationActivity.getNsfwFilter());

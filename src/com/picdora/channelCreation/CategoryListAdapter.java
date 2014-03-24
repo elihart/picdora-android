@@ -2,12 +2,12 @@ package com.picdora.channelCreation;
 
 import org.androidannotations.annotations.EBean;
 
-import com.picdora.ImageUtils.IMGUR_SIZE;
+import com.picdora.ImageUtils.ImgurSize;
 import com.picdora.models.Category;
-import com.picdora.ui.grid.ImageGridAdapter;
+import com.picdora.ui.grid.ModelGridAdapter;
 
 @EBean
-public class CategoryListAdapter extends ImageGridAdapter<Category> {
+public class CategoryListAdapter extends ModelGridAdapter<Category> {
 
 	@Override
 	public long getItemId(int position) {
@@ -15,8 +15,8 @@ public class CategoryListAdapter extends ImageGridAdapter<Category> {
 	}
 
 	@Override
-	protected String getImageUrl(Category item) {
-		return item.getPreviewUrl(IMGUR_SIZE.MEDIUM_THUMBNAIL);
+	protected String getImgurId(Category item) {
+		return item.getPreviewUrl(ImgurSize.MEDIUM_THUMBNAIL);
 	}
 
 	@Override

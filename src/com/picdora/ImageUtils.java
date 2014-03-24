@@ -37,7 +37,7 @@ public abstract class ImageUtils {
 	 * List of IMGUR api thumbnail sizes. The keys should be inserted after the
 	 * image id and before the file extension
 	 */
-	public enum IMGUR_SIZE {
+	public enum ImgurSize {
 		/**
 		 * 90X90 - Crops image
 		 */
@@ -69,7 +69,7 @@ public abstract class ImageUtils {
 
 		private String key;
 
-		private IMGUR_SIZE(String key) {
+		private ImgurSize(String key) {
 			this.key = key;
 		}
 
@@ -87,7 +87,7 @@ public abstract class ImageUtils {
 	 *            The size of the image to get
 	 * @return
 	 */
-	public static String getImgurLink(String imgurId, IMGUR_SIZE size) {
+	public static String getImgurLink(String imgurId, ImgurSize size) {
 		return IMGUR_BASE_URL + imgurId + size.key + IMGUR_BASE_EXTENSION;
 	}
 
@@ -100,7 +100,7 @@ public abstract class ImageUtils {
 	 *            The size of the image to get
 	 * @return
 	 */
-	public static String getImgurLink(Image image, IMGUR_SIZE size) {
+	public static String getImgurLink(Image image, ImgurSize size) {
 		return getImgurLink(image.getImgurId(), size);
 	}
 
@@ -212,7 +212,7 @@ public abstract class ImageUtils {
 
 		File file = new File(folder, imgurId + ".jpg");
 
-		String url = getImgurLink(imgurId, IMGUR_SIZE.FULL);
+		String url = getImgurLink(imgurId, ImgurSize.FULL);
 
 		Ion.with(context, url).write(file)
 				.setCallback(new FutureCallback<File>() {
@@ -239,7 +239,7 @@ public abstract class ImageUtils {
 	}
 	
 	public static void lookupImage(Activity context, String imgurId){
-		String query = "https://www.google.com/searchbyimage?&image_url=" + getImgurLink(imgurId, IMGUR_SIZE.FULL);
+		String query = "https://www.google.com/searchbyimage?&image_url=" + getImgurLink(imgurId, ImgurSize.FULL);
 
 		Intent i = new Intent(Intent.ACTION_VIEW);
 		i.setData(Uri.parse(query));
@@ -267,7 +267,7 @@ public abstract class ImageUtils {
 		Intent sendIntent = new Intent();
 		sendIntent.setAction(Intent.ACTION_SEND);
 		sendIntent.putExtra(Intent.EXTRA_TEXT,
-				getImgurLink(imgurId, IMGUR_SIZE.FULL));
+				getImgurLink(imgurId, ImgurSize.FULL));
 		sendIntent.setType("text/plain");
 		activity.startActivity(Intent.createChooser(sendIntent, "Share image"));
 	}

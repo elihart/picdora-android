@@ -38,7 +38,7 @@ import com.picdora.models.Channel.GifSetting;
 import com.picdora.ui.FontHelper;
 import com.picdora.ui.FontHelper.FontStyle;
 import com.picdora.ui.PicdoraDialog;
-import com.picdora.ui.grid.ImageGridSelector;
+import com.picdora.ui.grid.ModelGridSelector;
 
 @EFragment(R.layout.fragment_channel_detail_info)
 public class ChannelInfoFragment extends Fragment implements
@@ -282,7 +282,7 @@ public class ChannelInfoFragment extends Fragment implements
 		final List<Category> selectedCategories = mChannel.getCategories();
 		CategoryListAdapter adapter = CategoryListAdapter_
 				.getInstance_(mActivity);
-		ImageGridSelector<Category> selector = new ImageGridSelector<Category>(
+		ModelGridSelector<Category> selector = new ModelGridSelector<Category>(
 				mActivity, availableCategories, selectedCategories, adapter);
 
 		showSetCategoriesDialog(selector);
@@ -290,7 +290,7 @@ public class ChannelInfoFragment extends Fragment implements
 
 	@UiThread
 	protected void showSetCategoriesDialog(
-			final ImageGridSelector<Category> selector) {
+			final ModelGridSelector<Category> selector) {
 		new PicdoraDialog.Builder(mActivity).showTitle(false)
 				.setFullScreen(true).setView(selector.getView())
 				.setPositiveButton(R.string.channel_detail_change_categories_dialog_positive, new OnClickListener() {

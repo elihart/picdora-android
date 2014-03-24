@@ -12,7 +12,7 @@ import se.emilsjolander.sprinkles.annotations.PrimaryKey;
 import se.emilsjolander.sprinkles.annotations.Table;
 
 import com.picdora.ImageUtils;
-import com.picdora.ImageUtils.IMGUR_SIZE;
+import com.picdora.ImageUtils.ImgurSize;
 
 @Table("Images")
 public class Image extends Model {
@@ -174,7 +174,7 @@ public class Image extends Model {
 	 *            The size of the image the url should point to
 	 * @return
 	 */
-	public String getUrl(IMGUR_SIZE size) {
+	public String getUrl(ImgurSize size) {
 		return ImageUtils.getImgurLink(this, size);
 	}
 

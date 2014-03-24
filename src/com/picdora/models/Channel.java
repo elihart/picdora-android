@@ -14,7 +14,7 @@ import se.emilsjolander.sprinkles.annotations.Table;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.picdora.ImageUtils;
-import com.picdora.ImageUtils.IMGUR_SIZE;
+import com.picdora.ImageUtils.ImgurSize;
 import com.picdora.Util;
 
 @Table("Channels")
@@ -200,7 +200,7 @@ public class Channel extends Model {
 	 *            The thumbnail size to resize to
 	 * @return
 	 */
-	public String getIcon(IMGUR_SIZE size) {
+	public String getIcon(ImgurSize size) {
 		return ImageUtils.getImgurLink(mPreviewImage, size);
 	}
 

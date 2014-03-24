@@ -11,21 +11,30 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
+import com.picdora.ImageUtils;
+import com.picdora.ImageUtils.ImgurSize;
+
 /**
- * This adapter displays items for the ImageGridSelector. It should be
+ * This adapter displays models for the {@link #ImageGridSelector}. It should be
  * subclassed to work with whatever model is needed. Each item needs an image
- * url and text to display over the image.
+ * url and optionally text to display over the image.
  * 
  * @param <T>
  *            The item type
  */
 @EBean
-public abstract class ImageGridAdapter<T> extends BaseAdapter {
+public abstract class ModelGridAdapter<T> extends BaseAdapter {
 	@RootContext
 	protected Context context;
 
 	protected List<T> mAvailableItems = new ArrayList<T>();
 	protected List<T> mSelectedItems = new ArrayList<T>();
+
+	/** The image size to use */
+	protected ImageUtils.ImgurSize mImageSize = ImgurSize.MEDIUM_THUMBNAIL;
+
+	/** Whether to show text overlayed on the image. Default to true.*/
+	protected boolean mShowText = true;
 
 	/**
 	 * Set the items to show. Redraws the list after setting them.
@@ -93,22 +102,25 @@ public abstract class ImageGridAdapter<T> extends BaseAdapter {
 			itemView = (GridItemView) convertView;
 		}
 
+		itemView.setShowText(mShowText);
+
 		T item = getItem(position);
 
 		boolean highlight = getSelectedItems().contains(item);
 
-		itemView.bind(getText(item), getImageUrl(item), highlight);
+		String url = ImageUtils.getImgurLink(getImgurId(item), mImageSize);
+		itemView.bind(getText(item), url, highlight);
 
 		return itemView;
 	}
 
 	/**
-	 * Get the url of the image to display
+	 * Get the imgur id of the image that the item displays.
 	 * 
 	 * @param item
 	 * @return
 	 */
-	protected abstract String getImageUrl(T item);
+	protected abstract String getImgurId(T item);
 
 	/**
 	 * Get the text to shown over the image
@@ -126,6 +138,24 @@ public abstract class ImageGridAdapter<T> extends BaseAdapter {
 	 */
 	protected GridItemView buildItemView() {
 		return GridItemView_.build(context);
+	}
+
+	/**
+	 * Get the image size to be downloaded.
+	 * 
+	 * @return
+	 */
+	public ImageUtils.ImgurSize getImageSize() {
+		return mImageSize;
+	}
+
+	/**
+	 * Set the image size to use when downloading images for the grid.
+	 * 
+	 * @param imageSize
+	 */
+	public void setImageSize(ImageUtils.ImgurSize imageSize) {
+		mImageSize = imageSize;
 	}
 
 }

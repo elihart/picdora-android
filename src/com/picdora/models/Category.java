@@ -10,7 +10,7 @@ import se.emilsjolander.sprinkles.annotations.PrimaryKey;
 import se.emilsjolander.sprinkles.annotations.Table;
 
 import com.picdora.ImageUtils;
-import com.picdora.ImageUtils.IMGUR_SIZE;
+import com.picdora.ImageUtils.ImgurSize;
 
 @Table("Categories")
 public class Category extends Model {
@@ -114,7 +114,7 @@ public class Category extends Model {
 		return (int) mId;
 	}
 
-	public String getPreviewUrl(IMGUR_SIZE size) {
+	public String getPreviewUrl(ImgurSize size) {
 		return ImageUtils.getImgurLink(mPreviewImage, size);
 	}
 

@@ -11,6 +11,7 @@ import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.Gravity;
+import android.view.View;
 import android.widget.ImageView.ScaleType;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -52,6 +53,7 @@ public class GridItemView extends RelativeLayout {
 	protected boolean highlighted;
 	protected String text;
 	protected String url;
+	private boolean mShowText;
 
 	public GridItemView(Context context) {
 		super(context);
@@ -84,7 +86,7 @@ public class GridItemView extends RelativeLayout {
 		mText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, TEXT_SIZE_DP);
 		FontHelper.setTypeFace(mText, FontStyle.REGULAR);
 
-		addView(mText);		
+		addView(mText);
 	}
 
 	protected int dpToPixel(int dp) {
@@ -96,11 +98,14 @@ public class GridItemView extends RelativeLayout {
 	 * Set this grid item to display the given image and text
 	 * 
 	 * @param text
+	 *            The text to display if {@link #mShowText} is enabled
 	 * @param url
+	 *            The url of the image to display
 	 * @param highlight
+	 *            Whether the item should be highlighted
 	 */
 	public void bind(String text, String url, boolean highlight) {
-		this.text = text;
+		this.text = text.toUpperCase(Locale.US);
 		this.url = url;
 
 		// reset the image to be white until an image loads
@@ -108,13 +113,11 @@ public class GridItemView extends RelativeLayout {
 
 		highlighted = highlight;
 
-		if (highlighted) {
-			mImage.setColorFilter(highlightedTint);
-		} else {
-			mImage.setColorFilter(defaultTint);
-		}
+		setTint();
 
-		mText.setText(text.toUpperCase(Locale.US));
+		if (mShowText) {
+			mText.setText(text);
+		}
 
 		ImageLoader.getInstance().displayImage(url, mImage);
 	}
@@ -141,12 +144,37 @@ public class GridItemView extends RelativeLayout {
 	 * Update the tint depending on our current state
 	 */
 	protected void setTint() {
+
 		if (isPressed()) {
 			mImage.setColorFilter(pressedTint);
 		} else if (highlighted) {
 			mImage.setColorFilter(highlightedTint);
-		} else {
+		}
+		// If we are not showing text then we don't need the black overlay
+		else if (!mShowText) {
+			mImage.setColorFilter(null);
+		}
+		// set a dark overlay to make the text stand out
+		else {
 			mImage.setColorFilter(defaultTint);
+		}
+	}
+
+	/** Set whether text should be shown overlayed on the image
+	 * 
+	 * @param showText
+	 */
+	public void setShowText(boolean showText) {
+		mShowText = showText;
+		setTextVisibility(showText);
+		setTint();
+	}
+
+	private void setTextVisibility(boolean visible) {
+		if (visible) {
+			mText.setVisibility(View.VISIBLE);
+		} else {
+			mText.setVisibility(View.INVISIBLE);
 		}
 	}
 

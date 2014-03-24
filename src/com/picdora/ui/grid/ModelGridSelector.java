@@ -14,7 +14,7 @@ import com.nostra13.universalimageloader.core.assist.PauseOnScrollListener;
 import com.picdora.R;
 
 /**
- * Use this class with the ImageGridAdapter and the GridItemView to create a
+ * Use this class with the {@link #ModelGridAdapter} and the {@link #GridItemView} to create a
  * grid of images representing models that the user can choose from. Clicking on
  * an item in the grid selects it, and multiple items can be selected at once.
  * For example, this is used to show a list of all categories so the user can
@@ -26,11 +26,11 @@ import com.picdora.R;
  * 
  * @param <T>
  */
-public class ImageGridSelector<T> {
+public class ModelGridSelector<T> {
 	protected List<T> mAvailableItems, mSelectedItems;
 	protected Context mContext;
 	protected GridView mGrid;
-	protected ImageGridAdapter<T> mAdapter;
+	protected ModelGridAdapter<T> mAdapter;
 	protected OnGridItemClickListener<T> mClickListener;
 
 	/**
@@ -47,8 +47,8 @@ public class ImageGridSelector<T> {
 	 *            The adapter to use. Subclass ImageGridAdapter to provide
 	 *            support for a specific model
 	 */
-	public ImageGridSelector(Context context, List<T> availableItems,
-			List<T> selectedItems, ImageGridAdapter<T> adapter) {
+	public ModelGridSelector(Context context, List<T> availableItems,
+			List<T> selectedItems, ModelGridAdapter<T> adapter) {
 		if (availableItems == null) {
 			throw new IllegalArgumentException(
 					"AvailableItems must not be null");
