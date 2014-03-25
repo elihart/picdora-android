@@ -22,7 +22,7 @@ public class LikeViewFragment extends Fragment {
 	
 	
 	@AfterViews
-	void initViews() {
+	void init() {
 		
 	}
 

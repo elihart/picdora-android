@@ -15,7 +15,7 @@ import com.picdora.ImageUtils;
 import com.picdora.ImageUtils.ImgurSize;
 
 /**
- * This adapter displays models for the {@link #ImageGridSelector}. It should be
+ * This adapter displays models for the {@link #ModelGridSelector}. It should be
  * subclassed to work with whatever model is needed. Each item needs an image
  * url and optionally text to display over the image.
  * 
