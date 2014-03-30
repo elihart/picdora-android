@@ -7,7 +7,7 @@ import com.picdora.models.Image;
 import com.picdora.ui.grid.ModelGridAdapter;
 
 /**
- * Displays Images in a grid with no text overlayed on top of them. 
+ * A specialized {@link #ModelGridAdapter} that displays the picture represented by an Image model with no text overlayed on top of it. 
  */
 @EBean
 public class ImageGridAdapter extends ModelGridAdapter<Image> {

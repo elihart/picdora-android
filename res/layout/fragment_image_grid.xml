@@ -4,26 +4,21 @@
     android:layout_height="match_parent"
     android:background="@color/white" >
 
-    <include layout="@layout/image_grid" />
+    <FrameLayout
+        android:id="@+id/gridContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
-    <RelativeLayout
-        android:id="@+id/noLikesView"
+    <TextView
+        android:id="@+id/messageText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:visibility="gone" >
-
-        <TextView
-            android:id="@+id/noLikesText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:gravity="center"
-            android:paddingLeft="25dp"
-            android:paddingRight="25dp"
-            android:text="You haven't liked any images yet!"
-            android:textSize="25sp" />
-    </RelativeLayout>
+        android:gravity="center"
+        android:paddingLeft="25dp"
+        android:paddingRight="25dp"
+        android:textSize="25sp"
+        android:visibility="gone" />
 
     <ProgressBar
         android:id="@+id/progress"

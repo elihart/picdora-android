@@ -85,8 +85,14 @@ public class CategorySelectFragment extends Fragment {
 				.setOnClickListener(new OnGridItemClickListener<Category>() {
 
 					@Override
-					public void OnGridItemClick(GridItemView view, Category item) {
+					public void onGridItemClick(GridItemView view, Category item) {
 						setCreateButtonEnabled(!selectedCategories.isEmpty());
+					}
+
+					@Override
+					public void onGridItemLongClick(GridItemView view,
+							Category item) {
+						// don't care about long clicks						
 					}
 				});
 

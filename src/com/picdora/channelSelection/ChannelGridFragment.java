@@ -10,7 +10,6 @@ import org.androidannotations.annotations.ViewById;
 
 import android.support.v4.app.Fragment;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.GridView;
@@ -20,7 +19,6 @@ import android.widget.RelativeLayout;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.PauseOnScrollListener;
 import com.picdora.R;
-import com.picdora.Util;
 import com.picdora.models.Channel;
 
 @EFragment(R.layout.fragment_channel_selection)
