@@ -31,6 +31,11 @@ public class ChannelSelectionGridItem extends GridItemView {
 		showButtons(false);
 	}
 
+	/**
+	 * Whether to show the options buttons
+	 * 
+	 * @param show
+	 */
 	public void showButtons(boolean show) {
 		if (show) {
 			buttonContainer.setVisibility(View.VISIBLE);
@@ -39,6 +44,14 @@ public class ChannelSelectionGridItem extends GridItemView {
 			buttonContainer.setVisibility(View.GONE);
 			setClickable(false);
 		}
+
+		/*
+		 * If we are showing the buttons then show the highlight border too,
+		 * otherwise the buttons will extends beyond the side of the image and
+		 * look weird.
+		 */
+		setHighlighted(show);
+		decorate();
 	}
 
 }

@@ -82,7 +82,6 @@ public class ChannelSelectionActivity extends PicdoraActivity implements
 	 */
 	private void refreshChannels() {
 		if (channelFragment != null) {
-			// TODO: Filter out nsfw by preference
 			List<Channel> channels = ChannelUtils.getAllChannels(prefs
 					.showNsfw().get());
 			// TODO: Allow more sorting options

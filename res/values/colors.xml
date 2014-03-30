@@ -23,7 +23,7 @@
     
     <!--  Grid Item -->
     <color name="channel_grid_item_tint">#60000000</color>
-    <color name="channel_grid_item_selected_border">#1cb0f6</color>
+    <color name="channel_grid_item_selected_border">#80D3FB</color>
     <color name="channel_grid_item_tint_pressed">#60FF9111</color>
     <color name="channel_grid_item_text_color">#ffffff</color>
     

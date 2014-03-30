@@ -1,6 +1,5 @@
 package com.picdora.channelSelection;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.androidannotations.annotations.AfterViews;
@@ -35,15 +34,13 @@ public class ChannelGridFragment extends Fragment implements
 	ChannelListAdapter adapter;
 
 	private OnChannelClickListener mChannelSelectListener;
-	private boolean mMultiSelect = false;
-	private List<Channel> mSelectedChannels = new ArrayList<Channel>();
+
 
 	// the clicked channel
 	private OnItemClickListener mParentItemListener;
 
 	@AfterViews
 	void initViews() {
-		// TODO: Load list in background and show loading icon
 		grid.setAdapter(adapter);
 
 		setProgressVisible(true);
@@ -84,35 +81,13 @@ public class ChannelGridFragment extends Fragment implements
 	}
 
 	private void channelClicked(Channel channel) {
-		// don't alert the listener of the click until after we have updated the
-		// list
-		if (mMultiSelect) {
-			if (mSelectedChannels.contains(channel)) {
-				selectChannel(channel);
-			} else {
-				deselectChannel(channel);
-			}
-		}
-
 		if (mChannelSelectListener != null) {
 			mChannelSelectListener.onChannelClicked(channel);
 		}
 	}
 
-	private void deselectChannel(Channel channel) {
-		mSelectedChannels.remove(channel);
-		// Unhighlight channel
-	}
-
-	private void selectChannel(Channel channel) {
-		mSelectedChannels.add(channel);
-		// highlight channel
-
-	}
-
 	public void setChannels(List<Channel> channels) {
 		adapter.setChannels(channels);
-		clearSelectedChannels();
 
 		if (adapter.isEmpty()) {
 			noChannelsView.setVisibility(View.VISIBLE);
@@ -127,25 +102,6 @@ public class ChannelGridFragment extends Fragment implements
 
 	public void setOnChannelClickListener(OnChannelClickListener listener) {
 		this.mChannelSelectListener = listener;
-	}
-
-	public void clearSelectedChannels() {
-		for (Channel channel : mSelectedChannels) {
-			deselectChannel(channel);
-		}
-	}
-
-	/**
-	 * Whether multiple channels can be selected
-	 * 
-	 * @param selectMultiple
-	 */
-	public void setMultiSelect(boolean selectMultiple) {
-		mMultiSelect = selectMultiple;
-	}
-
-	public List<Channel> getSelectedChannels() {
-		return mSelectedChannels;
 	}
 
 	public interface OnChannelClickListener {
