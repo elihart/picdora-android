@@ -49,7 +49,7 @@ public class GridItemView extends RelativeLayout {
 	protected int mHighlightedBorderColor;
 
 	/** Width of the highlighted border in DP */
-	private final static int HIGHLIGHT_BORDER_WIDTH_DP = 3;
+	private final static int HIGHLIGHT_BORDER_WIDTH_DP = 4;
 	/**
 	 * Width of border in pixels that will be calculated at runtime based on
 	 * screen density

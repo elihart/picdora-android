@@ -1,6 +1,7 @@
 package com.picdora.channelDetail;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.androidannotations.annotations.AfterViews;
@@ -265,7 +266,8 @@ public class ChannelInfoFragment extends Fragment implements
 
 	@UiThread
 	protected void showNameTakenError(String name) {
-		String msg = getResources().getString(R.string.channel_detail_change_name_taken_error, name);
+		String msg = getResources().getString(
+				R.string.channel_detail_change_name_taken_error, name);
 		int duration = Toast.LENGTH_SHORT;
 		Toast toast = Toast.makeText(mActivity, msg, duration);
 		toast.setGravity(Gravity.TOP, 0, 0);
@@ -279,9 +281,16 @@ public class ChannelInfoFragment extends Fragment implements
 		List<Category> availableCategories = CategoryUtils.getAll(mChannel
 				.isNsfw());
 		CategoryUtils.sortByName(availableCategories);
-		final List<Category> selectedCategories = mChannel.getCategories();
+
+		/*
+		 * Make a copy of the selected categories so our choices don't propogate
+		 * until we want them to.
+		 */
+		List<Category> selectedCategories = new ArrayList<Category>(mChannel.getCategories());
+
 		CategoryListAdapter adapter = CategoryListAdapter_
 				.getInstance_(mActivity);
+
 		ModelGridSelector<Category> selector = new ModelGridSelector<Category>(
 				mActivity, availableCategories, selectedCategories, adapter);
 
@@ -291,21 +300,30 @@ public class ChannelInfoFragment extends Fragment implements
 	@UiThread
 	protected void showSetCategoriesDialog(
 			final ModelGridSelector<Category> selector) {
-		new PicdoraDialog.Builder(mActivity).showTitle(false)
-				.setFullScreen(true).setView(selector.getView())
-				.setPositiveButton(R.string.channel_detail_change_categories_dialog_positive, new OnClickListener() {
+		new PicdoraDialog.Builder(mActivity)
+				.showTitle(false)
+				.setFullScreen(true)
+				.setView(selector.getView())
+				.setPositiveButton(
+						R.string.channel_detail_change_categories_dialog_positive,
+						new OnClickListener() {
 
-					@Override
-					public void onClick(DialogInterface dialog, int which) {
-						List<Category> selected = selector.getSelectedItems();
-						if (selected.isEmpty()) {
-							showEmptyCategoriesDialog();
-						} else {
-							mChannel.setCategories(selected);
-							mChannel.saveAsync();
-						}
-					}
-				}).setNegativeButton(R.string.dialog_default_negative, null).show();
+							@Override
+							public void onClick(DialogInterface dialog,
+									int which) {
+								Util.log("positive click");
+								List<Category> selected = selector
+										.getSelectedItems();
+								if (selected.isEmpty()) {
+									showEmptyCategoriesDialog();
+								} else {
+									mChannel.setCategories(selected);
+									mChannel.saveAsync();
+								}
+							}
+						})
+				.setNegativeButton(R.string.dialog_default_negative, null)
+				.show();
 	}
 
 	/**
@@ -314,17 +332,20 @@ public class ChannelInfoFragment extends Fragment implements
 	@UiThread
 	protected void showEmptyCategoriesDialog() {
 		new PicdoraDialog.Builder(mActivity)
-				.setTitle(R.string.channel_detail_change_categories_empty_dialog_title)
+				.setTitle(
+						R.string.channel_detail_change_categories_empty_dialog_title)
 				.setMessage(
 						R.string.channel_detail_change_categories_empty_dialog_message)
-				.setPositiveButton(R.string.dialog_default_positive, new OnClickListener() {
-					
-					@Override
-					public void onClick(DialogInterface dialog, int which) {
-						// reopen the categories dialog so they can choose again
-						changeCategoriesButtonClicked();						
-					}
-				})
-				.show();
+				.setPositiveButton(R.string.dialog_default_positive,
+						new OnClickListener() {
+
+							@Override
+							public void onClick(DialogInterface dialog,
+									int which) {
+								// reopen the categories dialog so they can
+								// choose again
+								changeCategoriesButtonClicked();
+							}
+						}).show();
 	}
 }
