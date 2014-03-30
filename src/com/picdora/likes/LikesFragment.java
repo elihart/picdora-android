@@ -7,7 +7,13 @@ import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.UiThread;
 
+import android.support.v7.view.ActionMode;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+
 import com.picdora.ChannelUtils;
+import com.picdora.PicdoraActivity;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.models.Channel;
@@ -17,6 +23,8 @@ import com.picdora.ui.grid.ImageGridFragment;
 @EFragment(R.layout.fragment_image_grid)
 public class LikesFragment extends ImageGridFragment {
 	private List<Channel> mChannels;
+	/** ActionMode for showing contextual options for selected images */
+	private ActionMode mActionMode;
 
 	/**
 	 * Use the given channels to source the liked images for display.
@@ -69,12 +77,55 @@ public class LikesFragment extends ImageGridFragment {
 
 	@Override
 	protected void onSelectionChanged(List<Image> selectedImages) {
-		Util.log("Selection: " + selectedImages.toString());
+		/* Start an action mode to show options for the selected images */
+		if (mActionMode == null && !selectedImages.isEmpty()) {
+			mActionMode = ((PicdoraActivity) getActivity())
+					.startSupportActionMode(mActionModeCallback);
+		}
+
+		/* End the action mode if the selected images were cleared */
+		else if (selectedImages.isEmpty() && mActionMode != null) {
+			mActionMode.finish();
+			mActionMode = null;
+		}
 	}
 
 	@Override
 	protected void onImageClick(Image image) {
 		Util.log("click");
 	}
+
+	private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
+
+		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+			MenuInflater inflater = mode.getMenuInflater();
+			inflater.inflate(R.menu.likes_contextual, menu);
+			return true;
+		}
+
+		public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+			return false;
+		}
+
+		public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+			switch (item.getItemId()) {
+			case R.id.download:
+				Util.log("download");
+				return true;
+			default:
+				return false;
+			}
+		}
+
+		public void onDestroyActionMode(ActionMode mode) {
+			/*
+			 * If we are closing and images are still selected then deselect
+			 * them
+			 */
+			if (!getSelectedImages().isEmpty()) {
+				clearSelectedImages();
+			}
+		}
+	};
 
 }

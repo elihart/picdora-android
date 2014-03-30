@@ -24,7 +24,7 @@ public class LikesActivity extends PicdoraActivity {
 		SlidingMenuHelper.addMenuToActivity(this, true);
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 		getSupportActionBar().setHomeButtonEnabled(true);
-		
+
 		List<Channel> channels = ChannelUtils.getAllChannels(true);
 		likesFragment.setChannels(channels);
 	}

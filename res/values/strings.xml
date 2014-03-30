@@ -58,6 +58,9 @@
     <string name="channel_view_star_dialog_title">Add to collection</string>
     <string name="channel_view_star_dialog_message">Add this image to your collection?</string>
     <string name="channel_view_star_dialog_positive_button">Add</string>
+    
+    <!-- Likes Contextual Menu -->
+    <string name="likes_menu_download">Download</string>
 
     
 </resources>
