@@ -81,6 +81,7 @@ public class LikesFragment extends ImageGridFragment {
 		if (mActionMode == null && !selectedImages.isEmpty()) {
 			mActionMode = ((PicdoraActivity) getActivity())
 					.startSupportActionMode(mActionModeCallback);
+			// mActionMode.setCustomView(arg0);
 		}
 
 		/* End the action mode if the selected images were cleared */
@@ -111,6 +112,12 @@ public class LikesFragment extends ImageGridFragment {
 			switch (item.getItemId()) {
 			case R.id.download:
 				Util.log("download");
+				return true;
+			case R.id.delete:
+				Util.log("delete");
+				return true;
+			case R.id.star:
+				Util.log("star");
 				return true;
 			default:
 				return false;
