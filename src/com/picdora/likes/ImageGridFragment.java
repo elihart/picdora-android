@@ -6,7 +6,6 @@ import java.util.List;
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EFragment;
-import org.androidannotations.annotations.FragmentArg;
 import org.androidannotations.annotations.ViewById;
 
 import android.support.v4.app.Fragment;
@@ -38,10 +37,6 @@ public abstract class ImageGridFragment extends Fragment implements
 	protected ImageGridAdapter mAdapter;
 	protected ModelGridSelector<Image> mImageSelector;
 
-	/** The images to display */
-	@FragmentArg
-	protected List<Image> imageList = new ArrayList<Image>();
-
 	/**
 	 * Whether any images are currently selected. False to begin with since no
 	 * images are selected at start.
@@ -50,10 +45,11 @@ public abstract class ImageGridFragment extends Fragment implements
 
 	@AfterViews
 	void init() {
-		setProgressVisible(true);
-
-		mImageSelector = new ModelGridSelector<Image>(getActivity(), imageList,
-				null, mAdapter);
+		/*
+		 * Start with empty list of images and nothing selected.
+		 */
+		mImageSelector = new ModelGridSelector<Image>(getActivity(),
+				new ArrayList<Image>(), null, mAdapter);
 
 		mImageSelector.setRequireLongClick(true);
 
@@ -103,7 +99,7 @@ public abstract class ImageGridFragment extends Fragment implements
 	/**
 	 * Show the progress bar and hide the image grid.
 	 */
-	public void setProgressVisible(boolean visible) {
+	public void showProgress() {
 		progress.setVisibility(View.VISIBLE);
 		gridContainer.setVisibility(View.GONE);
 		messageText.setVisibility(View.GONE);

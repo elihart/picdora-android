@@ -110,6 +110,7 @@ public class Category extends Model {
 		return cat.getId() == mId;
 	}
 
+	@Override
 	public int hashCode() {
 		return (int) mId;
 	}
@@ -118,6 +119,10 @@ public class Category extends Model {
 		return ImageUtils.getImgurLink(mPreviewImage, size);
 	}
 
+	/** Get the imgur id of the icon to use for this category.
+	 * 
+	 * @return
+	 */
 	public String getIconId() {
 		return mPreviewImage;
 	}

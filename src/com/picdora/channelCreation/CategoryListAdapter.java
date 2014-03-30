@@ -16,7 +16,7 @@ public class CategoryListAdapter extends ModelGridAdapter<Category> {
 
 	@Override
 	protected String getImgurId(Category item) {
-		return item.getPreviewUrl(ImgurSize.MEDIUM_THUMBNAIL);
+		return item.getIconId();
 	}
 
 	@Override

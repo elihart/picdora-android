@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.androidannotations.annotations.EBean;
@@ -24,6 +25,8 @@ import com.picdora.channelDetail.ChannelDetailActivity_;
 import com.picdora.channelPlayer.ChannelViewActivity_;
 import com.picdora.models.Category;
 import com.picdora.models.Channel;
+import com.picdora.models.ChannelImage;
+import com.picdora.models.Image;
 
 @EBean
 public class ChannelUtils {
@@ -33,11 +36,16 @@ public class ChannelUtils {
 	/**
 	 * Launch the ChannelViewActivity with the given channel.
 	 * 
-	 * @param channel The channel to play.
-	 * @param activity The activity context to launch the ChannelViewActivity from.
-	 * @param save Whether the channel should be saved and it's Last Used field updated to now. Save is synchronous!
+	 * @param channel
+	 *            The channel to play.
+	 * @param activity
+	 *            The activity context to launch the ChannelViewActivity from.
+	 * @param save
+	 *            Whether the channel should be saved and it's Last Used field
+	 *            updated to now. Save is synchronous!
 	 */
-	public static void playChannel(Channel channel, Activity activity, boolean save) {
+	public static void playChannel(Channel channel, Activity activity,
+			boolean save) {
 		if (channel == null) {
 			throw new IllegalArgumentException("Channel can't be null");
 		}
@@ -170,5 +178,42 @@ public class ChannelUtils {
 		SQLiteStatement s = db.compileStatement(query);
 
 		return (int) s.simpleQueryForLong();
+	}
+
+	/**
+	 * Get all liked images from the given channels.
+	 * 
+	 * @param channels
+	 * @return
+	 */
+	public static List<Image> getLikedImages(List<Channel> channels) {
+		String query = "SELECT * FROM Images WHERE imgurId IN (SELECT image FROM Views WHERE liked="
+				+ ChannelImage.LIKE_STATUS.LIKED.ordinal()
+				+ " AND channelId IN " + getChannelIds(channels) + ")";
+
+		CursorList<Image> list = Query.many(Image.class, query, null).get();
+
+		List<Image> images = new ArrayList<Image>();
+		images.addAll(list.asList());
+		list.close();
+
+		// remove duplicates by creating set first
+		return new ArrayList<Image>(new LinkedHashSet<Image>(images));
+	}
+
+	/**
+	 * Create a parenthesized, comma separated list of the ids of the given
+	 * channels for use in db queries.
+	 * 
+	 * @param channels
+	 * @return Id list - "(1,2,3)"
+	 */
+	public static String getChannelIds(List<Channel> channels) {
+		List<Integer> ids = new ArrayList<Integer>();
+		for (Channel c : channels) {
+			ids.add((int) c.getId());
+		}
+
+		return ("(" + TextUtils.join(",", ids) + ")");
 	}
 }

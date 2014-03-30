@@ -51,9 +51,8 @@ public class GridItemView extends RelativeLayout {
 	protected static final int CORNER_RADIUS = 10;
 
 	protected boolean highlighted;
-	protected String text;
-	protected String url;
-	private boolean mShowText;
+	/** Whether text should be shown on top of an image. Defaults to true */
+	private boolean mShowText = true;
 
 	public GridItemView(Context context) {
 		super(context);
@@ -104,11 +103,8 @@ public class GridItemView extends RelativeLayout {
 	 * @param highlight
 	 *            Whether the item should be highlighted
 	 */
-	public void bind(String text, String url, boolean highlight) {
-		this.text = text.toUpperCase(Locale.US);
-		this.url = url;
-
-		// reset the image to be white until an image loads
+	public void bind(String text, String url, boolean highlight) {		
+		// use a placeholder until an image loads
 		mImage.setImageDrawable(imagePlaceholder);
 
 		highlighted = highlight;
@@ -116,7 +112,7 @@ public class GridItemView extends RelativeLayout {
 		setTint();
 
 		if (mShowText) {
-			mText.setText(text);
+			mText.setText(text.toUpperCase(Locale.US));
 		}
 
 		ImageLoader.getInstance().displayImage(url, mImage);

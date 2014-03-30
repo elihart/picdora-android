@@ -5,13 +5,11 @@
 
     <!-- The main content view -->
 
-    <RelativeLayout
+    <fragment
+        android:id="@+id/likesFragment"
+        android:name="com.picdora.likes.LikesFragment_"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" >
-
-        
-
-    </RelativeLayout>
+        android:layout_height="match_parent" />
 
     <!-- The navigation drawer -->
 
