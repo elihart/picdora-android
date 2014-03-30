@@ -1,4 +1,4 @@
-package com.picdora.likes;
+package com.picdora.ui.grid;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,10 +18,27 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.PauseOnScrollListener;
 import com.picdora.R;
 import com.picdora.models.Image;
-import com.picdora.ui.grid.GridItemView;
-import com.picdora.ui.grid.ModelGridSelector;
 import com.picdora.ui.grid.ModelGridSelector.OnGridItemClickListener;
 
+/**
+ * Displays Images in a grid and provides all the functionality for selections,
+ * showing loading progress, and showing an error message.
+ * <p>
+ * This works similar to the Gallery app. A list of Images must first be
+ * provided, and they are then shown in a grid. The user can click on any image
+ * to interact with it; {@link #onImageClick(Image)} needs to be subclassed to
+ * handle a click. This also provides support for selections like the Gallery
+ * app. A selection is started by a long click. More images can then be added by
+ * either long clicking or normal clicking other images. Long clicking or short
+ * clicking an already selected image will deselect it. Anytime the set of
+ * selected images changes {@link #onSelectionChanged(List)} will be called with
+ * the set of currently selected images.
+ * <p>
+ * The client must manually call {@link #showProgress()} and
+ * {@link #showMessage(String)} when they want to show a progress bar or a
+ * message grid.
+ * 
+ */
 @EFragment(R.layout.fragment_image_grid)
 public abstract class ImageGridFragment extends Fragment implements
 		OnGridItemClickListener<Image> {
@@ -44,7 +61,7 @@ public abstract class ImageGridFragment extends Fragment implements
 	private boolean mImagesSelected = false;
 
 	@AfterViews
-	void init() {
+	protected void init() {
 		/*
 		 * Start with empty list of images and nothing selected.
 		 */

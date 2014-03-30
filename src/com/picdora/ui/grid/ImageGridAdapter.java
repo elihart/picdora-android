@@ -1,10 +1,9 @@
-package com.picdora.likes;
+package com.picdora.ui.grid;
 
 import org.androidannotations.annotations.AfterInject;
 import org.androidannotations.annotations.EBean;
 
 import com.picdora.models.Image;
-import com.picdora.ui.grid.ModelGridAdapter;
 
 /**
  * A specialized {@link #ModelGridAdapter} that displays the picture represented by an Image model with no text overlayed on top of it. 

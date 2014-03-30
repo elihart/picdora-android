@@ -12,6 +12,7 @@ import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.models.Channel;
 import com.picdora.models.Image;
+import com.picdora.ui.grid.ImageGridFragment;
 
 @EFragment(R.layout.fragment_image_grid)
 public class LikesFragment extends ImageGridFragment {
@@ -58,7 +59,6 @@ public class LikesFragment extends ImageGridFragment {
 	 */
 	@UiThread
 	protected void handleRefreshResult(List<Image> images) {
-		Util.log("count " + images.size());
 		setImagesToShow(images);
 		if (images.isEmpty()) {
 			showMessage("You haven't liked any images yet!");
