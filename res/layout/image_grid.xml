@@ -10,4 +10,5 @@
     android:numColumns="auto_fit"
     android:stretchMode="columnWidth"
     android:verticalSpacing="@dimen/image_grid_item_padding"
+    android:listSelector="@android:color/transparent"
     android:padding="@dimen/image_grid_item_padding" />

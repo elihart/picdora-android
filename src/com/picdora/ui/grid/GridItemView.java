@@ -49,7 +49,7 @@ public class GridItemView extends RelativeLayout {
 	protected int mHighlightedBorderColor;
 
 	/** Width of the highlighted border in DP */
-	private final static int HIGHLIGHT_BORDER_WIDTH_DP = 7;
+	private final static int HIGHLIGHT_BORDER_WIDTH_DP = 3;
 	/**
 	 * Width of border in pixels that will be calculated at runtime based on
 	 * screen density
@@ -163,19 +163,22 @@ public class GridItemView extends RelativeLayout {
 	 * Adjust the image colors based on current state.
 	 */
 	protected void decorate() {
-		/* Fade the press color in on press, or cancel the animation on no press */
+		/*
+		 * Fade the press color in on press, or cancel the animation on no press
+		 * and set default tint
+		 */
 		if (isPressed()) {
 			startPressAnimation();
 		} else {
 			cancelPressAnimation();
 
-			// show the default tint
-			// If we are not showing text then we don't need the black overlay
+			// Show the default tint.
 			if (mShowText) {
+				// Set a dark overlay to make the text stand out.
 				mImage.setColorFilter(mDefaultTint);
-			}
-			// set a dark overlay to make the text stand out
-			else {
+			} else {
+				// If we are not showing text then we don't need the black
+				// overlay
 				mImage.setColorFilter(null);
 			}
 		}
@@ -230,7 +233,7 @@ public class GridItemView extends RelativeLayout {
 
 			@Override
 			public void onAnimationStart(Animator arg0) {
-				//mImage.setColorFilter(mPressedTint);
+				// mImage.setColorFilter(mPressedTint);
 			}
 
 			@Override
@@ -240,7 +243,7 @@ public class GridItemView extends RelativeLayout {
 
 			@Override
 			public void onAnimationEnd(Animator arg0) {
-				//mImage.setColorFilter(mPressedTint);
+				// mImage.setColorFilter(mPressedTint);
 			}
 
 			@Override
@@ -315,7 +318,7 @@ public class GridItemView extends RelativeLayout {
 		 * The percent of the animation to spend at the beginning doing the fade
 		 * from end value to start value
 		 */
-		private static final float INTRO_PERCENT = .2f;
+		private static final float INTRO_PERCENT = .5f;
 
 		/**
 		 * This function returns the calculated in-between value for a color
