@@ -27,7 +27,8 @@ public class LikesFragment extends ImageGridFragment {
 	private ActionMode mActionMode;
 
 	/**
-	 * Use the given channels to source the liked images for display.
+	 * Use the given channels to source the liked images for display. Use
+	 * {@link #setChannel(Channel)} to shown just one channel.
 	 * 
 	 * @param channels
 	 */
@@ -37,7 +38,8 @@ public class LikesFragment extends ImageGridFragment {
 	}
 
 	/**
-	 * Display only liked images from this channel
+	 * Display only liked images from this channel. Use
+	 * {@link #setChannels(List)} to shown just multiple channels.
 	 * 
 	 * @param channel
 	 */

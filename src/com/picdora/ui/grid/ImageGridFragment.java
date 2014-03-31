@@ -6,6 +6,7 @@ import java.util.List;
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EFragment;
+import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
 
 import android.support.v4.app.Fragment;
@@ -116,6 +117,7 @@ public abstract class ImageGridFragment extends Fragment implements
 	/**
 	 * Show the progress bar and hide the image grid.
 	 */
+	@UiThread
 	public void showProgress() {
 		progress.setVisibility(View.VISIBLE);
 		gridContainer.setVisibility(View.GONE);
@@ -128,6 +130,7 @@ public abstract class ImageGridFragment extends Fragment implements
 	 * @param msg
 	 *            The message to show
 	 */
+	@UiThread
 	public void showMessage(String msg) {
 		messageText.setText(msg);
 
@@ -139,6 +142,7 @@ public abstract class ImageGridFragment extends Fragment implements
 	/**
 	 * Show the image grid and hide the progress bar and message text
 	 */
+	@UiThread
 	public void showImageGrid() {
 		progress.setVisibility(View.GONE);
 		gridContainer.setVisibility(View.VISIBLE);

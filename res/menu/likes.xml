@@ -1,9 +1,12 @@
-<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:picdora="http://schemas.android.com/apk/res-auto" >
 
     <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="100"
-        android:showAsAction="never"
-        android:title="@string/action_settings"/>
+        android:id="@+id/channel_spinner"
+        android:icon="@drawable/ic_action_play"
+        android:orderInCategory="1"
+        android:title="@string/likes_channel_spinner"
+        picdora:actionViewClass="android.widget.Spinner"
+        picdora:showAsAction="ifRoom"/>
 
 </menu>
