@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.androidannotations.annotations.AfterViews;
-import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
 
 import android.support.v4.app.Fragment;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -51,7 +51,6 @@ public abstract class ImageGridFragment extends Fragment implements
 	@ViewById
 	protected FrameLayout gridContainer;
 
-	@Bean
 	protected ImageGridAdapter mAdapter;
 	protected ModelGridSelector<Image> mImageSelector;
 
@@ -61,27 +60,56 @@ public abstract class ImageGridFragment extends Fragment implements
 	 */
 	private boolean mImagesSelected = false;
 
+	/**
+	 * Keep track of whether the fragment has been destroyed for use in
+	 * {@link #isDestroyed()}
+	 */
+	private volatile boolean mDestroyed = false;
+
 	@AfterViews
 	protected void init() {
 		/*
-		 * Start with empty list of images and nothing selected.
+		 * Retain state between config changes so we don't have to load images
+		 * all over again.
 		 */
-		mImageSelector = new ModelGridSelector<Image>(getActivity(),
-				new ArrayList<Image>(), null, mAdapter);
+		setRetainInstance(true);
 
-		mImageSelector.setRequireLongClick(true);
+		/*
+		 * If we retained state then we shouldn't recreate these.
+		 */
+		if (mImageSelector == null) {
+			mAdapter = ImageGridAdapter_.getInstance_(getActivity());
 
-		boolean pauseOnScroll = false;
-		boolean pauseOnFling = true;
+			/*
+			 * Start with empty list of images and nothing selected.
+			 */
+			mImageSelector = new ModelGridSelector<Image>(getActivity(),
+					new ArrayList<Image>(), null, mAdapter);
 
-		PauseOnScrollListener listener = new PauseOnScrollListener(
-				ImageLoader.getInstance(), pauseOnScroll, pauseOnFling);
+			mImageSelector.setRequireLongClick(true);
 
-		mImageSelector.setScrollListener(listener);
+			boolean pauseOnScroll = false;
+			boolean pauseOnFling = true;
 
-		gridContainer.addView(mImageSelector.getView());
+			PauseOnScrollListener listener = new PauseOnScrollListener(
+					ImageLoader.getInstance(), pauseOnScroll, pauseOnFling);
 
-		mImageSelector.setOnClickListener(this);
+			mImageSelector.setScrollListener(listener);
+			mImageSelector.setOnClickListener(this);
+		}
+
+		/*
+		 * If this view was recreated then we need to remove our image selector
+		 * from the old view before adding it to the new one
+		 */
+		View v = mImageSelector.getView();
+		ViewGroup parent = (ViewGroup) v.getParent();
+		if (parent != null) {
+			parent.removeView(v);
+		}
+		
+		/* Add grid view to the fragment */
+		gridContainer.addView(v);
 	}
 
 	@Override
@@ -170,12 +198,22 @@ public abstract class ImageGridFragment extends Fragment implements
 	protected abstract void onImageClick(Image image);
 
 	/**
-	 * Set the images to be displayed in the grid.
+	 * Set the images to be displayed in the grid. Clear any currently selected images.
 	 * 
 	 * @param images
 	 */
 	public void setImagesToShow(List<Image> images) {
+		clearSelectedImages();
 		mImageSelector.setItems(images);
+	}
+
+	/**
+	 * Whether our image list is currently empty.
+	 * 
+	 * @return True if we don't have any images set, false otherwise.
+	 */
+	public boolean isImagesEmpty() {
+		return mAdapter.getItems().isEmpty();
 	}
 
 	/**
@@ -197,6 +235,20 @@ public abstract class ImageGridFragment extends Fragment implements
 		mAdapter.notifyDataSetChanged();
 
 		onSelectionChanged(mImageSelector.getSelectedItems());
+	}
+
+	/**
+	 * Whether the onDestroy method has been called for this fragment instance.
+	 * 
+	 */
+	public boolean isDestroyed() {
+		return mDestroyed;
+	}
+
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		mDestroyed = true;
 	}
 
 }

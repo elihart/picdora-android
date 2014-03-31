@@ -6,10 +6,11 @@ import java.util.List;
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EActivity;
-import org.androidannotations.annotations.FragmentById;
 import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.sharedpreferences.Pref;
 
+import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.view.MenuItemCompat;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -27,10 +28,16 @@ import com.picdora.models.Channel;
 import com.picdora.models.Channel.GifSetting;
 import com.picdora.ui.SlidingMenuHelper;
 
+/**
+ * Displays "Liked" images in a gallery style page. A spinner in the action bar
+ * allows the user to filter images by what channel they were liked in, or show
+ * images from all channels (the default).
+ */
 @EActivity(R.layout.activity_likes)
 public class LikesActivity extends PicdoraActivity {
-	@FragmentById
-	protected LikesFragment likesFragment;
+	/** Tag to associate likes fragment with in fragment manager */
+	private static final String LIKES_FRAGMENT_TAG = "likesFragment";
+	protected LikesFragment mLikesFragment;
 
 	@Pref
 	protected PicdoraPreferences_ mPrefs;
@@ -40,15 +47,40 @@ public class LikesActivity extends PicdoraActivity {
 	private ChannelSelectArrayAdapter mSpinnerAdapter;
 	private List<Channel> mChannels;
 
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+
+		/*
+		 * The fragment is set to retain state so we don't have to recreate it
+		 * on config changes.
+		 */
+		FragmentManager fm = getSupportFragmentManager();
+		mLikesFragment = (LikesFragment) fm
+				.findFragmentByTag(LIKES_FRAGMENT_TAG);
+		/* Create the fragment and add it if it doesn't yet exist */
+		if (mLikesFragment == null) {
+			mLikesFragment = new LikesFragment_();
+			fm.beginTransaction()
+					.add(R.id.fragment_container, mLikesFragment,
+							LIKES_FRAGMENT_TAG).commit();
+		}
+
+		/* Restore instance state if available */
+		SavedState state = (SavedState) getRetainedState();
+		if (state != null) {
+			mChannels = state.channels;
+		}
+	}
+
 	@AfterViews
 	void initViews() {
 		SlidingMenuHelper.addMenuToActivity(this, true);
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 		getSupportActionBar().setHomeButtonEnabled(true);
 
-		// List<Channel> channels = ChannelUtils.getAllChannels(true);
-		// likesFragment.setChannels(channels);
-		likesFragment.showProgress();
+		/* Show progress until channels and images are loaded */
+		mLikesFragment.showProgress();
 	}
 
 	@Override
@@ -56,9 +88,21 @@ public class LikesActivity extends PicdoraActivity {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.likes, menu);
 
+		/* Get the spinner in the action bar */
 		MenuItem spinnerItem = menu.findItem(R.id.channel_spinner);
 		mChannelSpinner = (Spinner) MenuItemCompat.getActionView(spinnerItem);
-		initChannels();
+
+		/*
+		 * We couldn't initialize the spinner until we had a handle on it, now
+		 * we can go ahead and get the channels to populate it with. If we
+		 * already have the channels from a restored state then we can skip to
+		 * initing the spinner
+		 */
+		if (mChannels == null || mChannels.isEmpty()) {
+			initChannels();
+		} else {
+			initSpinner();
+		}
 
 		return true;
 	}
@@ -74,7 +118,13 @@ public class LikesActivity extends PicdoraActivity {
 		// get all channels from db.
 		mChannels = ChannelUtils.getAllChannels(mPrefs.showNsfw().get());
 
-		initSpinner();
+		/*
+		 * If the activity was destroyed while we were getting those then don't
+		 * continue, otherwise init the spinner with the channels we got
+		 */
+		if (!isDestroyedCompat()) {
+			initSpinner();
+		}
 	}
 
 	/**
@@ -109,11 +159,11 @@ public class LikesActivity extends PicdoraActivity {
 					int position, long id) {
 				/* If position is 0 then it is our All Channels dummy */
 				if (position == 0) {
-					likesFragment.setChannels(mChannels);
+					mLikesFragment.setChannels(mChannels);
 				}
 				// normal channel
 				else {
-					likesFragment.setChannel(mSpinnerAdapter.getItem(position));
+					mLikesFragment.setChannel(mSpinnerAdapter.getItem(position));
 				}
 
 			}
@@ -124,12 +174,51 @@ public class LikesActivity extends PicdoraActivity {
 				mChannelSpinner.setSelection(0);
 			}
 		});
-		
-		/* Start with all channels selected */
-		mChannelSpinner.setSelection(0);
 
-		// Pass all channels to fragment to load all by default
-		//likesFragment.setChannels(mChannels);
+		/*
+		 * If we have a saved spinner position then restore that, otherwise
+		 * default to "all". Ideally we would only have to set the selection on
+		 * the spinner and it's callback would set the channels, but we can't
+		 * rely on that for the case when the spinner isn't shown, otherwise if
+		 * the spinner is hidden in the beginning then the fragment won't be
+		 * told what to load.
+		 */
+		SavedState state = (SavedState) getRetainedState();
+		if (state != null && state.spinnerPos != 0) {
+			mChannelSpinner.setSelection(state.spinnerPos);
+			mLikesFragment
+					.setChannel(mSpinnerAdapter.getItem(state.spinnerPos));
+		} else {
+			// Pass all channels to fragment to load all by default
+			mChannelSpinner.setSelection(0);
+			mLikesFragment.setChannels(mChannels);
+		}
+	}
+
+	@Override
+	protected Object onRetainState() {
+		/* Get the currently selected position, or default to 0 if nothing is selected */
+		int pos = mChannelSpinner.getSelectedItemPosition();
+		if(pos == AdapterView.INVALID_POSITION ){
+			pos = 0;
+		}
+
+		return new SavedState(mChannels, pos);
+	}
+
+	/**
+	 * Helper class to save our activity state with {@link #onRetainState()}.
+	 */
+	private class SavedState {
+		public List<Channel> channels;
+		public int spinnerPos;
+
+		public SavedState(List<Channel> channels, int spinnerPos) {
+			super();
+			this.channels = channels;
+			this.spinnerPos = spinnerPos;
+		}
+
 	}
 
 }

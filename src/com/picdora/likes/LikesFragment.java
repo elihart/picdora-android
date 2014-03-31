@@ -26,15 +26,40 @@ public class LikesFragment extends ImageGridFragment {
 	/** ActionMode for showing contextual options for selected images */
 	private ActionMode mActionMode;
 
+	/** Whether we currently have a background task going to get new images */
+	private volatile boolean mImageRefreshInProgress = false;
+
 	/**
 	 * Use the given channels to source the liked images for display. Use
 	 * {@link #setChannel(Channel)} to shown just one channel.
 	 * 
 	 * @param channels
+	 *            The channels to source liked images from. Can't be null.
 	 */
 	public void setChannels(List<Channel> channels) {
-		mChannels = channels;
-		refreshImageList();
+		if (channels == null) {
+			throw new IllegalArgumentException("Channels can't be null");
+		}
+
+		/*
+		 * If our existing channels are the same as the new ones then don't
+		 * bother changing anything. However, if we don't have any images to
+		 * show and no background refresh task is ongoing then let's try to
+		 * refresh again.
+		 */
+		if (channels.equals(mChannels)
+				&& (!isImagesEmpty() || mImageRefreshInProgress)) {
+			showImages();
+		} else {
+			/*
+			 * TODO: Case where image refresh is in progress for other channels
+			 * and the user changes the channels during the load. Ideally this
+			 * would instantly cancel the previous load, but right now the
+			 * second will start in parallel. This is bad.
+			 */
+			mChannels = channels;
+			refreshImageList();
+		}
 	}
 
 	/**
@@ -44,9 +69,9 @@ public class LikesFragment extends ImageGridFragment {
 	 * @param channel
 	 */
 	public void setChannel(Channel channel) {
-		mChannels = new ArrayList<Channel>();
-		mChannels.add(channel);
-		refreshImageList();
+		List<Channel> channels = new ArrayList<Channel>();
+		channels.add(channel);
+		setChannels(channels);
 	}
 
 	/**
@@ -56,10 +81,17 @@ public class LikesFragment extends ImageGridFragment {
 	 */
 	@Background
 	public void refreshImageList() {
+		mImageRefreshInProgress = true;
 		showProgress();
 		List<Image> images = ChannelUtils.getLikedImages(mChannels);
-		// update the display on the ui thread
-		handleRefreshResult(images);
+		/*
+		 * Update the display on the ui thread if the fragment wasn't destroyed
+		 * while we were getting images
+		 */
+		if (!isDestroyed()) {
+			handleRefreshResult(images);
+		}
+		mImageRefreshInProgress = false;
 	}
 
 	/**
@@ -70,7 +102,18 @@ public class LikesFragment extends ImageGridFragment {
 	@UiThread
 	protected void handleRefreshResult(List<Image> images) {
 		setImagesToShow(images);
-		if (images.isEmpty()) {
+		showImages();
+	}
+
+	/**
+	 * Show the image grid if we have images, but if our image list is empty
+	 * then show a message instead.
+	 * 
+	 */
+	protected void showImages() {
+		if (mImageRefreshInProgress) {
+			showProgress();
+		} else if (isImagesEmpty()) {
 			showMessage("You haven't liked any images yet!");
 		} else {
 			showImageGrid();
