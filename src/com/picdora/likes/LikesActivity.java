@@ -197,9 +197,12 @@ public class LikesActivity extends PicdoraActivity {
 
 	@Override
 	protected Object onRetainState() {
-		/* Get the currently selected position, or default to 0 if nothing is selected */
+		/*
+		 * Get the currently selected position, or default to 0 if nothing is
+		 * selected
+		 */
 		int pos = mChannelSpinner.getSelectedItemPosition();
-		if(pos == AdapterView.INVALID_POSITION ){
+		if (pos == AdapterView.INVALID_POSITION) {
 			pos = 0;
 		}
 

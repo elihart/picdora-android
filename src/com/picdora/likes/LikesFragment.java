@@ -3,6 +3,7 @@ package com.picdora.likes;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.UiThread;
@@ -28,6 +29,27 @@ public class LikesFragment extends ImageGridFragment {
 
 	/** Whether we currently have a background task going to get new images */
 	private volatile boolean mImageRefreshInProgress = false;
+
+	/**
+	 * On a config change the action mode bar will not be recreated
+	 * automatically so we need to recreate it manually.
+	 * 
+	 */
+	@AfterViews
+	protected void restoreActionMode() {
+		/*
+		 * If we have a lingering action mode or selected images then create a
+		 * fresh action mode.
+		 */
+		if (mActionMode != null || !getSelectedImages().isEmpty()) {
+			/*
+			 * Easiest way to recreate is just forget about the old one and
+			 * remind ourselves of the selected items.
+			 */
+			mActionMode = null;
+			onSelectionChanged(getSelectedImages());
+		}
+	}
 
 	/**
 	 * Use the given channels to source the liked images for display. Use
@@ -126,7 +148,6 @@ public class LikesFragment extends ImageGridFragment {
 		if (mActionMode == null && !selectedImages.isEmpty()) {
 			mActionMode = ((PicdoraActivity) getActivity())
 					.startSupportActionMode(mActionModeCallback);
-			// mActionMode.setCustomView(arg0);
 		}
 
 		/* End the action mode if the selected images were cleared */

@@ -96,7 +96,7 @@ public abstract class ImageGridFragment extends Fragment implements
 
 			mImageSelector.setScrollListener(listener);
 			mImageSelector.setOnClickListener(this);
-		}
+		} 		
 
 		/*
 		 * If this view was recreated then we need to remove our image selector
@@ -107,7 +107,7 @@ public abstract class ImageGridFragment extends Fragment implements
 		if (parent != null) {
 			parent.removeView(v);
 		}
-		
+
 		/* Add grid view to the fragment */
 		gridContainer.addView(v);
 	}
@@ -198,7 +198,8 @@ public abstract class ImageGridFragment extends Fragment implements
 	protected abstract void onImageClick(Image image);
 
 	/**
-	 * Set the images to be displayed in the grid. Clear any currently selected images.
+	 * Set the images to be displayed in the grid. Clear any currently selected
+	 * images.
 	 * 
 	 * @param images
 	 */
