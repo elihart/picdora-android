@@ -1,14 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:picdora="http://schemas.android.com/apk/res-auto" >
 
     <item
-        android:id="@+id/channel_spinner"
-        android:icon="@drawable/ic_action_channels"
-        android:orderInCategory="1"
-        android:title="@string/likes_channel_spinner"
+        android:id="@+id/size_spinner"
+        android:icon="@drawable/ic_action_download"
+        android:orderInCategory="50"
+        android:title="@string/gallery_size_spinner"
         picdora:actionViewClass="android.widget.Spinner"
         picdora:showAsAction="ifRoom|collapseActionView"/>
-    
-    
 
 </menu>

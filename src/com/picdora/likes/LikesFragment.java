@@ -19,10 +19,10 @@ import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.models.Channel;
 import com.picdora.models.Image;
-import com.picdora.ui.grid.ImageGridFragment;
+import com.picdora.ui.gallery.GalleryFragment;
 
 @EFragment(R.layout.fragment_image_grid)
-public class LikesFragment extends ImageGridFragment {
+public class LikesFragment extends GalleryFragment {
 	private List<Channel> mChannels;
 	/** ActionMode for showing contextual options for selected images */
 	private ActionMode mActionMode;

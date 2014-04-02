@@ -4,7 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:ellipsize="marquee"
-    android:padding="5dp"
+    android:paddingLeft="@dimen/action_spinner_item_side_padding"
+    android:paddingRight="@dimen/action_spinner_item_side_padding"
     android:singleLine="true"
-    android:textSize="20sp" />
+    android:textSize="@dimen/action_spinner_item_text" />
 

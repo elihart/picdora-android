@@ -120,7 +120,7 @@ public class GridItemView extends RelativeLayout {
 	 * Set this grid item to display the given image and text
 	 * 
 	 * @param text
-	 *            The text to display if {@link #mShowText} is enabled
+	 *            The text to display. Can be null if {@link #mShowText} is disabled
 	 * @param url
 	 *            The url of the image to display
 	 * @param highlight

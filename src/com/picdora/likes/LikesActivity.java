@@ -44,6 +44,9 @@ public class LikesActivity extends PicdoraActivity {
 
 	/** Spinner to select channel */
 	private Spinner mChannelSpinner;
+
+	private MenuItem mChannelSpinnerItem;
+	
 	private ChannelSelectArrayAdapter mSpinnerAdapter;
 	private List<Channel> mChannels;
 
@@ -86,11 +89,11 @@ public class LikesActivity extends PicdoraActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.likes, menu);
+		getMenuInflater().inflate(R.menu.likes, menu);		
 
-		/* Get the spinner in the action bar */
-		MenuItem spinnerItem = menu.findItem(R.id.channel_spinner);
-		mChannelSpinner = (Spinner) MenuItemCompat.getActionView(spinnerItem);
+		/* Get the channel spinner*/
+		mChannelSpinnerItem = menu.findItem(R.id.channel_spinner);
+		mChannelSpinner = (Spinner) MenuItemCompat.getActionView(mChannelSpinnerItem);	
 
 		/*
 		 * We couldn't initialize the spinner until we had a handle on it, now
@@ -101,7 +104,7 @@ public class LikesActivity extends PicdoraActivity {
 		if (mChannels == null || mChannels.isEmpty()) {
 			initChannels();
 		} else {
-			initSpinner();
+			initChannelSpinner();
 		}
 
 		return true;
@@ -123,7 +126,7 @@ public class LikesActivity extends PicdoraActivity {
 		 * continue, otherwise init the spinner with the channels we got
 		 */
 		if (!isDestroyedCompat()) {
-			initSpinner();
+			initChannelSpinner();
 		}
 	}
 
@@ -131,7 +134,7 @@ public class LikesActivity extends PicdoraActivity {
 	 * Init and populate the Channel Select spinner.
 	 */
 	@UiThread
-	protected void initSpinner() {
+	protected void initChannelSpinner() {
 		/*
 		 * We need an option for "All Channels". Couple ways to do this, but for
 		 * now let's use a dummy Channel at index 0 with it's name being the
@@ -148,7 +151,7 @@ public class LikesActivity extends PicdoraActivity {
 		channelsToShow.add(0, allChannelsDummy);
 
 		mSpinnerAdapter = new ChannelSelectArrayAdapter(this,
-				R.layout.channel_spinner_item, channelsToShow);
+				R.layout.action_spinner_item, channelsToShow);
 
 		mChannelSpinner.setAdapter(mSpinnerAdapter);
 

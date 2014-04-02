@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <!-- Picdora Dialog -->
     <string name="dialog_default_positive">Ok</string>
     <string name="dialog_default_negative">Cancel</string>
     <string name="dialog_default_title">Alert</string>
     <string name="dialog_default_message">Alert message</string>
-
     <string name="app_name">Picdora</string>
     <string name="action_settings">Settings</string>
     <string name="action_new_channel">Create Channel</string>
@@ -22,7 +22,6 @@
     <string name="title_activity_likes">Likes</string>
     <string name="title_activity_launch">Picdora</string>
 
-    
     <!-- Channel Detail -->
     <string name="action_delete_channel">Delete Channel</string>
     <string name="action_play_channel">Play Channel</string>
@@ -47,26 +46,28 @@
     <string name="channel_detail_images_seen">Images Seen: %1$d</string>
     <string name="channel_detail_name_dialog_positive">Change Name</string>
     <string name="channel_detail_name_dialog_title">Change Channel Name</string>
-    
+
     <!-- Satellite Menu -->
     <string name="sat_menu_main">Menu</string>
-    
-    <!--  Channel View Activity -->
+
+    <!-- Channel View Activity -->
     <string name="channel_view_report_dialog_title">Report image?</string>
     <string name="channel_view_report_dialog_message">Is this image totally out of place? Report it to us and we\'ll get it sorted out!</string>
     <string name="channel_view_report_dialog_positive_button">Report</string>
     <string name="channel_view_star_dialog_title">Add to collection</string>
     <string name="channel_view_star_dialog_message">Add this image to your collection?</string>
     <string name="channel_view_star_dialog_positive_button">Add</string>
-    
+
+    <!-- Gallery Fragment -->
+    <string name="gallery_size_spinner">Image Size</string>
+
     <!-- Likes Contextual Menu -->
     <string name="likes_menu_download">Download</string>
     <string name="likes_menu_star">Add to collection</string>
     <string name="likes_menu_delete">Delete</string>
-    
+
     <!-- Likes Contextual Menu -->
     <string name="likes_channel_spinner">Channel Selection</string>
     <string name="likes_channel_spinner_value_all">All Channels</string>
 
-    
 </resources>

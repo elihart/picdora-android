@@ -1,4 +1,4 @@
-package com.picdora.ui.grid;
+package com.picdora.ui.gallery;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,16 +9,24 @@ import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
 
 import android.support.v4.app.Fragment;
+import android.support.v4.view.MenuItemCompat;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.PauseOnScrollListener;
 import com.picdora.R;
 import com.picdora.models.Image;
+import com.picdora.ui.grid.GridItemView;
+import com.picdora.ui.grid.ModelGridSelector;
 import com.picdora.ui.grid.ModelGridSelector.OnGridItemClickListener;
 
 /**
@@ -35,13 +43,16 @@ import com.picdora.ui.grid.ModelGridSelector.OnGridItemClickListener;
  * selected images changes {@link #onSelectionChanged(List)} will be called with
  * the set of currently selected images.
  * <p>
- * The client must manually call {@link #showProgress()} and
+ * The client can manually call {@link #showProgress()} and
  * {@link #showMessage(String)} when they want to show a progress bar or a
  * message grid.
+ * <p>
+ * A collapsed action view Spinner is placed in the action bar to allow the user
+ * to choose the size of the images in the grid.
  * 
  */
 @EFragment(R.layout.fragment_image_grid)
-public abstract class ImageGridFragment extends Fragment implements
+public abstract class GalleryFragment extends Fragment implements
 		OnGridItemClickListener<Image> {
 
 	@ViewById
@@ -51,8 +62,12 @@ public abstract class ImageGridFragment extends Fragment implements
 	@ViewById
 	protected FrameLayout gridContainer;
 
-	protected ImageGridAdapter mAdapter;
+	protected GalleryAdapter mAdapter;
 	protected ModelGridSelector<Image> mImageSelector;
+	/** The spinner in the actionbar for selecting image size */
+	private Spinner mSizeSpinner;
+	/** The actionbar item container the actionview for {@link #mSizeSpinner} */
+	private MenuItem mSizeSpinnerItem;
 
 	/**
 	 * Whether any images are currently selected. False to begin with since no
@@ -68,6 +83,8 @@ public abstract class ImageGridFragment extends Fragment implements
 
 	@AfterViews
 	protected void init() {
+		setHasOptionsMenu(true);
+		
 		/*
 		 * Retain state between config changes so we don't have to load images
 		 * all over again.
@@ -78,7 +95,7 @@ public abstract class ImageGridFragment extends Fragment implements
 		 * If we retained state then we shouldn't recreate these.
 		 */
 		if (mImageSelector == null) {
-			mAdapter = ImageGridAdapter_.getInstance_(getActivity());
+			mAdapter = GalleryAdapter_.getInstance_(getActivity());
 
 			/*
 			 * Start with empty list of images and nothing selected.
@@ -96,7 +113,7 @@ public abstract class ImageGridFragment extends Fragment implements
 
 			mImageSelector.setScrollListener(listener);
 			mImageSelector.setOnClickListener(this);
-		} 		
+		}
 
 		/*
 		 * If this view was recreated then we need to remove our image selector
@@ -110,6 +127,23 @@ public abstract class ImageGridFragment extends Fragment implements
 
 		/* Add grid view to the fragment */
 		gridContainer.addView(v);
+	}
+	
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {	
+		// Inflate the menu; this adds items to the action bar if it is present.
+		inflater.inflate(R.menu.fragment_gallery, menu);
+		
+		/* Get the size spinner*/
+		mSizeSpinnerItem = menu.findItem(R.id.size_spinner);		
+		mSizeSpinner = (Spinner) MenuItemCompat.getActionView(mSizeSpinnerItem);	
+		
+		ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(),
+				R.layout.action_spinner_item, new String[]{"small", "medium", "large"});
+
+		mSizeSpinner.setAdapter(adapter);
+		
+		super.onCreateOptionsMenu(menu, inflater);
 	}
 
 	@Override

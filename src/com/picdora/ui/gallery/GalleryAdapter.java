@@ -1,15 +1,16 @@
-package com.picdora.ui.grid;
+package com.picdora.ui.gallery;
 
 import org.androidannotations.annotations.AfterInject;
 import org.androidannotations.annotations.EBean;
 
 import com.picdora.models.Image;
+import com.picdora.ui.grid.ModelGridAdapter;
 
 /**
- * A specialized {@link #ModelGridAdapter} that displays the picture represented by an Image model with no text overlayed on top of it. 
+ * A specialized {@link #ModelGridAdapter} that displays the picture represented by an Image model with no text overlaid on top of it. 
  */
 @EBean
-public class ImageGridAdapter extends ModelGridAdapter<Image> {
+public class GalleryAdapter extends ModelGridAdapter<Image> {
 	
 	@AfterInject
 	protected void init(){
