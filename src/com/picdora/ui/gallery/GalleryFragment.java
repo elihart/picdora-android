@@ -14,15 +14,12 @@ import android.support.v4.view.MenuItemCompat;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
-import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -140,16 +137,6 @@ public abstract class GalleryFragment extends Fragment implements
 		/* set the default grid size */
 		GridSize size = GridSize.values()[mPrefs.gridSize().get()];
 		setGridSize(size);
-
-		/* Collapse the size spinner when a touch happens in the grid */
-		mImageSelector.setGridTouchListener(new OnTouchListener() {
-
-			@Override
-			public boolean onTouch(View v, MotionEvent event) {
-				mActionSizeSpinner.collapseSpinner();
-				return false;
-			}
-		});
 	}
 
 	@Override
@@ -174,44 +161,31 @@ public abstract class GalleryFragment extends Fragment implements
 		mActionSizeSpinner = (ActionSpinner) MenuItemCompat
 				.getActionView(spinnerItem);
 
-		Spinner spinner = mActionSizeSpinner.getSpinner();
-
 		final GridSizeArrayAdapter adapter = new GridSizeArrayAdapter(
 				getActivity(), R.layout.action_spinner_item, GridSize.values());
 
-		spinner.setAdapter(adapter);
+		mActionSizeSpinner.setSpinnerAdapter(adapter);
 
-		spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
-			/*
-			 * Spinners have a strange behavior where they do an automatic
-			 * selection when they are first displayed, without any user input.
-			 * We want to ignore this first one and only respond to the user's
-			 * selections
-			 */
-			boolean firstSelection = true;
+		mActionSizeSpinner
+				.setSpinnerSelectionListener(new OnItemSelectedListener() {
+					@Override
+					public void onItemSelected(AdapterView<?> parent,
+							View view, int position, long id) {
+						GridSize size = adapter.getItem(position);
+						if (getGridSize() != size) {
+							setGridSize(size);
+							mActionSizeSpinner.collapseSpinner();
+						}
+					}
 
-			@Override
-			public void onItemSelected(AdapterView<?> parent, View view,
-					int position, long id) {
-				/* Ignore automatic first selection */
-				if (firstSelection) {
-					firstSelection = false;
-					return;
-				}
+					@Override
+					public void onNothingSelected(AdapterView<?> parent) {
 
-				GridSize size = adapter.getItem(position);
-				setGridSize(size);
-				mActionSizeSpinner.collapseSpinner();
-			}
-
-			@Override
-			public void onNothingSelected(AdapterView<?> parent) {
-
-			}
-		});
+					}
+				});
 
 		/* Set to last selected value */
-		spinner.setSelection(mPrefs.gridSize().get());
+		mActionSizeSpinner.setSpinnerSelection(mPrefs.gridSize().get());
 	}
 
 	/**
@@ -223,6 +197,15 @@ public abstract class GalleryFragment extends Fragment implements
 		// save the preference first.
 		mPrefs.gridSize().put(size.ordinal());
 		mImageSelector.setGridSize(size);
+	}
+
+	/**
+	 * The last grid size set with {@link #setGridSize(GridSize)}
+	 * 
+	 * @return
+	 */
+	private GridSize getGridSize() {
+		return GridSize.values()[mPrefs.gridSize().get()];
 	}
 
 	@Override
@@ -363,6 +346,14 @@ public abstract class GalleryFragment extends Fragment implements
 	public void onDestroy() {
 		super.onDestroy();
 		mDestroyed = true;
+	}
+
+	/**
+	 * Collapse any open action views.
+	 * 
+	 */
+	public void collapseActionViews() {
+		mActionSizeSpinner.collapseSpinner();
 	}
 
 }

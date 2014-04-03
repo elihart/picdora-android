@@ -2,6 +2,7 @@ package com.picdora.ui;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EViewGroup;
+import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
 
 import android.content.Context;
@@ -9,9 +10,12 @@ import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
 
 import com.picdora.R;
 
@@ -31,8 +35,14 @@ public class ActionSpinner extends RelativeLayout {
 	@ViewById
 	protected Spinner spinner;
 
-	/** Whether the spinner is currently collapsed */
-	private boolean mCollapsed = true;
+	/** The default maximum width in dp */
+	private static final int MAX_WIDTH_DP = 200;
+
+	/** The maximum width to bind to in pixels */
+	private int mBoundedWidth;
+
+	/** The registered listener for spinner selections */
+	private OnItemSelectedListener mSelectionListener;
 
 	public ActionSpinner(Context context, AttributeSet attrs) {
 		super(context, attrs);
@@ -42,10 +52,14 @@ public class ActionSpinner extends RelativeLayout {
 				R.styleable.ActionSpinner, 0, 0);
 		iconDrawable = a.getDrawable(R.styleable.ActionSpinner_spinnerIcon);
 		a.recycle();
+
 	}
 
 	@AfterViews
 	protected void init() {
+		/* Get max width in pixels */
+		mBoundedWidth = UiUtil.dpToPixel(MAX_WIDTH_DP);
+
 		icon.setImageDrawable(iconDrawable);
 
 		/* When the icon is clicked we want to hide it and show the spinner */
@@ -55,19 +69,55 @@ public class ActionSpinner extends RelativeLayout {
 			@Override
 			public void onClick(View v) {
 				expandSpinner();
-				/* Do a click so the dropdown happens automatically */
-				spinner.performClick();
+			}
+		});
+
+		/*
+		 * Handle spinner selection. We will ignore the very first selection
+		 * because it is automatically generated, and only pass on the
+		 * selections after that as those will be done by the user. This is just
+		 * an odd idiosyncracy of how Spinners work.
+		 */
+		spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+			boolean firstSelection = true;
+
+			@Override
+			public void onItemSelected(AdapterView<?> parent, View view,
+					int position, long id) {
+				if (firstSelection) {
+					/* Ignore the first selection */
+					firstSelection = false;
+					return;
+				}
+
+				if (mSelectionListener != null) {
+					mSelectionListener.onItemSelected(parent, view, position,
+							id);
+				}
+			}
+
+			@Override
+			public void onNothingSelected(AdapterView<?> parent) {
+				if (mSelectionListener != null) {
+					mSelectionListener.onNothingSelected(parent);
+				}
 			}
 		});
 	}
 
-	/**
-	 * Get the spinner for this view.
-	 * 
-	 * @return
-	 */
-	public Spinner getSpinner() {
-		return spinner;
+	@Override
+	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+		super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+
+		/* Limit to max width */
+		int measuredWidth = MeasureSpec.getSize(widthMeasureSpec);
+		if (mBoundedWidth < measuredWidth) {
+			int measureMode = MeasureSpec.getMode(widthMeasureSpec);
+			widthMeasureSpec = MeasureSpec.makeMeasureSpec(mBoundedWidth,
+					measureMode);
+		}
+
+		super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 	}
 
 	/**
@@ -75,7 +125,6 @@ public class ActionSpinner extends RelativeLayout {
 	 * 
 	 */
 	public void collapseSpinner() {
-		mCollapsed = true;
 		icon.setVisibility(View.VISIBLE);
 		spinner.setVisibility(View.GONE);
 	}
@@ -85,9 +134,55 @@ public class ActionSpinner extends RelativeLayout {
 	 * 
 	 */
 	public void expandSpinner() {
-		mCollapsed = false;
 		icon.setVisibility(View.GONE);
 		spinner.setVisibility(View.VISIBLE);
+
+		/*
+		 * Do a click so the dropdown happens automatically, but we need to make
+		 * sure the view get's drawn first after being shown so we wait for a
+		 * slight delay
+		 */
+		delayedSpinnerDropdown();
 	}
 
+	@UiThread(delay = 100)
+	protected void delayedSpinnerDropdown() {
+		spinner.performClick();
+	}
+
+	/**
+	 * Set the adapter to use for the spinner.
+	 * 
+	 * @param adapter
+	 */
+	public void setSpinnerAdapter(SpinnerAdapter adapter) {
+		spinner.setAdapter(adapter);
+	}
+
+	/**
+	 * Set the spinner's current position.
+	 * 
+	 * @param position
+	 */
+	public void setSpinnerSelection(int position) {
+		spinner.setSelection(position);
+	}
+
+	/**
+	 * Set a listener for when a spinner item is selected.
+	 * 
+	 * @param listener
+	 */
+	public void setSpinnerSelectionListener(OnItemSelectedListener listener) {
+		mSelectionListener = listener;
+	}
+
+	/**
+	 * Get the item position of the currently selected item in the spinner.
+	 * 
+	 * @return
+	 */
+	public int getSelection() {
+		return spinner.getSelectedItemPosition();
+	}
 }

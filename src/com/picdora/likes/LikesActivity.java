@@ -7,17 +7,18 @@ import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.UiThread;
+import org.androidannotations.annotations.ViewById;
 import org.androidannotations.annotations.sharedpreferences.Pref;
 
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.MenuItemCompat;
 import android.view.Menu;
-import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
-import android.widget.Spinner;
+import android.widget.RelativeLayout;
 
 import com.picdora.ChannelUtils;
 import com.picdora.PicdoraActivity;
@@ -26,7 +27,9 @@ import com.picdora.R;
 import com.picdora.models.Category;
 import com.picdora.models.Channel;
 import com.picdora.models.Channel.GifSetting;
+import com.picdora.ui.ActionSpinner;
 import com.picdora.ui.SlidingMenuHelper;
+import com.picdora.ui.UiUtil;
 
 /**
  * Displays "Liked" images in a gallery style page. A spinner in the action bar
@@ -42,12 +45,11 @@ public class LikesActivity extends PicdoraActivity {
 	@Pref
 	protected PicdoraPreferences_ mPrefs;
 
-	/** Spinner to select channel */
-	private Spinner mChannelSpinner;
+	@ViewById(R.id.fragment_container)
+	protected RelativeLayout mRootView;
 
-	private MenuItem mChannelSpinnerItem;
+	private ActionSpinner mActionChannelSpinner;
 
-	private ChannelSelectArrayAdapter mSpinnerAdapter;
 	private List<Channel> mChannels;
 
 	@Override
@@ -85,6 +87,16 @@ public class LikesActivity extends PicdoraActivity {
 		/* Show progress until channels and images are loaded */
 		mLikesFragment.showProgress();
 	}
+	
+	@Override
+	public boolean dispatchTouchEvent(MotionEvent ev){
+		/* Collapse actionviews if there is a touch outside of the actionbar */
+		if(UiUtil.isEventInsideView(ev, mRootView)){
+			collapseActionViews();
+		}
+		
+		return super.dispatchTouchEvent(ev);
+	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -92,9 +104,8 @@ public class LikesActivity extends PicdoraActivity {
 		getMenuInflater().inflate(R.menu.likes, menu);
 
 		/* Get the channel spinner */
-		mChannelSpinnerItem = menu.findItem(R.id.channel_spinner);
-		mChannelSpinner = (Spinner) MenuItemCompat
-				.getActionView(mChannelSpinnerItem);
+		mActionChannelSpinner = (ActionSpinner) MenuItemCompat
+				.getActionView(menu.findItem(R.id.channel_spinner));
 
 		/*
 		 * We couldn't initialize the spinner until we had a handle on it, now
@@ -139,7 +150,7 @@ public class LikesActivity extends PicdoraActivity {
 		/*
 		 * We need an option for "All Channels". Couple ways to do this, but for
 		 * now let's use a dummy Channel at index 0 with it's name being the
-		 * text we want to display. We have to remember to treat position 1
+		 * text we want to display. We have to remember to treat position 0
 		 * differently on item select though. Thoughts on how to do this less
 		 * hackily?
 		 */
@@ -151,32 +162,33 @@ public class LikesActivity extends PicdoraActivity {
 		// insert dummy at top of list.
 		channelsToShow.add(0, allChannelsDummy);
 
-		mSpinnerAdapter = new ChannelSelectArrayAdapter(this,
-				R.layout.action_spinner_item, channelsToShow);
+		final ChannelSelectArrayAdapter adapter = new ChannelSelectArrayAdapter(
+				this, R.layout.action_spinner_item, channelsToShow);
 
-		mChannelSpinner.setAdapter(mSpinnerAdapter);
+		mActionChannelSpinner.setSpinnerAdapter(adapter);
 
-		mChannelSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+		mActionChannelSpinner
+				.setSpinnerSelectionListener(new OnItemSelectedListener() {
 
-			@Override
-			public void onItemSelected(AdapterView<?> parent, View view,
-					int position, long id) {
-				/* If position is 0 then it is our All Channels dummy */
-				if (position == 0) {
-					mLikesFragment.setChannels(mChannels);
-				}
-				// normal channel
-				else {
-					mLikesFragment.setChannel(mSpinnerAdapter.getItem(position));
-				}
+					@Override
+					public void onItemSelected(AdapterView<?> parent,
+							View view, int position, long id) {
+						/* If position is 0 then it is our All Channels dummy */
+						if (position == 0) {
+							mLikesFragment.setChannels(mChannels);
+						}
+						// normal channel
+						else {
+							mLikesFragment.setChannel(adapter.getItem(position));
+						}
 
-				// MenuItemCompat.collapseActionView(mChannelSpinnerItem);
-			}
+						mActionChannelSpinner.collapseSpinner();
+					}
 
-			@Override
-			public void onNothingSelected(AdapterView<?> parent) {
-			}
-		});
+					@Override
+					public void onNothingSelected(AdapterView<?> parent) {
+					}
+				});
 
 		/*
 		 * If we have a saved spinner position then restore that, otherwise
@@ -188,12 +200,11 @@ public class LikesActivity extends PicdoraActivity {
 		 */
 		SavedState state = (SavedState) getRetainedState();
 		if (state != null && state.spinnerPos != 0) {
-			mChannelSpinner.setSelection(state.spinnerPos);
-			mLikesFragment
-					.setChannel(mSpinnerAdapter.getItem(state.spinnerPos));
+			mActionChannelSpinner.setSpinnerSelection(state.spinnerPos);
+			mLikesFragment.setChannel(adapter.getItem(state.spinnerPos));
 		} else {
 			// Pass all channels to fragment to load all by default
-			mChannelSpinner.setSelection(0);
+			mActionChannelSpinner.setSpinnerSelection(0);
 			mLikesFragment.setChannels(mChannels);
 		}
 	}
@@ -204,7 +215,7 @@ public class LikesActivity extends PicdoraActivity {
 		 * Get the currently selected position, or default to 0 if nothing is
 		 * selected
 		 */
-		int pos = mChannelSpinner.getSelectedItemPosition();
+		int pos = mActionChannelSpinner.getSelection();
 		if (pos == AdapterView.INVALID_POSITION) {
 			pos = 0;
 		}
@@ -225,6 +236,11 @@ public class LikesActivity extends PicdoraActivity {
 			this.spinnerPos = spinnerPos;
 		}
 
+	}
+
+	public void collapseActionViews() {
+		mActionChannelSpinner.collapseSpinner();
+		mLikesFragment.collapseActionViews();
 	}
 
 }

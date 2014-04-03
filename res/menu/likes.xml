@@ -3,11 +3,10 @@
 
     <item
         android:id="@+id/channel_spinner"
-        android:icon="@drawable/ic_action_channels"
         android:orderInCategory="1"
         android:title="@string/likes_channel_spinner"
-        picdora:actionViewClass="android.widget.Spinner"
-        picdora:showAsAction="ifRoom|collapseActionView"/>
+        picdora:actionLayout="@layout/action_spinner_channel"
+        picdora:showAsAction="ifRoom"/>
     
     
 

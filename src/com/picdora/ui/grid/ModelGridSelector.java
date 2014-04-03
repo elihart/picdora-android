@@ -6,7 +6,6 @@ import java.util.List;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnTouchListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
@@ -243,10 +242,5 @@ public class ModelGridSelector<T> {
 	public void setGridSize(GridSize size) {
 		mGrid.setColumnWidth(size.getRowWidth());
 		mAdapter.setImageSize(size.getImageSize());
-	}
-
-	/** Set a listener for when the grid receives a touch */
-	public void setGridTouchListener(OnTouchListener listener) {
-		mGrid.setOnTouchListener(listener);
 	}
 }

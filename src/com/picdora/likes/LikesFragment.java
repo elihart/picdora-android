@@ -77,7 +77,7 @@ public class LikesFragment extends GalleryFragment {
 			 * TODO: Case where image refresh is in progress for other channels
 			 * and the user changes the channels during the load. Ideally this
 			 * would instantly cancel the previous load, but right now the
-			 * second will start in parallel. This is bad.
+			 * second will start in parallel which could be bad.
 			 */
 			mChannels = channels;
 			refreshImageList();
@@ -136,7 +136,18 @@ public class LikesFragment extends GalleryFragment {
 		if (mImageRefreshInProgress) {
 			showProgress();
 		} else if (isImagesEmpty()) {
-			showMessage("You haven't liked any images yet!");
+			/*
+			 * Show a message about not having any likes images. If there are
+			 * multiple channels selected then show a generic message, but if a
+			 * certain channel is selected then be specific
+			 */
+			String msg = "You haven't liked any images yet!";
+			if (mChannels.size() == 1) {
+				msg = "You haven't liked any images in the channel "
+						+ mChannels.get(0).getName();
+			}
+
+			showMessage(msg);
 		} else {
 			showImageGrid();
 		}
@@ -209,6 +220,6 @@ public class LikesFragment extends GalleryFragment {
 				clearSelectedImages();
 			}
 		}
-	};
+	};	
 
 }

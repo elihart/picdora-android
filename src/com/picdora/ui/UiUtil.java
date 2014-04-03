@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.TypedValue;
+import android.view.MotionEvent;
 import android.view.View;
 
 public class UiUtil {
@@ -63,6 +64,30 @@ public class UiUtil {
 	    int green = Color.green(color);
 	    int blue = Color.blue(color);
 	    return Color.argb(alpha, red, green, blue);
+	}
+	
+	/**
+	 * Determines if the given event happened inside the view
+	 * @param ev - The motion event to check
+	 * @param view - view object to compare
+	 * @return true if the event points are within view bounds, false otherwise
+	 */
+	public static boolean isEventInsideView(MotionEvent ev, View view){
+		float x = ev.getRawX();
+		float y = ev.getRawY();
+		
+	    int location[] = new int[2];
+	    view.getLocationOnScreen(location);
+	    int viewX = location[0];
+	    int viewY = location[1];
+
+	    //point is inside view bounds
+	    if(( x > viewX && x < (viewX + view.getWidth())) &&
+	            ( y > viewY && y < (viewY + view.getHeight()))){
+	        return true;
+	    } else {
+	        return false;
+	    }
 	}
 
 }

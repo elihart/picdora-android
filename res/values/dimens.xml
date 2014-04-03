@@ -26,7 +26,8 @@
     <!-- Notifier -->
     <dimen name="notifier_text_size">14sp</dimen>
     
-    <!-- Actionbar spinner -->
+    <!-- Actionbar spinner -->    
+    <dimen name="action_spinner_icon_side_padding">5dp</dimen>
     <dimen name="action_spinner_item_text">18dp</dimen>
     <dimen name="action_spinner_item_side_padding">5dp</dimen>
 
