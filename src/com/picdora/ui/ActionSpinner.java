@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -56,6 +55,7 @@ public class ActionSpinner extends RelativeLayout {
 			@Override
 			public void onClick(View v) {
 				expandSpinner();
+				/* Do a click so the dropdown happens automatically */
 				spinner.performClick();
 			}
 		});
@@ -88,37 +88,6 @@ public class ActionSpinner extends RelativeLayout {
 		mCollapsed = false;
 		icon.setVisibility(View.GONE);
 		spinner.setVisibility(View.VISIBLE);
-	}
-
-	/**
-	 * Collapse the spinner if the given motionevent happened outside of the
-	 * spinner bounds.
-	 * 
-	 * @param ev
-	 */
-	public void collapseIfOutside(MotionEvent ev) {
-		/* If we're already collapsed no need to do anything */
-		if (mCollapsed) {
-			return;
-		}
-
-		/*
-		 * Get the current location on screen and compare the given point to our
-		 * bounds
-		 */
-		int[] l = new int[2];
-		getLocationOnScreen(l);
-		int x = l[0];
-		int y = l[1];
-		int w = getWidth();
-		int h = getHeight();
-
-		/* If the point is outside then collapse */
-		if (ev.getRawX() < x || ev.getRawX() > x + w || ev.getRawY() < y
-				|| ev.getRawY() > y + h) {
-			collapseSpinner();
-		}
-
 	}
 
 }

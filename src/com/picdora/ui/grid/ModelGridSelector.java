@@ -6,6 +6,7 @@ import java.util.List;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnTouchListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
@@ -71,8 +72,8 @@ public class ModelGridSelector<T> {
 		mAvailableItems = availableItems;
 
 		/*
-		 * If a list of selected items was provided then use it,
-		 * otherwise create an empty one
+		 * If a list of selected items was provided then use it, otherwise
+		 * create an empty one
 		 */
 		if (selectedItems == null) {
 			mSelectedItems = new ArrayList<T>();
@@ -230,16 +231,22 @@ public class ModelGridSelector<T> {
 		public void onGridItemLongClick(GridItemView view, T item);
 	}
 
-	/** Set a scroll listener for when the grid scrolls 
+	/**
+	 * Set a scroll listener for when the grid scrolls
 	 * 
 	 * @param listener
-	 */	
+	 */
 	public void setScrollListener(PauseOnScrollListener listener) {
-		mGrid.setOnScrollListener(listener);		
+		mGrid.setOnScrollListener(listener);
 	}
-	
-	public void setGridSize(GridSize size){
+
+	public void setGridSize(GridSize size) {
 		mGrid.setColumnWidth(size.getRowWidth());
 		mAdapter.setImageSize(size.getImageSize());
+	}
+
+	/** Set a listener for when the grid receives a touch */
+	public void setGridTouchListener(OnTouchListener listener) {
+		mGrid.setOnTouchListener(listener);
 	}
 }

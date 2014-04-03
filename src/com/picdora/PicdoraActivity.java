@@ -168,32 +168,4 @@ public class PicdoraActivity extends ActionBarActivity {
 			return data;
 		}
 	}
-
-	private List<AfterDispatchTouchListener> mAfters = new ArrayList<PicdoraActivity.AfterDispatchTouchListener>();
-
-	@Override
-	public boolean dispatchTouchEvent(MotionEvent ev) {
-		boolean result = super.dispatchTouchEvent(ev);
-		
-		for(AfterDispatchTouchListener l : mAfters){
-			l.afterDispatch(ev);
-		}
-
-		return result;
-	}
-
-	public interface AfterDispatchTouchListener {
-		public void afterDispatch(MotionEvent ev);
-	}
-
-	public void registerAfterDispatchTouchListener(
-			AfterDispatchTouchListener listener) {
-		mAfters.add(listener);
-	}
-
-	public void removeAfterDispatchTouchListener(
-			AfterDispatchTouchListener listener) {
-		mAfters.remove(listener);
-	}
-
 }

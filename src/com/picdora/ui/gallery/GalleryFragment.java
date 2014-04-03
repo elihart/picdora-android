@@ -16,6 +16,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
@@ -26,11 +27,8 @@ import android.widget.TextView;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.PauseOnScrollListener;
-import com.picdora.PicdoraActivity;
-import com.picdora.PicdoraActivity.AfterDispatchTouchListener;
 import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
-import com.picdora.Util;
 import com.picdora.models.Image;
 import com.picdora.ui.ActionSpinner;
 import com.picdora.ui.grid.GridItemView;
@@ -142,6 +140,16 @@ public abstract class GalleryFragment extends Fragment implements
 		/* set the default grid size */
 		GridSize size = GridSize.values()[mPrefs.gridSize().get()];
 		setGridSize(size);
+
+		/* Collapse the size spinner when a touch happens in the grid */
+		mImageSelector.setGridTouchListener(new OnTouchListener() {
+
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				mActionSizeSpinner.collapseSpinner();
+				return false;
+			}
+		});
 	}
 
 	@Override
@@ -165,15 +173,6 @@ public abstract class GalleryFragment extends Fragment implements
 	private void initSizeSpinner(MenuItem spinnerItem) {
 		mActionSizeSpinner = (ActionSpinner) MenuItemCompat
 				.getActionView(spinnerItem);
-
-		((PicdoraActivity) getActivity())
-				.registerAfterDispatchTouchListener(new AfterDispatchTouchListener() {
-
-					@Override
-					public void afterDispatch(MotionEvent ev) {
-						mActionSizeSpinner.collapseIfOutside(ev);
-					}
-				});
 
 		Spinner spinner = mActionSizeSpinner.getSpinner();
 
