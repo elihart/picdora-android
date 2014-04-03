@@ -33,7 +33,7 @@ public abstract class ModelGridAdapter<T> extends BaseAdapter {
 	/** The image size to use */
 	protected ImageUtils.ImgurSize mImageSize = ImgurSize.MEDIUM_THUMBNAIL;
 
-	/** Whether to show text overlayed on the image. Default to true.*/
+	/** Whether to show text overlayed on the image. Default to true. */
 	protected boolean mShowText = true;
 
 	/**
@@ -155,7 +155,11 @@ public abstract class ModelGridAdapter<T> extends BaseAdapter {
 	 * @param imageSize
 	 */
 	public void setImageSize(ImageUtils.ImgurSize imageSize) {
-		mImageSize = imageSize;
+		/* Only update if the size is different. */
+		if (imageSize.equals(mImageSize)) {
+			mImageSize = imageSize;
+			notifyDataSetInvalidated();
+		}
 	}
 
 }

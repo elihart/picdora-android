@@ -35,46 +35,57 @@ public abstract class ImageUtils {
 
 	/**
 	 * List of IMGUR api thumbnail sizes. The keys should be inserted after the
-	 * image id and before the file extension
+	 * image id and before the file extension.
+	 * <p>
+	 * https://api.imgur.com/models/image
 	 */
 	public enum ImgurSize {
 		/**
 		 * 90X90 - Crops image
 		 */
-		SMALL_SQUARE("s"),
+		SMALL_SQUARE("s", 90),
 		/**
 		 * 160X160 - Crops image
 		 */
-		BIG_SQUARE("b"),
+		BIG_SQUARE("b", 160),
 		/**
 		 * 160x160
 		 */
-		SMALL_THUMBNAIL("t"),
+		SMALL_THUMBNAIL("t", 160),
 		/**
 		 * 320X320
 		 */
-		MEDIUM_THUMBNAIL("m"),
+		MEDIUM_THUMBNAIL("m", 320),
 		/**
 		 * 640X640
 		 */
-		LARGE_THUMBNAIL("l"),
+		LARGE_THUMBNAIL("l", 640),
 		/**
 		 * 1024X1024
 		 */
-		HUGE_THUMBNAIL("h"),
+		HUGE_THUMBNAIL("h", 1024),
 		/**
-		 * Original image size
+		 * Original image size. No key is used and size is unknown.
 		 */
-		FULL("");
+		FULL("", 1024);
 
+		/** The letter that needs to be appended to an imgur id in a get request to receive the desired size */
 		private String key;
+		private int size;
 
-		private ImgurSize(String key) {
+		private ImgurSize(String key, int size) {
 			this.key = key;
+			this.size = size;
 		}
 
+		/** Get the character suffix needed for this thumbnail size */
 		public String getKey() {
 			return key;
+		}
+		
+		/** The edge length of the thumbnail square in pixels. */
+		public int getSize(){
+			return size;
 		}
 	}
 

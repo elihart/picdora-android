@@ -230,8 +230,16 @@ public class ModelGridSelector<T> {
 		public void onGridItemLongClick(GridItemView view, T item);
 	}
 
+	/** Set a scroll listener for when the grid scrolls 
+	 * 
+	 * @param listener
+	 */	
 	public void setScrollListener(PauseOnScrollListener listener) {
-		mGrid.setOnScrollListener(listener);
-		
+		mGrid.setOnScrollListener(listener);		
+	}
+	
+	public void setGridSize(GridSize size){
+		mGrid.setColumnWidth(size.getRowWidth());
+		mAdapter.setImageSize(size.getImageSize());
 	}
 }

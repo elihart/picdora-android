@@ -7,6 +7,7 @@ import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
+import org.androidannotations.annotations.sharedpreferences.Pref;
 
 import android.support.v4.app.Fragment;
 import android.support.v4.view.MenuItemCompat;
@@ -15,7 +16,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
@@ -23,9 +25,11 @@ import android.widget.TextView;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.PauseOnScrollListener;
+import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
 import com.picdora.models.Image;
 import com.picdora.ui.grid.GridItemView;
+import com.picdora.ui.grid.GridSize;
 import com.picdora.ui.grid.ModelGridSelector;
 import com.picdora.ui.grid.ModelGridSelector.OnGridItemClickListener;
 
@@ -55,6 +59,9 @@ import com.picdora.ui.grid.ModelGridSelector.OnGridItemClickListener;
 public abstract class GalleryFragment extends Fragment implements
 		OnGridItemClickListener<Image> {
 
+	@Pref
+	protected PicdoraPreferences_ mPrefs;
+
 	@ViewById
 	protected ProgressBar progress;
 	@ViewById
@@ -64,10 +71,13 @@ public abstract class GalleryFragment extends Fragment implements
 
 	protected GalleryAdapter mAdapter;
 	protected ModelGridSelector<Image> mImageSelector;
+
 	/** The spinner in the actionbar for selecting image size */
 	private Spinner mSizeSpinner;
 	/** The actionbar item container the actionview for {@link #mSizeSpinner} */
 	private MenuItem mSizeSpinnerItem;
+	/** The adapter for the {@link #mSizeSpinner} */
+	private GridSizeArrayAdapter mSizeSpinnerAdapter;
 
 	/**
 	 * Whether any images are currently selected. False to begin with since no
@@ -84,7 +94,7 @@ public abstract class GalleryFragment extends Fragment implements
 	@AfterViews
 	protected void init() {
 		setHasOptionsMenu(true);
-		
+
 		/*
 		 * Retain state between config changes so we don't have to load images
 		 * all over again.
@@ -127,23 +137,67 @@ public abstract class GalleryFragment extends Fragment implements
 
 		/* Add grid view to the fragment */
 		gridContainer.addView(v);
+
+		/* set the default grid size */
+		GridSize size = GridSize.values()[mPrefs.gridSize().get()];
+		setGridSize(size);
 	}
-	
+
 	@Override
-	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {	
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		inflater.inflate(R.menu.fragment_gallery, menu);
-		
-		/* Get the size spinner*/
-		mSizeSpinnerItem = menu.findItem(R.id.size_spinner);		
-		mSizeSpinner = (Spinner) MenuItemCompat.getActionView(mSizeSpinnerItem);	
-		
-		ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(),
-				R.layout.action_spinner_item, new String[]{"small", "medium", "large"});
 
-		mSizeSpinner.setAdapter(adapter);
-		
+		/* Get the size spinner */
+		mSizeSpinnerItem = menu.findItem(R.id.size_spinner);
+		initSizeSpinner(mSizeSpinnerItem);
+
 		super.onCreateOptionsMenu(menu, inflater);
+	}
+
+	/**
+	 * Initialize the size spinner in the action bar
+	 * 
+	 * @param spinnerItem
+	 *            The menu item containing the spinner action view.
+	 * 
+	 */
+	private void initSizeSpinner(MenuItem spinnerItem) {
+		mSizeSpinner = (Spinner) MenuItemCompat.getActionView(spinnerItem);
+
+		mSizeSpinnerAdapter = new GridSizeArrayAdapter(getActivity(),
+				R.layout.action_spinner_item, GridSize.values());
+
+		mSizeSpinner.setAdapter(mSizeSpinnerAdapter);
+
+		mSizeSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+
+			@Override
+			public void onItemSelected(AdapterView<?> parent, View view,
+					int position, long id) {
+				GridSize size = mSizeSpinnerAdapter.getItem(position);
+				setGridSize(size);
+			}
+
+			@Override
+			public void onNothingSelected(AdapterView<?> parent) {
+
+			}
+		});
+		
+		/* Set to last selected value */
+		mSizeSpinner.setSelection(mPrefs.gridSize().get());
+	}
+
+	/**
+	 * The grid size to use when displaying the images.
+	 * 
+	 * @param size
+	 */
+	public void setGridSize(GridSize size) {
+		// save the preference first.
+		mPrefs.gridSize().put(size.ordinal());
+		mImageSelector.setGridSize(size);
 	}
 
 	@Override
