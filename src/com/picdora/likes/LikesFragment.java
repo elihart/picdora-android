@@ -155,6 +155,14 @@ public class LikesFragment extends GalleryFragment {
 			mActionMode.finish();
 			mActionMode = null;
 		}
+
+		/*
+		 * If the action mode exists set the title to be the number of selected
+		 * images
+		 */
+		if (mActionMode != null) {
+			mActionMode.setTitle(Integer.toString(selectedImages.size()));
+		}
 	}
 
 	@Override
@@ -176,6 +184,8 @@ public class LikesFragment extends GalleryFragment {
 
 		public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
 			switch (item.getItemId()) {
+			case R.id.select_all:
+				return true;
 			case R.id.download:
 				Util.log("download");
 				return true;

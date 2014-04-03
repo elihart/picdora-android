@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:picdora="http://schemas.android.com/apk/res-auto" >
+    
+    <item
+        android:id="@+id/select_all"
+        android:icon="@drawable/ic_action_select_all"
+        android:title="@string/likes_menu_all"
+        android:orderInCategory="3"
+        picdora:showAsAction="ifRoom"/>
 
     <item
         android:id="@+id/download"
@@ -20,7 +27,7 @@
         android:id="@+id/delete"
         android:icon="@drawable/ic_action_delete"
         android:title="@string/likes_menu_delete"
-        android:orderInCategory="3"
+        android:orderInCategory="4"
         picdora:showAsAction="ifRoom"/>
 
 

@@ -46,7 +46,7 @@ public class LikesActivity extends PicdoraActivity {
 	private Spinner mChannelSpinner;
 
 	private MenuItem mChannelSpinnerItem;
-	
+
 	private ChannelSelectArrayAdapter mSpinnerAdapter;
 	private List<Channel> mChannels;
 
@@ -89,11 +89,12 @@ public class LikesActivity extends PicdoraActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.likes, menu);		
+		getMenuInflater().inflate(R.menu.likes, menu);
 
-		/* Get the channel spinner*/
+		/* Get the channel spinner */
 		mChannelSpinnerItem = menu.findItem(R.id.channel_spinner);
-		mChannelSpinner = (Spinner) MenuItemCompat.getActionView(mChannelSpinnerItem);	
+		mChannelSpinner = (Spinner) MenuItemCompat
+				.getActionView(mChannelSpinnerItem);
 
 		/*
 		 * We couldn't initialize the spinner until we had a handle on it, now
@@ -169,12 +170,11 @@ public class LikesActivity extends PicdoraActivity {
 					mLikesFragment.setChannel(mSpinnerAdapter.getItem(position));
 				}
 
+				// MenuItemCompat.collapseActionView(mChannelSpinnerItem);
 			}
 
 			@Override
 			public void onNothingSelected(AdapterView<?> parent) {
-				/* Default to all channels selected */
-				mChannelSpinner.setSelection(0);
 			}
 		});
 

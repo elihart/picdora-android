@@ -63,6 +63,7 @@
 
     <!-- Likes Contextual Menu -->
     <string name="likes_menu_download">Download</string>
+    <string name="likes_menu_all">Select All</string>
     <string name="likes_menu_star">Add to collection</string>
     <string name="likes_menu_delete">Delete</string>
 

@@ -177,6 +177,7 @@ public abstract class GalleryFragment extends Fragment implements
 					int position, long id) {
 				GridSize size = mSizeSpinnerAdapter.getItem(position);
 				setGridSize(size);
+				//MenuItemCompat.collapseActionView(mSizeSpinnerItem);
 			}
 
 			@Override
