@@ -14,6 +14,7 @@ import android.support.v4.view.MenuItemCompat;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -25,9 +26,13 @@ import android.widget.TextView;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.PauseOnScrollListener;
+import com.picdora.PicdoraActivity;
+import com.picdora.PicdoraActivity.AfterDispatchTouchListener;
 import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
+import com.picdora.Util;
 import com.picdora.models.Image;
+import com.picdora.ui.ActionSpinner;
 import com.picdora.ui.grid.GridItemView;
 import com.picdora.ui.grid.GridSize;
 import com.picdora.ui.grid.ModelGridSelector;
@@ -73,11 +78,7 @@ public abstract class GalleryFragment extends Fragment implements
 	protected ModelGridSelector<Image> mImageSelector;
 
 	/** The spinner in the actionbar for selecting image size */
-	private Spinner mSizeSpinner;
-	/** The actionbar item container the actionview for {@link #mSizeSpinner} */
-	private MenuItem mSizeSpinnerItem;
-	/** The adapter for the {@link #mSizeSpinner} */
-	private GridSizeArrayAdapter mSizeSpinnerAdapter;
+	private ActionSpinner mActionSizeSpinner;
 
 	/**
 	 * Whether any images are currently selected. False to begin with since no
@@ -148,9 +149,8 @@ public abstract class GalleryFragment extends Fragment implements
 		// Inflate the menu; this adds items to the action bar if it is present.
 		inflater.inflate(R.menu.fragment_gallery, menu);
 
-		/* Get the size spinner */
-		mSizeSpinnerItem = menu.findItem(R.id.size_spinner);
-		initSizeSpinner(mSizeSpinnerItem);
+		/* Init the size spinner */
+		initSizeSpinner(menu.findItem(R.id.size_spinner));
 
 		super.onCreateOptionsMenu(menu, inflater);
 	}
@@ -163,21 +163,46 @@ public abstract class GalleryFragment extends Fragment implements
 	 * 
 	 */
 	private void initSizeSpinner(MenuItem spinnerItem) {
-		mSizeSpinner = (Spinner) MenuItemCompat.getActionView(spinnerItem);
+		mActionSizeSpinner = (ActionSpinner) MenuItemCompat
+				.getActionView(spinnerItem);
 
-		mSizeSpinnerAdapter = new GridSizeArrayAdapter(getActivity(),
-				R.layout.action_spinner_item, GridSize.values());
+		((PicdoraActivity) getActivity())
+				.registerAfterDispatchTouchListener(new AfterDispatchTouchListener() {
 
-		mSizeSpinner.setAdapter(mSizeSpinnerAdapter);
+					@Override
+					public void afterDispatch(MotionEvent ev) {
+						mActionSizeSpinner.collapseIfOutside(ev);
+					}
+				});
 
-		mSizeSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+		Spinner spinner = mActionSizeSpinner.getSpinner();
+
+		final GridSizeArrayAdapter adapter = new GridSizeArrayAdapter(
+				getActivity(), R.layout.action_spinner_item, GridSize.values());
+
+		spinner.setAdapter(adapter);
+
+		spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+			/*
+			 * Spinners have a strange behavior where they do an automatic
+			 * selection when they are first displayed, without any user input.
+			 * We want to ignore this first one and only respond to the user's
+			 * selections
+			 */
+			boolean firstSelection = true;
 
 			@Override
 			public void onItemSelected(AdapterView<?> parent, View view,
 					int position, long id) {
-				GridSize size = mSizeSpinnerAdapter.getItem(position);
+				/* Ignore automatic first selection */
+				if (firstSelection) {
+					firstSelection = false;
+					return;
+				}
+
+				GridSize size = adapter.getItem(position);
 				setGridSize(size);
-				//MenuItemCompat.collapseActionView(mSizeSpinnerItem);
+				mActionSizeSpinner.collapseSpinner();
 			}
 
 			@Override
@@ -185,9 +210,9 @@ public abstract class GalleryFragment extends Fragment implements
 
 			}
 		});
-		
+
 		/* Set to last selected value */
-		mSizeSpinner.setSelection(mPrefs.gridSize().get());
+		spinner.setSelection(mPrefs.gridSize().get());
 	}
 
 	/**

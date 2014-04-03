@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.picdora.ui.ActionSpinner_ xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:picdora="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    picdora:spinnerIcon="@drawable/ic_action_sort_by_size" />

@@ -4,10 +4,9 @@
 
     <item
         android:id="@+id/size_spinner"
-        android:icon="@drawable/ic_action_sort_by_size"
         android:orderInCategory="50"
         android:title="@string/gallery_size_spinner"
-        picdora:actionViewClass="android.widget.Spinner"
-        picdora:showAsAction="ifRoom|collapseActionView"/>
+        picdora:actionLayout="@layout/action_spinner_grid_size"
+        picdora:showAsAction="ifRoom"/>
 
 </menu>

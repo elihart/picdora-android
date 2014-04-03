@@ -1,5 +1,8 @@
 package com.picdora;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.ActionBarDrawerToggle;
@@ -7,6 +10,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.ActionBarActivity;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 
 import com.picdora.ui.FontHelper;
 
@@ -163,6 +167,33 @@ public class PicdoraActivity extends ActionBarActivity {
 		public Object getData() {
 			return data;
 		}
+	}
+
+	private List<AfterDispatchTouchListener> mAfters = new ArrayList<PicdoraActivity.AfterDispatchTouchListener>();
+
+	@Override
+	public boolean dispatchTouchEvent(MotionEvent ev) {
+		boolean result = super.dispatchTouchEvent(ev);
+		
+		for(AfterDispatchTouchListener l : mAfters){
+			l.afterDispatch(ev);
+		}
+
+		return result;
+	}
+
+	public interface AfterDispatchTouchListener {
+		public void afterDispatch(MotionEvent ev);
+	}
+
+	public void registerAfterDispatchTouchListener(
+			AfterDispatchTouchListener listener) {
+		mAfters.add(listener);
+	}
+
+	public void removeAfterDispatchTouchListener(
+			AfterDispatchTouchListener listener) {
+		mAfters.remove(listener);
 	}
 
 }
