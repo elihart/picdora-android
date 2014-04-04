@@ -113,7 +113,7 @@ public abstract class GalleryFragment extends Fragment implements
 		if (mImageSelector == null) {
 			/* Show progress bar until we show images */
 			showProgress();
-			
+
 			mAdapter = GalleryAdapter_.getInstance_(getActivity());
 
 			/*
@@ -262,10 +262,10 @@ public abstract class GalleryFragment extends Fragment implements
 
 		/* Set the resulting list with the images removed */
 		mImageSelector.setItems(result);
-		
+
 		/* Clear the selection */
 		clearSelectedImages();
-		
+
 		/* Pass the deleted images on to subclasses to handle cleanup */
 		onSelectionDeleted(imagesToDelete);
 	}
@@ -293,8 +293,8 @@ public abstract class GalleryFragment extends Fragment implements
 	 * 
 	 */
 	protected void selectAll() {
-		Util.log("all");
-
+		mImageSelector.selectAll();
+		onSelectionChanged(getSelectedImages());
 	}
 
 	/**
@@ -422,7 +422,8 @@ public abstract class GalleryFragment extends Fragment implements
 	/**
 	 * Called when the set of selected images changes. This includes images
 	 * being added or removed from the set. If the list is empty then the last
-	 * selected image was removed and no images are currently selected
+	 * selected image was removed and no images are currently selected. If you
+	 * subclass this method be sure to call super.
 	 * 
 	 * @param selectedImages
 	 *            List of currently selected images. Empty if no images are

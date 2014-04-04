@@ -247,11 +247,26 @@ public class ModelGridSelector<T> {
 		mAdapter.setImageSize(size.getImageSize());
 	}
 
-	/** Get all the items we are displaying.
+	/**
+	 * Get all the items we are displaying.
 	 * 
 	 * @return
 	 */
 	public List<T> getItems() {
 		return mAdapter.getItems();
+	}
+
+	/**
+	 * Select all images in the grid.
+	 * 
+	 */
+	public void selectAll() {
+		/*
+		 * Clear currently selected images before adding all images to avoid
+		 * duplicates
+		 */
+		mSelectedItems.clear();
+		mSelectedItems.addAll(getItems());
+		mAdapter.notifyDataSetChanged();
 	}
 }
