@@ -36,8 +36,8 @@ public class SlidingMenuHelper {
 				"Channels", ChannelSelectionActivity_.class));
 		items.add(new SlidingMenuItem(R.drawable.ic_action_like, "Likes",
 				LikesActivity_.class));
-		items.add(new SlidingMenuItem(R.drawable.ic_action_favorite,
-				"Favorites", FavoritesActivity_.class));
+		items.add(new SlidingMenuItem(R.drawable.ic_action_star,
+				"Collections", FavoritesActivity_.class));
 		items.add(new SlidingMenuItem(R.drawable.ic_action_settings,
 				"Settings", SettingsActivity.class));
 

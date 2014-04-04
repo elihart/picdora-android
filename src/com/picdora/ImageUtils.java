@@ -69,7 +69,10 @@ public abstract class ImageUtils {
 		 */
 		FULL("", 1024);
 
-		/** The letter that needs to be appended to an imgur id in a get request to receive the desired size */
+		/**
+		 * The letter that needs to be appended to an imgur id in a get request
+		 * to receive the desired size
+		 */
 		private String key;
 		private int size;
 
@@ -82,9 +85,9 @@ public abstract class ImageUtils {
 		public String getKey() {
 			return key;
 		}
-		
+
 		/** The edge length of the thumbnail square in pixels. */
-		public int getSize(){
+		public int getSize() {
 			return size;
 		}
 	}
@@ -209,7 +212,9 @@ public abstract class ImageUtils {
 	 * save it to the user's public images
 	 * 
 	 * @param imgurId
-	 * @param listener Optional listener that will be called when the download completes
+	 * @param listener
+	 *            Optional listener that will be called when the download
+	 *            completes
 	 */
 	public static void saveImgurImage(final Context context, String imgurId,
 			final OnDownloadCompleteListener listener) {
@@ -248,9 +253,10 @@ public abstract class ImageUtils {
 				});
 
 	}
-	
-	public static void lookupImage(Activity context, String imgurId){
-		String query = "https://www.google.com/searchbyimage?&image_url=" + getImgurLink(imgurId, ImgurSize.FULL);
+
+	public static void lookupImage(Activity context, String imgurId) {
+		String query = "https://www.google.com/searchbyimage?&image_url="
+				+ getImgurLink(imgurId, ImgurSize.FULL);
 
 		Intent i = new Intent(Intent.ACTION_VIEW);
 		i.setData(Uri.parse(query));
@@ -263,32 +269,68 @@ public abstract class ImageUtils {
 	public interface OnDownloadCompleteListener {
 		/**
 		 * Called when the image downloads.
-		 * @param success True if the download was downloaded successfully and false otherwise
+		 * 
+		 * @param success
+		 *            True if the download was downloaded successfully and false
+		 *            otherwise
 		 */
 		public void onDownloadComplete(boolean success);
 	}
 
 	/**
-	 * Launch a chooser dialog to select an app to share the image with
+	 * Mark the given image as reported and notify the server of the report.
+	 * 
+	 * @param currentImage
+	 */
+	public static void reportImage(ChannelImage currentImage) {
+		// TODO Auto-generated method stub
+
+	}
+
+	/**
+	 * Launch a chooser dialog to select an app to share the image with.
 	 * 
 	 * @param activity
 	 * @param imgurId
 	 */
 	public static void shareImage(Activity activity, String imgurId) {
-		Intent sendIntent = new Intent();
-		sendIntent.setAction(Intent.ACTION_SEND);
-		sendIntent.putExtra(Intent.EXTRA_TEXT,
-				getImgurLink(imgurId, ImgurSize.FULL));
-		sendIntent.setType("text/plain");
-		activity.startActivity(Intent.createChooser(sendIntent, "Share image"));
+		List<String> toShare = new ArrayList<String>();
+		toShare.add(imgurId);
+		share(activity, toShare);
 	}
 
 	/**
-	 * Mark the given image as reported and notify the server of the report.
-	 * @param currentImage
+	 * Launch a chooser dialog to select an app to share the images with.
+	 * 
+	 * @param activity
+	 * @param selectedImages
 	 */
-	public static void reportImage(ChannelImage currentImage) {
-		// TODO Auto-generated method stub
-		
+	public static void shareImages(Activity activity, List<Image> selectedImages) {
+		List<String> toShare = new ArrayList<String>();
+
+		for (Image i : selectedImages) {
+			toShare.add(i.getImgurId());
+		}
+
+		share(activity, toShare);
+	}
+
+	private static void share(Activity activity, List<String> imgurIds) {
+		Intent sendIntent = new Intent();
+		sendIntent.setAction(Intent.ACTION_SEND);
+
+		/*
+		 * Create a string of html links out of the imgur ids so that we can
+		 * share them all as an extra
+		 */
+		StringBuilder extraBuilder = new StringBuilder();
+		for (String id : imgurIds) {			
+			extraBuilder.append(getImgurLink(id, ImgurSize.FULL));
+			extraBuilder.append(" ");
+		}
+		sendIntent.putExtra(Intent.EXTRA_TEXT, extraBuilder.toString());
+
+		sendIntent.setType("text/plain");
+		activity.startActivity(Intent.createChooser(sendIntent, "Share image"));
 	}
 }

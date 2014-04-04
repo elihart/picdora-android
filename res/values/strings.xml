@@ -63,6 +63,7 @@
     <string name="gallery_cab_download">Download</string>
     <string name="gallery_cab_all">Select All</string>
     <string name="gallery_cab_delete">Delete</string>
+    <string name="gallery_cab_share">Share</string>
 
     <!-- Likes Contextual Menu -->
     <string name="likes_menu_star">Add to collection</string>

@@ -25,6 +25,7 @@ import android.widget.TextView;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.PauseOnScrollListener;
+import com.picdora.ImageUtils;
 import com.picdora.PicdoraActivity;
 import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
@@ -215,6 +216,9 @@ public abstract class GalleryFragment extends Fragment implements
 			case R.id.delete:
 				deleteSelection();
 				return true;
+			case R.id.share:
+				shareSelection();
+				return true;
 			}
 
 			return onSelectionAction(item);
@@ -240,6 +244,14 @@ public abstract class GalleryFragment extends Fragment implements
 		initSizeSpinner(menu.findItem(R.id.size_spinner));
 
 		super.onCreateOptionsMenu(menu, inflater);
+	}
+
+	/**
+	 * Open a share intent dialog to share the selected items.
+	 * 
+	 */
+	protected void shareSelection() {
+		ImageUtils.shareImages(getActivity(), getSelectedImages());
 	}
 
 	/**

@@ -9,6 +9,13 @@
         android:title="@string/gallery_cab_delete"
         picdora:showAsAction="ifRoom"/>
     <item
+        android:id="@+id/share"
+        android:icon="@drawable/ic_action_share"
+        android:title="@string/gallery_cab_share"
+        android:orderInCategory="48"
+        picdora:showAsAction="ifRoom"/>
+    
+    <item
         android:id="@+id/select_all"
         android:icon="@drawable/ic_action_select_all"
         android:title="@string/gallery_cab_all"
