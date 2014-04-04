@@ -165,14 +165,13 @@ public class LikesFragment extends GalleryFragment {
 	 * 
 	 */
 	private void addToCollection() {
-		Util.log("collect");
-		// TODO Auto-generated method stub
+		// TODO 
 
 	}
 
 	@Override
 	protected void onImageClick(Image image) {
-		Util.log("click");
+		// TODO: Launch player
 	}
 
 	@Override

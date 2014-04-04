@@ -188,8 +188,9 @@ public class ChannelUtils {
 	 */
 	public static List<Image> getLikedImages(List<Channel> channels) {
 		String query = "SELECT * FROM Images WHERE imgurId IN (SELECT image FROM Views WHERE liked="
-				+ ChannelImage.LIKE_STATUS.LIKED.ordinal()
-				+ " AND channelId IN " + getChannelIds(channels) + ")";
+				+ ChannelImage.LIKE_STATUS.LIKED.getId()
+				+ " AND channelId IN "
+				+ getChannelIds(channels) + ")";
 
 		CursorList<Image> list = Query.many(Image.class, query, null).get();
 
@@ -219,13 +220,20 @@ public class ChannelUtils {
 
 	/**
 	 * Remove the given images from the set of Liked images in the given
-	 * channels.
+	 * channels. This will change their status to neutral.
 	 * 
-	 * @param channels The channels to remove the likes from.
-	 * @param images The images to be removed from the liked set.
+	 * @param channels
+	 *            The channels to remove the likes from.
+	 * @param images
+	 *            The images to be removed from the liked set.
 	 */
 	public static void deleteLikes(List<Channel> channels, List<Image> images) {
-		// TODO 
+		SQLiteDatabase db = Sprinkles.getDatabase();
+		String query = "UPDATE Views SET liked="
+				+ ChannelImage.LIKE_STATUS.NEUTRAL.getId()
+				+ " WHERE channelId IN " + getChannelIds(channels)
+				+ " AND image IN " + ImageUtils.getImgurIds(images);
 
+		db.compileStatement(query).execute();
 	}
 }

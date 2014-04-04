@@ -22,6 +22,7 @@ import android.text.TextUtils;
 
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
+import com.picdora.models.Channel;
 import com.picdora.models.ChannelImage;
 import com.picdora.models.Image;
 
@@ -324,7 +325,7 @@ public abstract class ImageUtils {
 		 * share them all as an extra
 		 */
 		StringBuilder extraBuilder = new StringBuilder();
-		for (String id : imgurIds) {			
+		for (String id : imgurIds) {
 			extraBuilder.append(getImgurLink(id, ImgurSize.FULL));
 			extraBuilder.append(" ");
 		}
@@ -332,5 +333,46 @@ public abstract class ImageUtils {
 
 		sendIntent.setType("text/plain");
 		activity.startActivity(Intent.createChooser(sendIntent, "Share image"));
+	}
+
+	/**
+	 * Create a parenthesized, comma separated list of the imgur ids of the
+	 * given images for use in db queries.
+	 * 
+	 * @param images
+	 * @return Id list - "("we1asd", "oij23j")"
+	 */
+	public static String getImgurIds(List<Image> images) {
+		StringBuilder builder = new StringBuilder();
+		builder.append("(");
+
+		/* Add imgurid in quotes and end with a comma*/
+		for (Image i : images) {
+			builder.append("\"");
+			builder.append(i.getImgurId());
+			builder.append("\",");
+		}
+		
+		/* Replace last comma with closing parenthesis */
+		builder.deleteCharAt(builder.length() - 1);
+		builder.append(")");
+		String result = builder.toString();
+		return result;
+	}
+
+	/**
+	 * Create a parenthesized, comma separated list of the ids of the given
+	 * channels for use in db queries.
+	 * 
+	 * @param channels
+	 * @return Id list - "(1,2,3)"
+	 */
+	public static String getChannelIds(List<Channel> channels) {
+		List<Integer> ids = new ArrayList<Integer>();
+		for (Channel c : channels) {
+			ids.add((int) c.getId());
+		}
+
+		return ("(" + TextUtils.join(",", ids) + ")");
 	}
 }
