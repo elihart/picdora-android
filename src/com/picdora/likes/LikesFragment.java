@@ -32,6 +32,11 @@ public class LikesFragment extends GalleryFragment {
 
 	/** Whether we currently have a background task going to get new images */
 	private volatile boolean mImageRefreshInProgress = false;
+	/**
+	 * The most recent id we gave to a background image refresh so when the task
+	 * ends it can tell if it was most recent or not
+	 */
+	private volatile int mCurrentImageRefreshBatchId = 0;
 
 	/**
 	 * Use the given channels to source the liked images for display. Use
@@ -55,14 +60,13 @@ public class LikesFragment extends GalleryFragment {
 				&& (!isImagesEmpty() || mImageRefreshInProgress)) {
 			showImages();
 		} else {
-			/*
-			 * TODO: Case where image refresh is in progress for other channels
-			 * and the user changes the channels during the load. Ideally this
-			 * would instantly cancel the previous load, but right now the
-			 * second will start in parallel which could be bad.
-			 */
 			mChannels = channels;
-			refreshImageList();
+			/*
+			 * Refresh the current images based on the new channel list.
+			 * Increment the current batch id and give it to the refresh task so
+			 * when the task ends it knows whether its result is most recent
+			 */
+			refreshImageList(++mCurrentImageRefreshBatchId);
 		}
 	}
 
@@ -84,18 +88,21 @@ public class LikesFragment extends GalleryFragment {
 	 * 
 	 */
 	@Background
-	public void refreshImageList() {
+	public void refreshImageList(int batchId) {
 		mImageRefreshInProgress = true;
 		showProgress();
 		List<Image> images = ChannelUtils.getLikedImages(mChannels);
 		/*
 		 * Update the display on the ui thread if the fragment wasn't destroyed
-		 * while we were getting images
+		 * while we were getting images and if our batch is the most recent
 		 */
-		if (!isDestroyed()) {
+		if (isDestroyed()) {
+			mImageRefreshInProgress = false;
+			return;
+		} else if (batchId == mCurrentImageRefreshBatchId) {
 			handleRefreshResult(images);
+			mImageRefreshInProgress = false;
 		}
-		mImageRefreshInProgress = false;
 	}
 
 	/**
@@ -166,5 +173,11 @@ public class LikesFragment extends GalleryFragment {
 	@Override
 	protected void onImageClick(Image image) {
 		Util.log("click");
+	}
+
+	@Override
+	protected void onSelectionDeleted(List<Image> deletedImages) {
+		/* Remove the given images from the currently selected channels */
+		ChannelUtils.deleteLikes(mChannels, deletedImages);
 	}
 }

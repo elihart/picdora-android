@@ -30,7 +30,7 @@ import com.picdora.R;
  * @param <T>
  */
 public class ModelGridSelector<T> {
-	protected List<T> mAvailableItems, mSelectedItems;
+	protected List<T> mSelectedItems;
 	protected Context mContext;
 	protected GridView mGrid;
 	protected ModelGridAdapter<T> mAdapter;
@@ -68,7 +68,6 @@ public class ModelGridSelector<T> {
 		}
 
 		mContext = context;
-		mAvailableItems = availableItems;
 
 		/*
 		 * If a list of selected items was provided then use it, otherwise
@@ -84,7 +83,7 @@ public class ModelGridSelector<T> {
 				R.layout.image_grid, null);
 		mAdapter = adapter;
 		mAdapter.setSelectedItems(mSelectedItems);
-		mAdapter.setAvailableItems(mAvailableItems);
+		mAdapter.setAvailableItems(availableItems);
 
 		mGrid.setAdapter(mAdapter);
 
@@ -124,7 +123,6 @@ public class ModelGridSelector<T> {
 	 * @param items
 	 */
 	public void setItems(List<T> items) {
-		mAvailableItems = items;
 		mAdapter.setAvailableItems(items);
 	}
 
@@ -239,8 +237,21 @@ public class ModelGridSelector<T> {
 		mGrid.setOnScrollListener(listener);
 	}
 
+	/**
+	 * Set the size of the grid to use.
+	 * 
+	 * @param size
+	 */
 	public void setGridSize(GridSize size) {
 		mGrid.setColumnWidth(size.getRowWidth());
 		mAdapter.setImageSize(size.getImageSize());
+	}
+
+	/** Get all the items we are displaying.
+	 * 
+	 * @return
+	 */
+	public List<T> getItems() {
+		return mAdapter.getItems();
 	}
 }

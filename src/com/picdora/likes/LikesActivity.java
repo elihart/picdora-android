@@ -83,9 +83,6 @@ public class LikesActivity extends PicdoraActivity {
 		SlidingMenuHelper.addMenuToActivity(this, true);
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 		getSupportActionBar().setHomeButtonEnabled(true);
-
-		/* Show progress until channels and images are loaded */
-		mLikesFragment.showProgress();
 	}
 	
 	@Override

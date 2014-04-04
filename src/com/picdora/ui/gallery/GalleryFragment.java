@@ -111,6 +111,9 @@ public abstract class GalleryFragment extends Fragment implements
 		 * If we retained state then we shouldn't recreate these.
 		 */
 		if (mImageSelector == null) {
+			/* Show progress bar until we show images */
+			showProgress();
+			
 			mAdapter = GalleryAdapter_.getInstance_(getActivity());
 
 			/*
@@ -147,7 +150,7 @@ public abstract class GalleryFragment extends Fragment implements
 		/* set the default grid size */
 		GridSize size = GridSize.values()[mPrefs.gridSize().get()];
 		setGridSize(size);
-		
+
 		/*
 		 * If we have a lingering action mode or selected images then create a
 		 * fresh action mode.
@@ -240,13 +243,41 @@ public abstract class GalleryFragment extends Fragment implements
 	}
 
 	/**
-	 * Remove the currently selected images.
+	 * Remove the currently selected images from the grid and alert subclasses
+	 * so they can handle the deletion as they choose.
 	 * 
 	 */
-	protected void deleteSelection() {
-		Util.log("delete");
+	private void deleteSelection() {
+		/*
+		 * All images and selected images. Create a copy of the selected images
+		 * because we need to pass on the selection to subclasses, and the
+		 * original selection will be cleared after this.
+		 */
+		List<Image> allImages = mImageSelector.getItems();
+		List<Image> imagesToDelete = new ArrayList<Image>(getSelectedImages());
 
+		/* Duplicate all images list and remove the selected images */
+		List<Image> result = new ArrayList<Image>(allImages);
+		result.removeAll(imagesToDelete);
+
+		/* Set the resulting list with the images removed */
+		mImageSelector.setItems(result);
+		
+		/* Clear the selection */
+		clearSelectedImages();
+		
+		/* Pass the deleted images on to subclasses to handle cleanup */
+		onSelectionDeleted(imagesToDelete);
 	}
+
+	/**
+	 * Called when the user has chosen to delete the selection. The images will
+	 * be removed from the grid automatically, but the subclass can handle any
+	 * further cleanup it wants.
+	 * 
+	 * @param deletedImages
+	 */
+	protected abstract void onSelectionDeleted(List<Image> deletedImages);
 
 	/**
 	 * Download the currently selected images.

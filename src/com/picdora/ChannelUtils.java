@@ -216,4 +216,16 @@ public class ChannelUtils {
 
 		return ("(" + TextUtils.join(",", ids) + ")");
 	}
+
+	/**
+	 * Remove the given images from the set of Liked images in the given
+	 * channels.
+	 * 
+	 * @param channels The channels to remove the likes from.
+	 * @param images The images to be removed from the liked set.
+	 */
+	public static void deleteLikes(List<Channel> channels, List<Image> images) {
+		// TODO 
+
+	}
 }
