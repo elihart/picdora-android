@@ -6,6 +6,8 @@ import java.util.List;
 import org.androidannotations.annotations.EBean;
 import org.androidannotations.annotations.RootContext;
 
+import se.emilsjolander.sprinkles.CursorList;
+import se.emilsjolander.sprinkles.QueryResult;
 import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,9 +25,14 @@ import com.picdora.ImageUtils.ImgurSize;
  *            The item type
  */
 @EBean
-public abstract class ModelGridAdapter<T> extends BaseAdapter {
+public abstract class ModelGridAdapter<T extends QueryResult> extends
+		BaseAdapter {
 	@RootContext
-	protected Context context;
+	protected Context mContext;
+
+	protected CursorList<T> mCursor;
+	protected List<T> mCursorAsList;
+	protected boolean mUseCursor = false;
 
 	protected List<T> mAvailableItems = new ArrayList<T>();
 	protected List<T> mSelectedItems = new ArrayList<T>();
@@ -44,10 +51,32 @@ public abstract class ModelGridAdapter<T> extends BaseAdapter {
 	public void setAvailableItems(List<T> items) {
 		if (items == null) {
 			throw new IllegalArgumentException("Items can't be null");
+		} else if (mUseCursor) {
+			throw new IllegalStateException("Using cursor, can't set list");
 		}
 
 		mAvailableItems = items;
 		notifyDataSetChanged();
+	}
+
+	public void useCursor(boolean useCursor) {
+		mUseCursor = useCursor;
+	}
+
+	public void setCursor(CursorList<T> cursor) {
+		if (!mUseCursor) {
+			throw new IllegalStateException("Not set to use cursor");
+		}
+		mCursorAsList = null;
+		mCursor = cursor;
+	}
+
+	public CursorList<T> getCursor() {
+		if (!mUseCursor) {
+			throw new IllegalStateException("Not set to use cursor");
+		}
+
+		return mCursor;
 	}
 
 	/**
@@ -79,17 +108,32 @@ public abstract class ModelGridAdapter<T> extends BaseAdapter {
 	 * @return
 	 */
 	public List<T> getItems() {
-		return mAvailableItems;
+		if (mUseCursor) {
+			if (mCursorAsList == null) {
+				mCursorAsList = mCursor.asList();
+			}
+			return mCursorAsList;
+		} else {
+			return mAvailableItems;
+		}
 	}
 
 	@Override
 	public int getCount() {
-		return getItems().size();
+		if (mUseCursor) {
+			return mCursor.size();
+		} else {
+			return mAvailableItems.size();
+		}
 	}
 
 	@Override
 	public T getItem(int position) {
-		return getItems().get(position);
+		if (mUseCursor) {
+			return mCursor.get(position);
+		} else {
+			return mAvailableItems.get(position);
+		}
 	}
 
 	@Override
@@ -137,7 +181,7 @@ public abstract class ModelGridAdapter<T> extends BaseAdapter {
 	 * @return
 	 */
 	protected GridItemView buildItemView() {
-		return GridItemView_.build(context);
+		return GridItemView_.build(mContext);
 	}
 
 	/**
