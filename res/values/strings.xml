@@ -61,6 +61,10 @@
     <!-- Gallery Fragment -->
     <string name="gallery_size_spinner">Image Size</string>
     <string name="gallery_cab_download">Download</string>
+    <string name="gallery_download_start_alert_singular">Downloading image</string>
+    <string name="gallery_download_start_alert_multiple">Downloading %1$d images</string>
+    <string name="gallery_download_progress"> %1$d of %2$d images downloaded</string>
+    <string name="gallery_download_failure">Error downloading images</string>
     <string name="gallery_cab_all">Select All</string>
     <string name="gallery_cab_delete">Delete</string>
     <string name="gallery_delete_confirmation_title">Delete Selection?</string>

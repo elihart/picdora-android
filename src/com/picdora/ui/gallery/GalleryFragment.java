@@ -256,19 +256,22 @@ public abstract class GalleryFragment extends Fragment implements
 	protected void shareSelection() {
 		ImageUtils.shareImages(getActivity(), getSelectedImages());
 	}
-	
-	private void doDeleteConfirmation(){
-		new PicdoraDialog.Builder(getActivity()).setTitle(R.string.gallery_delete_confirmation_title)
-		.setMessage(R.string.gallery_delete_confirmation_message)
-		.setNegativeButton(R.string.dialog_default_negative, null)
-		.setPositiveButton(R.string.gallery_delete_confirmation_positive, new OnClickListener() {
-			
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				deleteSelection();				
-			}
-		})
-		.show();
+
+	private void doDeleteConfirmation() {
+		new PicdoraDialog.Builder(getActivity())
+				.setTitle(R.string.gallery_delete_confirmation_title)
+				.setMessage(R.string.gallery_delete_confirmation_message)
+				.setNegativeButton(R.string.dialog_default_negative, null)
+				.setPositiveButton(
+						R.string.gallery_delete_confirmation_positive,
+						new OnClickListener() {
+
+							@Override
+							public void onClick(DialogInterface dialog,
+									int which) {
+								deleteSelection();
+							}
+						}).show();
 	}
 
 	/**
@@ -312,16 +315,36 @@ public abstract class GalleryFragment extends Fragment implements
 	 * Download the currently selected images.
 	 * 
 	 */
-	protected void downloadSelection() {
-		Util.log("download");
+	private void downloadSelection() {
+		/* Use a queue to download each image one at a time */
+		List<Image> imagesToDownload = getSelectedImages();
+		int count = imagesToDownload.size();
 
+		/*
+		 * Show a confirmation message saying the download is starting and how
+		 * many images will be downloaded. Customize language for
+		 * singular/plural
+		 */
+		String startMessage;
+		if (count > 1) {
+			startMessage = getResources().getString(
+					R.string.gallery_download_start_alert_multiple, count);
+		} else {
+			startMessage = getResources().getString(
+					R.string.gallery_download_start_alert_singular);
+		}
+		Util.makeBasicToast(getActivity(), startMessage);
+
+		new DownloadQueue(getActivity(), imagesToDownload).start();
 	}
+
+	
 
 	/**
 	 * Select all images in the grid.
 	 * 
 	 */
-	protected void selectAll() {
+	private void selectAll() {
 		mImageSelector.selectAll();
 		onSelectionChanged(getSelectedImages());
 	}
