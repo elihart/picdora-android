@@ -9,6 +9,8 @@ import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
 import org.androidannotations.annotations.sharedpreferences.Pref;
 
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.view.ActionMode;
@@ -32,6 +34,7 @@ import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.models.Image;
 import com.picdora.ui.ActionSpinner;
+import com.picdora.ui.PicdoraDialog;
 import com.picdora.ui.grid.GridItemView;
 import com.picdora.ui.grid.GridSize;
 import com.picdora.ui.grid.ModelGridSelector;
@@ -214,7 +217,7 @@ public abstract class GalleryFragment extends Fragment implements
 				downloadSelection();
 				return true;
 			case R.id.delete:
-				deleteSelection();
+				doDeleteConfirmation();
 				return true;
 			case R.id.share:
 				shareSelection();
@@ -252,6 +255,20 @@ public abstract class GalleryFragment extends Fragment implements
 	 */
 	protected void shareSelection() {
 		ImageUtils.shareImages(getActivity(), getSelectedImages());
+	}
+	
+	private void doDeleteConfirmation(){
+		new PicdoraDialog.Builder(getActivity()).setTitle(R.string.gallery_delete_confirmation_title)
+		.setMessage(R.string.gallery_delete_confirmation_message)
+		.setNegativeButton(R.string.dialog_default_negative, null)
+		.setPositiveButton(R.string.gallery_delete_confirmation_positive, new OnClickListener() {
+			
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				deleteSelection();				
+			}
+		})
+		.show();
 	}
 
 	/**
