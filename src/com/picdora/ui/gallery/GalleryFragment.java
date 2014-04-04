@@ -11,6 +11,7 @@ import org.androidannotations.annotations.sharedpreferences.Pref;
 
 import android.support.v4.app.Fragment;
 import android.support.v4.view.MenuItemCompat;
+import android.support.v7.view.ActionMode;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -24,8 +25,10 @@ import android.widget.TextView;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.PauseOnScrollListener;
+import com.picdora.PicdoraActivity;
 import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
+import com.picdora.Util;
 import com.picdora.models.Image;
 import com.picdora.ui.ActionSpinner;
 import com.picdora.ui.grid.GridItemView;
@@ -53,6 +56,9 @@ import com.picdora.ui.grid.ModelGridSelector.OnGridItemClickListener;
  * <p>
  * A collapsed action view Spinner is placed in the action bar to allow the user
  * to choose the size of the images in the grid.
+ * <p>
+ * This fragment also handles creating an ActionMode context menu when images
+ * are selected.
  * 
  */
 @EFragment(R.layout.fragment_image_grid)
@@ -75,6 +81,9 @@ public abstract class GalleryFragment extends Fragment implements
 	/** The spinner in the actionbar for selecting image size */
 	private ActionSpinner mActionSizeSpinner;
 
+	/** ActionMode for showing contextual options for selected images */
+	private ActionMode mActionMode;
+
 	/**
 	 * Whether any images are currently selected. False to begin with since no
 	 * images are selected at start.
@@ -89,6 +98,7 @@ public abstract class GalleryFragment extends Fragment implements
 
 	@AfterViews
 	protected void init() {
+		/* We want to add our size spinner to the action bar */
 		setHasOptionsMenu(true);
 
 		/*
@@ -137,7 +147,86 @@ public abstract class GalleryFragment extends Fragment implements
 		/* set the default grid size */
 		GridSize size = GridSize.values()[mPrefs.gridSize().get()];
 		setGridSize(size);
+		
+		/*
+		 * If we have a lingering action mode or selected images then create a
+		 * fresh action mode.
+		 */
+		if (mActionMode != null || !getSelectedImages().isEmpty()) {
+			/*
+			 * Easiest way to recreate is just forget about the old one and
+			 * remind ourselves of the selected items.
+			 */
+			mActionMode = null;
+			onSelectionChanged(getSelectedImages());
+		}
 	}
+
+	/**
+	 * Called when the contextual ActionMode for selected images is being
+	 * created. Subclassed fragments can override this to add their own items to
+	 * the ActionMode. If overridden be sure to call super.
+	 * 
+	 * @param inflater
+	 * @param menu
+	 */
+	protected void onCreateSelectionMenu(MenuInflater inflater, Menu menu) {
+		inflater.inflate(R.menu.fragment_gallery_cab, menu);
+	}
+
+	/**
+	 * Called when an item in the actionmode is clicked. Subclassed fragments
+	 * can override this to listen for their items being clicked. This will be
+	 * called only if the parent doesn't use the item.
+	 * 
+	 * @param item
+	 * @return
+	 */
+	protected boolean onSelectionAction(MenuItem item) {
+		return false;
+	}
+
+	/**
+	 * Callback options for when the actionmode changes or an option is selected
+	 */
+	private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
+
+		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+			MenuInflater inflater = mode.getMenuInflater();
+			onCreateSelectionMenu(inflater, menu);
+			return true;
+		}
+
+		public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+			return false;
+		}
+
+		public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+			switch (item.getItemId()) {
+			case R.id.select_all:
+				selectAll();
+				return true;
+			case R.id.download:
+				downloadSelection();
+				return true;
+			case R.id.delete:
+				deleteSelection();
+				return true;
+			}
+
+			return onSelectionAction(item);
+		}
+
+		public void onDestroyActionMode(ActionMode mode) {
+			/*
+			 * If we are closing and images are still selected then deselect
+			 * them
+			 */
+			if (!getSelectedImages().isEmpty()) {
+				clearSelectedImages();
+			}
+		}
+	};
 
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -148,6 +237,33 @@ public abstract class GalleryFragment extends Fragment implements
 		initSizeSpinner(menu.findItem(R.id.size_spinner));
 
 		super.onCreateOptionsMenu(menu, inflater);
+	}
+
+	/**
+	 * Remove the currently selected images.
+	 * 
+	 */
+	protected void deleteSelection() {
+		Util.log("delete");
+
+	}
+
+	/**
+	 * Download the currently selected images.
+	 * 
+	 */
+	protected void downloadSelection() {
+		Util.log("download");
+
+	}
+
+	/**
+	 * Select all images in the grid.
+	 * 
+	 */
+	protected void selectAll() {
+		Util.log("all");
+
 	}
 
 	/**
@@ -164,28 +280,27 @@ public abstract class GalleryFragment extends Fragment implements
 		final GridSizeArrayAdapter adapter = new GridSizeArrayAdapter(
 				getActivity(), R.layout.action_spinner_item, GridSize.values());
 
-		mActionSizeSpinner.setSpinnerAdapter(adapter);
+		mActionSizeSpinner.setAdapter(adapter);
 
-		mActionSizeSpinner
-				.setSpinnerSelectionListener(new OnItemSelectedListener() {
-					@Override
-					public void onItemSelected(AdapterView<?> parent,
-							View view, int position, long id) {
-						GridSize size = adapter.getItem(position);
-						if (getGridSize() != size) {
-							setGridSize(size);
-							mActionSizeSpinner.collapseSpinner();
-						}
-					}
+		mActionSizeSpinner.setSelectionListener(new OnItemSelectedListener() {
+			@Override
+			public void onItemSelected(AdapterView<?> parent, View view,
+					int position, long id) {
+				GridSize size = adapter.getItem(position);
+				if (getGridSize() != size) {
+					setGridSize(size);
+					mActionSizeSpinner.collapse();
+				}
+			}
 
-					@Override
-					public void onNothingSelected(AdapterView<?> parent) {
+			@Override
+			public void onNothingSelected(AdapterView<?> parent) {
 
-					}
-				});
+			}
+		});
 
 		/* Set to last selected value */
-		mActionSizeSpinner.setSpinnerSelection(mPrefs.gridSize().get());
+		mActionSizeSpinner.setSelection(mPrefs.gridSize().get());
 	}
 
 	/**
@@ -282,7 +397,27 @@ public abstract class GalleryFragment extends Fragment implements
 	 *            List of currently selected images. Empty if no images are
 	 *            selected.
 	 */
-	protected abstract void onSelectionChanged(List<Image> selectedImages);
+	protected void onSelectionChanged(List<Image> selectedImages) {
+		/* Start an action mode to show options for the selected images */
+		if (mActionMode == null && !selectedImages.isEmpty()) {
+			mActionMode = ((PicdoraActivity) getActivity())
+					.startSupportActionMode(mActionModeCallback);
+		}
+
+		/* End the action mode if the selected images were cleared */
+		else if (selectedImages.isEmpty() && mActionMode != null) {
+			mActionMode.finish();
+			mActionMode = null;
+		}
+
+		/*
+		 * If the action mode exists set the title to be the number of selected
+		 * images
+		 */
+		if (mActionMode != null) {
+			mActionMode.setTitle(Integer.toString(selectedImages.size()));
+		}
+	}
 
 	/**
 	 * Called when an image is clicked that isn't part of the selection process.
@@ -353,7 +488,7 @@ public abstract class GalleryFragment extends Fragment implements
 	 * 
 	 */
 	public void collapseActionViews() {
-		mActionSizeSpinner.collapseSpinner();
+		mActionSizeSpinner.collapse();
 	}
 
 }

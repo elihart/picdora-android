@@ -68,7 +68,7 @@ public class ActionSpinner extends RelativeLayout {
 
 			@Override
 			public void onClick(View v) {
-				expandSpinner();
+				expand();
 			}
 		});
 
@@ -124,7 +124,7 @@ public class ActionSpinner extends RelativeLayout {
 	 * Hide the spinner and show the icon.
 	 * 
 	 */
-	public void collapseSpinner() {
+	public void collapse() {
 		icon.setVisibility(View.VISIBLE);
 		spinner.setVisibility(View.GONE);
 	}
@@ -133,13 +133,13 @@ public class ActionSpinner extends RelativeLayout {
 	 * Hide the icon and show the spinner.
 	 * 
 	 */
-	public void expandSpinner() {
+	public void expand() {
 		icon.setVisibility(View.GONE);
 		spinner.setVisibility(View.VISIBLE);
 
 		/*
 		 * Do a click so the dropdown happens automatically, but we need to make
-		 * sure the view get's drawn first after being shown so we wait for a
+		 * sure the view gets drawn first after being shown so we wait for a
 		 * slight delay
 		 */
 		delayedSpinnerDropdown();
@@ -155,7 +155,7 @@ public class ActionSpinner extends RelativeLayout {
 	 * 
 	 * @param adapter
 	 */
-	public void setSpinnerAdapter(SpinnerAdapter adapter) {
+	public void setAdapter(SpinnerAdapter adapter) {
 		spinner.setAdapter(adapter);
 	}
 
@@ -164,7 +164,7 @@ public class ActionSpinner extends RelativeLayout {
 	 * 
 	 * @param position
 	 */
-	public void setSpinnerSelection(int position) {
+	public void setSelection(int position) {
 		spinner.setSelection(position);
 	}
 
@@ -173,12 +173,12 @@ public class ActionSpinner extends RelativeLayout {
 	 * 
 	 * @param listener
 	 */
-	public void setSpinnerSelectionListener(OnItemSelectedListener listener) {
+	public void setSelectionListener(OnItemSelectedListener listener) {
 		mSelectionListener = listener;
 	}
 
 	/**
-	 * Get the item position of the currently selected item in the spinner.
+	 * Get the currently selected item position in the spinner.
 	 * 
 	 * @return
 	 */

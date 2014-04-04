@@ -60,14 +60,14 @@
 
     <!-- Gallery Fragment -->
     <string name="gallery_size_spinner">Image Size</string>
+    <string name="gallery_cab_download">Download</string>
+    <string name="gallery_cab_all">Select All</string>
+    <string name="gallery_cab_delete">Delete</string>
 
     <!-- Likes Contextual Menu -->
-    <string name="likes_menu_download">Download</string>
-    <string name="likes_menu_all">Select All</string>
     <string name="likes_menu_star">Add to collection</string>
-    <string name="likes_menu_delete">Delete</string>
 
-    <!-- Likes Contextual Menu -->
+    <!-- Likes Menu -->
     <string name="likes_channel_spinner">Channel Selection</string>
     <string name="likes_channel_spinner_value_all">All Channels</string>
 

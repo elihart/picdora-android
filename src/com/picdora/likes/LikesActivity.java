@@ -165,10 +165,10 @@ public class LikesActivity extends PicdoraActivity {
 		final ChannelSelectArrayAdapter adapter = new ChannelSelectArrayAdapter(
 				this, R.layout.action_spinner_item, channelsToShow);
 
-		mActionChannelSpinner.setSpinnerAdapter(adapter);
+		mActionChannelSpinner.setAdapter(adapter);
 
 		mActionChannelSpinner
-				.setSpinnerSelectionListener(new OnItemSelectedListener() {
+				.setSelectionListener(new OnItemSelectedListener() {
 
 					@Override
 					public void onItemSelected(AdapterView<?> parent,
@@ -182,7 +182,7 @@ public class LikesActivity extends PicdoraActivity {
 							mLikesFragment.setChannel(adapter.getItem(position));
 						}
 
-						mActionChannelSpinner.collapseSpinner();
+						mActionChannelSpinner.collapse();
 					}
 
 					@Override
@@ -200,11 +200,11 @@ public class LikesActivity extends PicdoraActivity {
 		 */
 		SavedState state = (SavedState) getRetainedState();
 		if (state != null && state.spinnerPos != 0) {
-			mActionChannelSpinner.setSpinnerSelection(state.spinnerPos);
+			mActionChannelSpinner.setSelection(state.spinnerPos);
 			mLikesFragment.setChannel(adapter.getItem(state.spinnerPos));
 		} else {
 			// Pass all channels to fragment to load all by default
-			mActionChannelSpinner.setSpinnerSelection(0);
+			mActionChannelSpinner.setSelection(0);
 			mLikesFragment.setChannels(mChannels);
 		}
 	}
@@ -239,7 +239,7 @@ public class LikesActivity extends PicdoraActivity {
 	}
 
 	public void collapseActionViews() {
-		mActionChannelSpinner.collapseSpinner();
+		mActionChannelSpinner.collapse();
 		mLikesFragment.collapseActionViews();
 	}
 

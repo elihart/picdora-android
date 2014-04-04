@@ -27,7 +27,7 @@ public class PicdoraApp extends Application {
 	@Pref
 	protected PicdoraPreferences_ mPrefs;
 	
-	public static final boolean DEBUG = false;
+	public static final boolean DEBUG = true;
 
 	@Override
 	public void onCreate() {

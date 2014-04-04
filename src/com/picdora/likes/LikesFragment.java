@@ -3,53 +3,35 @@ package com.picdora.likes;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.UiThread;
 
-import android.support.v7.view.ActionMode;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
 import com.picdora.ChannelUtils;
-import com.picdora.PicdoraActivity;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.models.Channel;
 import com.picdora.models.Image;
 import com.picdora.ui.gallery.GalleryFragment;
 
+/**
+ * A special case of the {@link #GalleryFragment} where Liked images from
+ * Channels are shown. The client has set one Channel or a list of Channels to
+ * use and Liked images will be drawn from there to display.
+ * <p>
+ * On selection the user will have the option to remove the images from the
+ * liked list, add them to a collection, or download them.
+ */
 @EFragment(R.layout.fragment_image_grid)
 public class LikesFragment extends GalleryFragment {
 	private List<Channel> mChannels;
-	/** ActionMode for showing contextual options for selected images */
-	private ActionMode mActionMode;
 
 	/** Whether we currently have a background task going to get new images */
 	private volatile boolean mImageRefreshInProgress = false;
-
-	/**
-	 * On a config change the action mode bar will not be recreated
-	 * automatically so we need to recreate it manually.
-	 * 
-	 */
-	@AfterViews
-	protected void restoreActionMode() {
-		/*
-		 * If we have a lingering action mode or selected images then create a
-		 * fresh action mode.
-		 */
-		if (mActionMode != null || !getSelectedImages().isEmpty()) {
-			/*
-			 * Easiest way to recreate is just forget about the old one and
-			 * remind ourselves of the selected items.
-			 */
-			mActionMode = null;
-			onSelectionChanged(getSelectedImages());
-		}
-	}
 
 	/**
 	 * Use the given channels to source the liked images for display. Use
@@ -154,72 +136,35 @@ public class LikesFragment extends GalleryFragment {
 	}
 
 	@Override
-	protected void onSelectionChanged(List<Image> selectedImages) {
-		/* Start an action mode to show options for the selected images */
-		if (mActionMode == null && !selectedImages.isEmpty()) {
-			mActionMode = ((PicdoraActivity) getActivity())
-					.startSupportActionMode(mActionModeCallback);
+	protected void onCreateSelectionMenu(MenuInflater inflater, Menu menu) {
+		super.onCreateSelectionMenu(inflater, menu);
+		inflater.inflate(R.menu.fragment_likes_cab, menu);
+	}
+
+	@Override
+	protected boolean onSelectionAction(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.star:
+			addToCollection();
+			return true;
 		}
 
-		/* End the action mode if the selected images were cleared */
-		else if (selectedImages.isEmpty() && mActionMode != null) {
-			mActionMode.finish();
-			mActionMode = null;
-		}
+		return false;
+	}
 
-		/*
-		 * If the action mode exists set the title to be the number of selected
-		 * images
-		 */
-		if (mActionMode != null) {
-			mActionMode.setTitle(Integer.toString(selectedImages.size()));
-		}
+	/**
+	 * Show a dialog allowing the user to add the currently selected images to a
+	 * collection.
+	 * 
+	 */
+	private void addToCollection() {
+		Util.log("collect");
+		// TODO Auto-generated method stub
+
 	}
 
 	@Override
 	protected void onImageClick(Image image) {
 		Util.log("click");
 	}
-
-	private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
-
-		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-			MenuInflater inflater = mode.getMenuInflater();
-			inflater.inflate(R.menu.likes_contextual, menu);
-			return true;
-		}
-
-		public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-			return false;
-		}
-
-		public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-			switch (item.getItemId()) {
-			case R.id.select_all:
-				return true;
-			case R.id.download:
-				Util.log("download");
-				return true;
-			case R.id.delete:
-				Util.log("delete");
-				return true;
-			case R.id.star:
-				Util.log("star");
-				return true;
-			default:
-				return false;
-			}
-		}
-
-		public void onDestroyActionMode(ActionMode mode) {
-			/*
-			 * If we are closing and images are still selected then deselect
-			 * them
-			 */
-			if (!getSelectedImages().isEmpty()) {
-				clearSelectedImages();
-			}
-		}
-	};	
-
 }
