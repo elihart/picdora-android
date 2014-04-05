@@ -124,4 +124,15 @@ public class Util {
 		}
 		return buffer.toString();
 	}
+	
+	private static long startTime;
+	public static void startTimer(){
+		startTime = System.currentTimeMillis();
+	}
+	
+	public static void lap(String msg){
+		long curr = System.currentTimeMillis();
+		log(msg + " : " + (curr - startTime));
+		startTime =  curr;
+	}
 }

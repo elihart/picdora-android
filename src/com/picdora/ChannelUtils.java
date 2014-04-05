@@ -187,18 +187,26 @@ public class ChannelUtils {
 	 * @return
 	 */
 	public static List<Image> getLikedImages(List<Channel> channels) {
+		/*
+		 * TODO: Should we exclude deleted images? On the one hand the user
+		 * might not like having them disappear without any warning, and on the
+		 * other hand they might not like seeing the blank image and having to
+		 * delete it manually. For now let's let them deal with it.
+		 */
+
 		String query = "SELECT * FROM Images WHERE imgurId IN (SELECT image FROM Views WHERE liked="
 				+ ChannelImage.LIKE_STATUS.LIKED.getId()
 				+ " AND channelId IN "
 				+ getChannelIds(channels) + ")";
 
 		CursorList<Image> list = Query.many(Image.class, query, null).get();
-
-		List<Image> images = new ArrayList<Image>();
-		images.addAll(list.asList());
+		List<Image> images = list.asList();
 		list.close();
 
-		// remove duplicates by creating set first
+		/*
+		 * Remove duplicates by creating set first. TODO: Remove this when we
+		 * get uniqueness forced in the db.
+		 */
 		return new ArrayList<Image>(new LinkedHashSet<Image>(images));
 	}
 

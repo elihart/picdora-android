@@ -338,8 +338,6 @@ public abstract class GalleryFragment extends Fragment implements
 		new DownloadQueue(getActivity(), imagesToDownload).start();
 	}
 
-	
-
 	/**
 	 * Select all images in the grid.
 	 * 
@@ -507,10 +505,15 @@ public abstract class GalleryFragment extends Fragment implements
 	 * Called when an image is clicked that isn't part of the selection process.
 	 * In other words, if the user has long clicked and is clicking other images
 	 * to include in the selection this won't be call.
+	 * <p>
+	 * The default action will be to show the clicked image in fullscreen. The
+	 * method can be overridden for custom functionality.
 	 * 
 	 * @param image
 	 */
-	protected abstract void onImageClick(Image image);
+	protected void onImageClick(Image image) {
+		// TODO: Show image in full screen
+	}
 
 	/**
 	 * Set the images to be displayed in the grid. Clear any currently selected

@@ -3,9 +3,7 @@ package com.picdora.likes;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EFragment;
-import org.androidannotations.annotations.UiThread;
 
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -13,10 +11,9 @@ import android.view.MenuItem;
 
 import com.picdora.ChannelUtils;
 import com.picdora.R;
-import com.picdora.Util;
 import com.picdora.models.Channel;
 import com.picdora.models.Image;
-import com.picdora.ui.gallery.GalleryFragment;
+import com.picdora.ui.gallery.DbGalleryFragment;
 
 /**
  * A special case of the {@link #GalleryFragment} where Liked images from
@@ -27,16 +24,8 @@ import com.picdora.ui.gallery.GalleryFragment;
  * liked list, add them to a collection, or download them.
  */
 @EFragment(R.layout.fragment_image_grid)
-public class LikesFragment extends GalleryFragment {
+public class LikesFragment extends DbGalleryFragment {
 	private List<Channel> mChannels;
-
-	/** Whether we currently have a background task going to get new images */
-	private volatile boolean mImageRefreshInProgress = false;
-	/**
-	 * The most recent id we gave to a background image refresh so when the task
-	 * ends it can tell if it was most recent or not
-	 */
-	private volatile int mCurrentImageRefreshBatchId = 0;
 
 	/**
 	 * Use the given channels to source the liked images for display. Use
@@ -52,21 +41,16 @@ public class LikesFragment extends GalleryFragment {
 
 		/*
 		 * If our existing channels are the same as the new ones then don't
-		 * bother changing anything. However, if we don't have any images to
-		 * show and no background refresh task is ongoing then let's try to
-		 * refresh again.
+		 * bother changing anything. Otherwise do a fresh load to update the
+		 * images for the new channels.
 		 */
-		if (channels.equals(mChannels)
-				&& (!isImagesEmpty() || mImageRefreshInProgress)) {
-			showImages();
-		} else {
+		if (!channels.equals(mChannels)){
 			mChannels = channels;
-			/*
-			 * Refresh the current images based on the new channel list.
-			 * Increment the current batch id and give it to the refresh task so
-			 * when the task ends it knows whether its result is most recent
-			 */
-			refreshImageList(++mCurrentImageRefreshBatchId);
+			loadImagesFromDb();
+		} 
+		/* Make sure we are showing the images */
+		else {
+			showImages();
 		}
 	}
 
@@ -80,66 +64,6 @@ public class LikesFragment extends GalleryFragment {
 		List<Channel> channels = new ArrayList<Channel>();
 		channels.add(channel);
 		setChannels(channels);
-	}
-
-	/**
-	 * Refresh the list of liked images from the set channels. This will
-	 * retrieve the current list from the database and repopulate the grid.
-	 * 
-	 */
-	@Background
-	public void refreshImageList(int batchId) {
-		mImageRefreshInProgress = true;
-		showProgress();
-		List<Image> images = ChannelUtils.getLikedImages(mChannels);
-		/*
-		 * Update the display on the ui thread if the fragment wasn't destroyed
-		 * while we were getting images and if our batch is the most recent
-		 */
-		if (isDestroyed()) {
-			mImageRefreshInProgress = false;
-			return;
-		} else if (batchId == mCurrentImageRefreshBatchId) {
-			handleRefreshResult(images);
-			mImageRefreshInProgress = false;
-		}
-	}
-
-	/**
-	 * Need to use the ui thread to display the refreshed images
-	 * 
-	 * @param images
-	 */
-	@UiThread
-	protected void handleRefreshResult(List<Image> images) {
-		setImagesToShow(images);
-		showImages();
-	}
-
-	/**
-	 * Show the image grid if we have images, but if our image list is empty
-	 * then show a message instead.
-	 * 
-	 */
-	protected void showImages() {
-		if (mImageRefreshInProgress) {
-			showProgress();
-		} else if (isImagesEmpty()) {
-			/*
-			 * Show a message about not having any likes images. If there are
-			 * multiple channels selected then show a generic message, but if a
-			 * certain channel is selected then be specific
-			 */
-			String msg = "You haven't liked any images yet!";
-			if (mChannels.size() == 1) {
-				msg = "You haven't liked any images in the channel "
-						+ mChannels.get(0).getName();
-			}
-
-			showMessage(msg);
-		} else {
-			showImageGrid();
-		}
 	}
 
 	@Override
@@ -165,18 +89,29 @@ public class LikesFragment extends GalleryFragment {
 	 * 
 	 */
 	private void addToCollection() {
-		// TODO 
+		// TODO
 
-	}
-
-	@Override
-	protected void onImageClick(Image image) {
-		// TODO: Launch player
 	}
 
 	@Override
 	protected void onSelectionDeleted(List<Image> deletedImages) {
 		/* Remove the given images from the currently selected channels */
 		ChannelUtils.deleteLikes(mChannels, deletedImages);
+	}
+
+	@Override
+	protected List<Image> getImagesFromDb() {
+		return ChannelUtils.getLikedImages(mChannels);
+	}
+
+	@Override
+	protected String getEmptyMessage() {
+		String msg = "You haven't liked any images yet!";
+		if (mChannels.size() == 1) {
+			msg = "You haven't liked any images in the channel "
+					+ mChannels.get(0).getName();
+		}
+
+		return msg;
 	}
 }
