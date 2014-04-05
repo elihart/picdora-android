@@ -6,6 +6,8 @@ import org.androidannotations.annotations.ViewById;
 
 import uk.co.senab.photoview.PhotoView;
 import android.app.Activity;
+import android.content.DialogInterface;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.view.View;
@@ -19,6 +21,10 @@ import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.ProgressCallback;
 import com.picdora.ImageUtils;
 import com.picdora.R;
+import com.picdora.Util;
+import com.picdora.imageloader.PicdoraImageLoader;
+import com.picdora.imageloader.PicdoraImageLoader.LoadCallbacks;
+import com.picdora.imageloader.PicdoraImageLoader.LoadError;
 import com.picdora.models.Image;
 
 /**
@@ -51,6 +57,10 @@ public class FullscreenFragment extends DialogFragment implements
 		setStyle(DialogFragment.STYLE_NO_FRAME,
 				android.R.style.Theme_Black_NoTitleBar_Fullscreen);
 
+		/*
+		 * We want to retain on image to loaded and any download progress on
+		 * rotation.
+		 */
 		setRetainInstance(true);
 	}
 
@@ -59,6 +69,8 @@ public class FullscreenFragment extends DialogFragment implements
 		mInitialized = true;
 		mContext = getActivity();
 		showLoadingCircle();
+
+		Util.log("init");
 
 		/*
 		 * If an image has already been provided for us to display than start
@@ -91,27 +103,77 @@ public class FullscreenFragment extends DialogFragment implements
 	 * @param imageToDisplay
 	 */
 	private void loadImage(Image image) {
+		showLoadingCircle();
+
 		/* Cancel previous load to start the new one */
 		if (mCurrentDownload != null && !mCurrentDownload.isDone()) {
 			mCurrentDownload.cancel(true);
 		}
 
-		showLoadingCircle();
+		/*
+		 * Use our custom image loader to handle gifs. It's much more memory
+		 * efficient.
+		 */
+		if (image.isGif()) {
+			loadGif(image);
+			return;
+		}
 
+		/*
+		 * Use Ion to handle regular images. It can do gifs, but it gets OOM
+		 * errors on large ones. It is great with images though and will load
+		 * any gifs that slip through.
+		 */
 		mCurrentDownload = Ion
 				.with(mContext)
-				// .load("https://raw2.github.com/koush/ion/master/ion-sample/telescope.jpg")
 				.load(ImageUtils.getImgurLink(image, ImageUtils.ImgurSize.FULL))
 				.progressHandler(this).withBitmap().deepZoom()
 				.intoImageView(mPhotoView)
 				.setCallback(new FutureCallback<ImageView>() {
 					@Override
 					public void onCompleted(Exception e, ImageView result) {
-						mPhotoView.setVisibility(View.VISIBLE);
-						mProgressContainer.setVisibility(View.GONE);
+						if (e == null) {
+							showPhotoView();
+						}
 					}
-				});
 
+				});
+	}
+
+	/**
+	 * Show the photoview and hide all other views.
+	 * 
+	 */
+	private void showPhotoView() {
+		mPhotoView.setVisibility(View.VISIBLE);
+		mProgressContainer.setVisibility(View.GONE);
+	}
+
+	/**
+	 * Load a gif into the photoview.
+	 * 
+	 * @param image
+	 */
+	private void loadGif(Image image) {
+		PicdoraImageLoader.instance().loadImage(image, new LoadCallbacks() {
+
+			@Override
+			public void onSuccess(Drawable drawable) {
+				mPhotoView.setImageDrawable(drawable);
+				showPhotoView();
+			}
+
+			@Override
+			public void onProgress(int percentComplete) {
+				setProgress(percentComplete);
+			}
+
+			@Override
+			public void onError(LoadError error) {
+				// TODO
+
+			}
+		});
 	}
 
 	/**
@@ -120,7 +182,13 @@ public class FullscreenFragment extends DialogFragment implements
 	 */
 	@Override
 	public void onProgress(int downloaded, int total) {
-		setProgress((int) ((downloaded * 100f) / total));
+		/*
+		 * Protect from divide by 0 and convert to a percent so we can show the
+		 * progress level
+		 */
+		if (total != 0) {
+			setProgress((int) ((downloaded * 100f) / total));
+		}
 	}
 
 	/**
@@ -128,14 +196,9 @@ public class FullscreenFragment extends DialogFragment implements
 	 * 
 	 */
 	private void showLoadingCircle() {
-		try {
-			mPhotoView.setVisibility(View.GONE);
-			mProgressContainer.setVisibility(View.VISIBLE);
-			mProgressText.setVisibility(View.GONE);
-		} catch (NullPointerException e) {
-			// the fragment was probably destroyed so we don't have to do
-			// anything
-		}
+		mPhotoView.setVisibility(View.GONE);
+		mProgressContainer.setVisibility(View.VISIBLE);
+		mProgressText.setVisibility(View.GONE);
 	}
 
 	private void setProgress(int percentComplete) {
@@ -145,6 +208,14 @@ public class FullscreenFragment extends DialogFragment implements
 		} else {
 			mProgressText.setVisibility(View.VISIBLE);
 			mProgressText.setText(percentComplete + "%");
+		}
+	}
+
+	@Override
+	public void onDismiss(DialogInterface dialog) {
+		/* Cancel the current download if we are dismissed */
+		if (mCurrentDownload != null) {
+			mCurrentDownload.cancel(true);
 		}
 	}
 
@@ -162,7 +233,7 @@ public class FullscreenFragment extends DialogFragment implements
 		if (getDialog() != null && getRetainInstance()) {
 			getDialog().setDismissMessage(null);
 		}
-		
+
 		super.onDestroyView();
 	}
 

@@ -371,7 +371,6 @@ public abstract class GalleryFragment extends Fragment implements
 				GridSize size = adapter.getItem(position);
 				if (getGridSize() != size) {
 					setGridSize(size);
-					mActionSizeSpinner.collapse();
 				}
 			}
 

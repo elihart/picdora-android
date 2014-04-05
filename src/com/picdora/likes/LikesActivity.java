@@ -178,8 +178,6 @@ public class LikesActivity extends PicdoraActivity {
 						else {
 							mLikesFragment.setChannel(adapter.getItem(position));
 						}
-
-						mActionChannelSpinner.collapse();
 					}
 
 					@Override
