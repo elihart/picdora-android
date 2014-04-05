@@ -12,6 +12,7 @@ import org.androidannotations.annotations.sharedpreferences.Pref;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.view.ActionMode;
 import android.view.Menu;
@@ -511,8 +512,12 @@ public abstract class GalleryFragment extends Fragment implements
 	 * 
 	 * @param image
 	 */
-	protected void onImageClick(Image image) {
-		// TODO: Show image in full screen
+	protected void onImageClick(Image image) {		
+        FullscreenFragment frag = new FullscreenFragment_();
+        frag.setImage(image);
+       
+        FragmentManager fm = getActivity().getSupportFragmentManager();
+        frag.show(fm, "fragment_fullscreen");
 	}
 
 	/**

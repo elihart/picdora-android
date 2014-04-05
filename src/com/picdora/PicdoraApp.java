@@ -8,6 +8,7 @@ import se.emilsjolander.sprinkles.Migration;
 import se.emilsjolander.sprinkles.Sprinkles;
 import android.app.Application;
 
+import com.koushikdutta.ion.Ion;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
@@ -26,7 +27,7 @@ public class PicdoraApp extends Application {
 	protected PicdoraSyncManager mSyncManager;
 	@Pref
 	protected PicdoraPreferences_ mPrefs;
-	
+
 	public static final boolean DEBUG = true;
 
 	@Override
@@ -50,10 +51,13 @@ public class PicdoraApp extends Application {
 		mSyncManager.sync();
 	}
 
-	private void clearCache() {
-		ImageLoader.getInstance().clearDiscCache();
+	/**
+	 * Clear the memory caches of Ion and the UniversalImageLoader.
+	 * 
+	 */
+	public void clearMemoryCaches() {
+		Ion.getDefault(this).getBitmapCache().clear();
 		ImageLoader.getInstance().clearMemoryCache();
-
 	}
 
 	private void resetApp() {
@@ -95,7 +99,7 @@ public class PicdoraApp extends Application {
 	}
 
 	private void trimMemory() {
-		ImageLoader.getInstance().clearMemoryCache();
+		clearMemoryCaches();
 		System.gc();
 	}
 

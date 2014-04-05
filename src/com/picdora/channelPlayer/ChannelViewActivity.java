@@ -1,6 +1,7 @@
 package com.picdora.channelPlayer;
 
 import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.App;
 import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.Fullscreen;
@@ -22,7 +23,7 @@ import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.nostra13.universalimageloader.core.ImageLoader;
+import com.picdora.PicdoraApp;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.channelPlayer.ChannelPlayer.ChannelError;
@@ -47,9 +48,6 @@ public class ChannelViewActivity extends FragmentActivity implements
 	// TODO: Review the loader for bugs, seems like sometimes things don't start
 	// loading correctly.
 
-	// TODO: Show icon notification icon in top right, such as like status,
-	// download progress/completion, etc.
-
 	private PicdoraImageLoader mIimageLoader;
 
 	@ViewById
@@ -67,6 +65,9 @@ public class ChannelViewActivity extends FragmentActivity implements
 	protected LikeGestureHandler mLikeGestureHandler;
 	@Bean
 	protected MenuManager mMenuManager;
+	
+	@App
+	protected PicdoraApp mApp;
 
 	protected Activity mContext;
 
@@ -102,9 +103,8 @@ public class ChannelViewActivity extends FragmentActivity implements
 
 		mMenuManager.initMenu(menu);
 
-		// We don't use the Universal Image loader here, it's only used for
-		// thumbnails, so lets clear out so memory and clear it's cache
-		ImageLoader.getInstance().clearMemoryCache();
+		/* Clear the memory caches of the other image loaders to free up memory for our loader */
+		mApp.clearMemoryCaches();
 
 		mIimageLoader = PicdoraImageLoader.instance();
 

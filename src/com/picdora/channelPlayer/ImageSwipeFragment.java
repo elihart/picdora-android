@@ -65,7 +65,7 @@ public class ImageSwipeFragment extends Fragment implements
 	private boolean mVisible;
 
 	// keep track of whether or not this fragment had it's view destroyed
-	private boolean viewActive;
+	private boolean mDestroyed;
 	// keep track of the original photo coords so we can tell when we are zoomed
 	private RectF mOriginalImageRect;
 	/*
@@ -81,7 +81,7 @@ public class ImageSwipeFragment extends Fragment implements
 
 	@AfterViews
 	void addImage() {
-		viewActive = true;
+		mDestroyed = false;
 		mLoadAttempts = 0;
 
 		showLoadingCircle();
@@ -166,7 +166,7 @@ public class ImageSwipeFragment extends Fragment implements
 	private void loadImage() {
 		// if the view was already destroyed then the user has moved on so don't
 		// bother trying to load
-		if (!viewActive) {
+		if (mDestroyed) {
 			return;
 		}
 		// we can't load an image if we don't have one...
@@ -187,7 +187,7 @@ public class ImageSwipeFragment extends Fragment implements
 	@Override
 	public void onDestroyView() {
 		super.onDestroyView();
-		viewActive = false;
+		mDestroyed = true;
 
 		if (mImage != null) {
 			PicdoraImageLoader.instance().unregisterCallbacks(
@@ -222,17 +222,16 @@ public class ImageSwipeFragment extends Fragment implements
 
 	@Override
 	public void onProgress(int percentComplete) {
-		if (!downloading) {
-			// Util.log("Image " + mImage.getImgurId() + " took "
-			// + (new Date().getTime() - loadStart.getTime())
-			// + " to start");
 			downloading = true;
-		}
 
-		if (!viewActive) {
+		if (mDestroyed) {
 			return;
 		}
 
+		setProgress(percentComplete);
+	}
+
+	private void setProgress(int percentComplete) {
 		// on error the percent can be wacky
 		if (percentComplete < 0 || percentComplete > 100) {
 			mProgressText.setVisibility(View.GONE);
@@ -244,11 +243,9 @@ public class ImageSwipeFragment extends Fragment implements
 
 	@Override
 	public void onSuccess(Drawable drawable) {
-		// Util.log("Image " + mImage.getImgurId() + " took "
-		// + (new Date().getTime() - loadStart.getTime()) + " to finish");
 		// TODO: check whether it is animated or not and update the gif status
 		// in the db in background if it's not right
-		if (viewActive) {
+		if (!mDestroyed) {
 			mPhotoView.setImageDrawable(drawable);
 			mPhotoView.setVisibility(View.VISIBLE);
 			mProgress.setVisibility(View.GONE);
@@ -319,7 +316,7 @@ public class ImageSwipeFragment extends Fragment implements
 	private void handleDeletedImage() {
 		mImage.getImage().setDeleted(true);
 
-		if (!viewActive) {
+		if (mDestroyed) {
 			return;
 		}
 
