@@ -37,7 +37,7 @@ public class ChannelSelectArrayAdapter extends ArrayAdapter<Channel> {
 
 		// but set the font to be bolder
 		FontHelper.setTypeFace(getHolder(v).text, FontStyle.MEDIUM);
-		
+
 		return v;
 	}
 
