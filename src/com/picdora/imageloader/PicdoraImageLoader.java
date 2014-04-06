@@ -132,7 +132,7 @@ public class PicdoraImageLoader {
 	public interface LoadCallbacks {
 		public void onProgress(int percentComplete);
 
-		public void onSuccess(Drawable drawable);
+		public void onSuccess(Image image, Drawable drawable);
 
 		public void onError(LoadError error);
 
@@ -278,7 +278,7 @@ public class PicdoraImageLoader {
 	 * @param callbacks
 	 *            The callback methods to return the image to. Must not be null.
 	 */
-	private void getAndReturnImage(Image image, final LoadCallbacks callbacks) {
+	private void getAndReturnImage(final Image image, final LoadCallbacks callbacks) {
 		// query the cache in the background. On hit return the image, on miss
 		// download it
 		new AsyncTask<Image, Void, Drawable>() {
@@ -325,7 +325,7 @@ public class PicdoraImageLoader {
 			protected void onPostExecute(Drawable d) {
 				// on cache hit return the result
 				if (d != null) {
-					callbacks.onSuccess(d);
+					callbacks.onSuccess(image, d);
 				} else {
 					callbacks.onError(LoadError.FAILED_DECODE);
 				}
@@ -729,7 +729,7 @@ public class PicdoraImageLoader {
 				if (helper.download.listeners != null) {
 					for (LoadCallbacks listener : helper.download.listeners) {
 						if (listener != null) {
-							listener.onSuccess(helper.drawable);
+							listener.onSuccess(helper.download.image, helper.drawable);
 						}
 					}
 				}

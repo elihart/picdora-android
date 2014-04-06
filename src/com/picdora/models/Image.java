@@ -17,9 +17,15 @@ import com.picdora.ImageUtils.ImgurSize;
 @Table("Images")
 public class Image extends Model {
 	/********** DB Fields ***********************/
+	/**
+	 * Default image id for an image that hasn't been saved to the db yet. This
+	 * is a number that won't conflict with saved image ids
+	 */
+	public static final int UNSAVED_IMAGE_ID = -1;
+
 	@PrimaryKey
 	@Column("id")
-	private long mId;
+	private long mId = UNSAVED_IMAGE_ID;
 
 	@Column("imgurId")
 	@NotNull
@@ -154,11 +160,10 @@ public class Image extends Model {
 
 	public void setGif(boolean gif) {
 		mGif = true;
-		save();
 	}
 
-	public void setDeleted(boolean mDeleted) {
-		this.mDeleted = mDeleted;
+	public void setDeleted(boolean deleted) {
+		mDeleted = deleted;
 	}
 
 	public void setReported(boolean reported) {

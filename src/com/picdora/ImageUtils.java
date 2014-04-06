@@ -346,13 +346,13 @@ public abstract class ImageUtils {
 		StringBuilder builder = new StringBuilder();
 		builder.append("(");
 
-		/* Add imgurid in quotes and end with a comma*/
+		/* Add imgurid in quotes and end with a comma */
 		for (Image i : images) {
 			builder.append("\"");
 			builder.append(i.getImgurId());
 			builder.append("\",");
 		}
-		
+
 		/* Replace last comma with closing parenthesis */
 		builder.deleteCharAt(builder.length() - 1);
 		builder.append(")");
@@ -374,5 +374,43 @@ public abstract class ImageUtils {
 		}
 
 		return ("(" + TextUtils.join(",", ids) + ")");
+	}
+
+	/**
+	 * Set the gif status of the given image. This method will only change the
+	 * gif value for images stored in the database. Any changes will be reported
+	 * to the server. This method should always be used instead of calling
+	 * setGif() directly on the image to ensure the server is updated as well.
+	 * 
+	 * @param image
+	 * @param gif
+	 *            True if the image is a gif, false otherwise.
+	 */
+	public static void setGifStatus(Image image, boolean gif) {
+		/*
+		 * If this isn't an image from the db or the gif value already matches
+		 * then don't save it.
+		 */
+		if (image.getId() == Image.UNSAVED_IMAGE_ID
+				|| Boolean.valueOf(gif).equals(image.isGif())) {
+			return;
+		}
+
+		image.setGif(gif);
+		image.saveAsync();
+
+		/* TODO: Queue the change to be reported to the server */
+
+	}
+
+	/**
+	 * Mark the selected image as deleted in the local database and queue the
+	 * deletion to be reported to the main server.
+	 * 
+	 * @param image
+	 */
+	public static void markImageDeleted(ChannelImage image) {
+		// TODO Auto-generated method stub
+
 	}
 }

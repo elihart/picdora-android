@@ -5,23 +5,15 @@ import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.ViewById;
 
 import uk.co.senab.photoview.PhotoView;
-import android.app.Activity;
-import android.content.DialogInterface;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.koushikdutta.async.future.Future;
-import com.koushikdutta.async.future.FutureCallback;
-import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.ProgressCallback;
-import com.picdora.ImageUtils;
 import com.picdora.R;
-import com.picdora.Util;
 import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.imageloader.PicdoraImageLoader.LoadCallbacks;
 import com.picdora.imageloader.PicdoraImageLoader.LoadError;
@@ -41,14 +33,10 @@ public class FullscreenFragment extends DialogFragment implements
 	@ViewById(R.id.progressText)
 	protected TextView mProgressText;
 
-	private Activity mContext;
-
 	/** The {@link #com.picdora.models.Image} that we should display. */
 	private Image mImageToDisplay;
 	/** Whether the fragment's views have been initialized yet */
 	private boolean mInitialized = false;
-
-	private Future<ImageView> mCurrentDownload;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -67,10 +55,7 @@ public class FullscreenFragment extends DialogFragment implements
 	@AfterViews
 	protected void init() {
 		mInitialized = true;
-		mContext = getActivity();
 		showLoadingCircle();
-
-		Util.log("init");
 
 		/*
 		 * If an image has already been provided for us to display than start
@@ -105,62 +90,14 @@ public class FullscreenFragment extends DialogFragment implements
 	private void loadImage(Image image) {
 		showLoadingCircle();
 
-		/* Cancel previous load to start the new one */
-		if (mCurrentDownload != null && !mCurrentDownload.isDone()) {
-			mCurrentDownload.cancel(true);
-		}
-
-		/*
-		 * Use our custom image loader to handle gifs. It's much more memory
-		 * efficient.
-		 */
-		if (image.isGif()) {
-			loadGif(image);
-			return;
-		}
-
-		/*
-		 * Use Ion to handle regular images. It can do gifs, but it gets OOM
-		 * errors on large ones. It is great with images though and will load
-		 * any gifs that slip through.
-		 */
-		mCurrentDownload = Ion
-				.with(mContext)
-				.load(ImageUtils.getImgurLink(image, ImageUtils.ImgurSize.FULL))
-				.progressHandler(this).withBitmap().deepZoom()
-				.intoImageView(mPhotoView)
-				.setCallback(new FutureCallback<ImageView>() {
-					@Override
-					public void onCompleted(Exception e, ImageView result) {
-						if (e == null) {
-							showPhotoView();
-						}
-					}
-
-				});
-	}
-
-	/**
-	 * Show the photoview and hide all other views.
-	 * 
-	 */
-	private void showPhotoView() {
-		mPhotoView.setVisibility(View.VISIBLE);
-		mProgressContainer.setVisibility(View.GONE);
-	}
-
-	/**
-	 * Load a gif into the photoview.
-	 * 
-	 * @param image
-	 */
-	private void loadGif(Image image) {
 		PicdoraImageLoader.instance().loadImage(image, new LoadCallbacks() {
 
 			@Override
-			public void onSuccess(Drawable drawable) {
-				mPhotoView.setImageDrawable(drawable);
-				showPhotoView();
+			public void onSuccess(Image image, Drawable drawable) {
+				if (image.equals(mImageToDisplay)) {
+					mPhotoView.setImageDrawable(drawable);
+					showPhotoView();
+				}
 			}
 
 			@Override
@@ -171,9 +108,17 @@ public class FullscreenFragment extends DialogFragment implements
 			@Override
 			public void onError(LoadError error) {
 				// TODO
-
 			}
 		});
+	}
+
+	/**
+	 * Show the photoview and hide all other views.
+	 * 
+	 */
+	private void showPhotoView() {
+		mPhotoView.setVisibility(View.VISIBLE);
+		mProgressContainer.setVisibility(View.GONE);
 	}
 
 	/**
@@ -208,14 +153,6 @@ public class FullscreenFragment extends DialogFragment implements
 		} else {
 			mProgressText.setVisibility(View.VISIBLE);
 			mProgressText.setText(percentComplete + "%");
-		}
-	}
-
-	@Override
-	public void onDismiss(DialogInterface dialog) {
-		/* Cancel the current download if we are dismissed */
-		if (mCurrentDownload != null) {
-			mCurrentDownload.cancel(true);
 		}
 	}
 

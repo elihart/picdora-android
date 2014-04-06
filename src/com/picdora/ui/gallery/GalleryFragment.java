@@ -13,6 +13,7 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.view.ActionMode;
 import android.view.Menu;

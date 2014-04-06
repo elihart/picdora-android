@@ -9,16 +9,20 @@ import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
 import org.androidannotations.annotations.res.ColorRes;
 
+import pl.droidsonroids.gif.GifDrawable;
+
 import uk.co.senab.photoview.PhotoView;
 import uk.co.senab.photoview.PhotoViewAttacher.OnMatrixChangedListener;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.v4.app.Fragment;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.picdora.ImageUtils;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.channelPlayer.ChannelPlayer.OnGetChannelImageResultListener;
@@ -26,6 +30,7 @@ import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.imageloader.PicdoraImageLoader.LoadError;
 import com.picdora.models.ChannelImage;
 import com.picdora.models.ChannelImage.LIKE_STATUS;
+import com.picdora.models.Image;
 import com.picdora.ui.GlowView;
 import com.picdora.ui.UiUtil;
 
@@ -35,6 +40,7 @@ import com.picdora.ui.UiUtil;
 @EFragment(R.layout.fragment_swipable_image)
 public class ImageSwipeFragment extends Fragment implements
 		PicdoraImageLoader.LoadCallbacks {
+	
 	@ColorRes(R.color.transparent)
 	protected int mColorTransparent;
 	@ColorRes(R.color.glow_liked)
@@ -222,7 +228,7 @@ public class ImageSwipeFragment extends Fragment implements
 
 	@Override
 	public void onProgress(int percentComplete) {
-			downloading = true;
+		downloading = true;
 
 		if (mDestroyed) {
 			return;
@@ -242,9 +248,23 @@ public class ImageSwipeFragment extends Fragment implements
 	}
 
 	@Override
-	public void onSuccess(Drawable drawable) {
-		// TODO: check whether it is animated or not and update the gif status
-		// in the db in background if it's not right
+	public void onSuccess(Image image, Drawable drawable) {
+		if (!image.equals(mImage)) {
+			// TODO: This isn't the image we are expecting... we shouldn't show
+			// it at least.
+		}
+
+		/*
+		 * If the image was able to be decoded as a gif then it will be a gif
+		 * drawable, otherwise it'll be a normal bitmap drawable. We want to
+		 * make sure the db gif value for the image mirrors this.
+		 */
+		if (drawable instanceof GifDrawable) {
+			ImageUtils.setGifStatus(image, true);
+		} else if (drawable instanceof BitmapDrawable) {
+			ImageUtils.setGifStatus(image, false);
+		}
+
 		if (!mDestroyed) {
 			mPhotoView.setImageDrawable(drawable);
 			mPhotoView.setVisibility(View.VISIBLE);
@@ -261,8 +281,9 @@ public class ImageSwipeFragment extends Fragment implements
 				@Override
 				public void onMatrixChanged(RectF rect) {
 					/*
-					 * If our image had 0 size when first set then set the bounds now. This
-					 * seems to happen for gifs, maybe because they aren't immediately drawn.
+					 * If our image had 0 size when first set then set the
+					 * bounds now. This seems to happen for gifs, maybe because
+					 * they aren't immediately drawn.
 					 */
 					if (mOriginalImageRect.height() == 0) {
 						mOriginalImageRect = new RectF(rect);
@@ -276,7 +297,6 @@ public class ImageSwipeFragment extends Fragment implements
 
 	@Override
 	public void onError(LoadError error) {
-		// Util.log("Load fail " + mImage.getImgurId() + " " + error);
 		mLoadAttempts++;
 
 		switch (error) {
@@ -314,7 +334,7 @@ public class ImageSwipeFragment extends Fragment implements
 	 * that fails we can show a message on screen.
 	 */
 	private void handleDeletedImage() {
-		mImage.getImage().setDeleted(true);
+		ImageUtils.markImageDeleted(mImage);
 
 		if (mDestroyed) {
 			return;
