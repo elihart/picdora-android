@@ -54,8 +54,8 @@
             android:label="@string/title_activity_settings" >
         </activity>
         <activity
-            android:name="com.picdora.favorites.FavoritesActivity_"
-            android:label="@string/title_activity_favorites" >
+            android:name="com.picdora.collections.CollectionsActivity_"
+            android:label="@string/title_activity_collections" >
         </activity>
         <activity
             android:name="com.picdora.likes.LikesActivity_"

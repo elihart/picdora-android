@@ -1,4 +1,4 @@
-package com.picdora.favorites;
+package com.picdora.collections;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EActivity;
@@ -9,8 +9,8 @@ import com.picdora.PicdoraActivity;
 import com.picdora.R;
 import com.picdora.ui.SlidingMenuHelper;
 
-@EActivity(R.layout.activity_favorites)
-public class FavoritesActivity extends PicdoraActivity {
+@EActivity(R.layout.activity_collections)
+public class CollectionsActivity extends PicdoraActivity {
 
 	@AfterViews
 	void initViews() {
@@ -23,7 +23,7 @@ public class FavoritesActivity extends PicdoraActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.favorites, menu);
+		getMenuInflater().inflate(R.menu.collections, menu);
 		return true;
 	}
 
