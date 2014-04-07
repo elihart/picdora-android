@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
+import com.picdora.ImageUtils.ImgurSize;
 import com.picdora.models.Channel;
 
 @EBean
@@ -37,7 +38,7 @@ public class ChannelListAdapter extends BaseAdapter {
 		}
 
 		Channel channel = getItem(position);
-		channelView.bind(channel.getName(), channel.getLargeThumbUrl(), false);
+		channelView.bind(channel.getName(), channel.getIcon(ImgurSize.MEDIUM_THUMBNAIL), false);
 
 		return channelView;
 	}

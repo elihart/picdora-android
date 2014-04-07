@@ -20,8 +20,10 @@
     <color name="drawerBackground">#f2f2f2</color>
     <color name="drawerDivider">#a8a8a8</color>
     <color name="drawerText">#000000</color>
+    
+    <!--  Grid Item -->
     <color name="channel_grid_item_tint">#60000000</color>
-    <color name="channel_grid_item_tint_selected">#601cb0f6</color>
+    <color name="channel_grid_item_selected_border">#80D3FB</color>
     <color name="channel_grid_item_tint_pressed">#60FF9111</color>
     <color name="channel_grid_item_text_color">#ffffff</color>
     
@@ -31,5 +33,10 @@
     <color name="picdora_dialog_title">@color/black</color>
     <color name="picdora_dialog_title_background">@color/white</color>
     <color name="picdora_dialog_message">@color/black</color>
+    
+    <!-- Glow View -->
+    <color name="glow_liked">@color/buttonLightBlue</color>
+    <color name="glow_neutral">@color/white</color>
+    <color name="glow_disliked">@color/red</color>
 
 </resources>

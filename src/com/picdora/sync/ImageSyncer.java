@@ -167,8 +167,10 @@ public class ImageSyncer extends Syncer {
 				values.put("nsfw", imageJson.getBoolean("nsfw"));
 				values.put("gif", imageJson.getBoolean("gif"));
 				values.put("categoryId", imageJson.getLong("category_id"));
+				
+				// TODO: Get reported and deleted values from server
 
-				long id = db.insertWithOnConflict("Images", null, values,
+				db.insertWithOnConflict("Images", null, values,
 						SQLiteDatabase.CONFLICT_REPLACE);
 			}
 			//Util.log("Batch successful!");

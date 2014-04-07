@@ -15,17 +15,17 @@ import android.support.v4.app.Fragment;
 import android.widget.Button;
 import android.widget.FrameLayout;
 
-import com.picdora.CategoryHelper;
+import com.picdora.CategoryUtils;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.channelCreation.ChannelCreationActivity.NsfwSetting;
 import com.picdora.channelCreation.ChannelCreationActivity.OnFilterCategoriesListener;
 import com.picdora.models.Category;
 import com.picdora.ui.FontHelper;
-import com.picdora.ui.FontHelper.STYLE;
+import com.picdora.ui.FontHelper.FontStyle;
 import com.picdora.ui.grid.GridItemView;
-import com.picdora.ui.grid.ImageGridSelector;
-import com.picdora.ui.grid.ImageGridSelector.OnGridItemClickListener;
+import com.picdora.ui.grid.ModelGridSelector;
+import com.picdora.ui.grid.ModelGridSelector.OnGridItemClickListener;
 
 /**
  * This fragment allows the user to select categories to use in the channel.
@@ -54,7 +54,7 @@ public class CategorySelectFragment extends Fragment {
 	private List<Category> sfwCategories;
 	private ChannelCreationActivity activity;
 	private NsfwSetting nsfwFilter;
-	protected ImageGridSelector<Category> mCategorySelector;
+	protected ModelGridSelector<Category> mCategorySelector;
 
 	@AfterViews
 	void initViews() {
@@ -73,7 +73,7 @@ public class CategorySelectFragment extends Fragment {
 		// TODO: Async
 		setupCategoryLists();
 
-		mCategorySelector = new ImageGridSelector<Category>(getActivity(),
+		mCategorySelector = new ModelGridSelector<Category>(getActivity(),
 				allCategories, selectedCategories, adapter);
 
 		filterCategories(ChannelCreationActivity.getNsfwFilter());
@@ -85,15 +85,21 @@ public class CategorySelectFragment extends Fragment {
 				.setOnClickListener(new OnGridItemClickListener<Category>() {
 
 					@Override
-					public void OnGridItemClick(GridItemView view, Category item) {
+					public void onGridItemClick(GridItemView view, Category item) {
 						setCreateButtonEnabled(!selectedCategories.isEmpty());
+					}
+
+					@Override
+					public void onGridItemLongClick(GridItemView view,
+							Category item) {
+						// don't care about long clicks						
 					}
 				});
 
 		// set fonts
-		FontHelper.setTypeFace(previewButton, STYLE.MEDIUM);
-		FontHelper.setTypeFace(createButton, STYLE.MEDIUM);
-		FontHelper.setTypeFace(clearButton, STYLE.MEDIUM);
+		FontHelper.setTypeFace(previewButton, FontStyle.MEDIUM);
+		FontHelper.setTypeFace(createButton, FontStyle.MEDIUM);
+		FontHelper.setTypeFace(clearButton, FontStyle.MEDIUM);
 	}
 
 	/**
@@ -101,7 +107,7 @@ public class CategorySelectFragment extends Fragment {
 	 */
 	private void setupCategoryLists() {
 		allCategories = Util.all(Category.class);
-		CategoryHelper.sortByName(allCategories);
+		CategoryUtils.sortByName(allCategories);
 		nsfwCategories = new ArrayList<Category>();
 		sfwCategories = new ArrayList<Category>();
 

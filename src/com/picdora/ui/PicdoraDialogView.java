@@ -13,7 +13,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.picdora.R;
-import com.picdora.ui.FontHelper.STYLE;
+import com.picdora.ui.FontHelper.FontStyle;
 import com.picdora.ui.PicdoraDialog.ButtonInfo;
 
 @EViewGroup(R.layout.picdora_dialog)
@@ -46,7 +46,7 @@ public class PicdoraDialogView extends RelativeLayout {
 	@AfterViews
 	protected void init() {
 		FontHelper.setTypeFace(rootView);
-		FontHelper.setTypeFace(title, STYLE.MEDIUM);
+		FontHelper.setTypeFace(title, FontStyle.MEDIUM);
 	}
 
 	public static class Builder {

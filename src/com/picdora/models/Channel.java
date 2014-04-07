@@ -8,14 +8,25 @@ import java.util.List;
 import se.emilsjolander.sprinkles.Model;
 import se.emilsjolander.sprinkles.annotations.AutoIncrementPrimaryKey;
 import se.emilsjolander.sprinkles.annotations.Column;
+import se.emilsjolander.sprinkles.annotations.NotNull;
 import se.emilsjolander.sprinkles.annotations.Table;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.picdora.ImageUtils;
+import com.picdora.ImageUtils.ImgurSize;
 import com.picdora.Util;
 
 @Table("Channels")
 public class Channel extends Model {
+	/*
+	 * TODO: What happens to liked ChannelImages when the channel is deleted? We
+	 * may want to save them, or ask the user if they still want them. Maybe add
+	 * a delete flag and never fully remove the channel. This could help not
+	 * show duplicate images in the future, and keep the liking history for
+	 * future reference.
+	 */
+
 	public enum GifSetting {
 		NONE, ALLOWED, ONLY
 	}
@@ -23,30 +34,33 @@ public class Channel extends Model {
 	/********** DB Fields ***********************/
 	@AutoIncrementPrimaryKey
 	@Column("id")
-	private long mId;
+	protected long mId;
 
 	@Column("name")
-	private String mName;
+	@NotNull
+	protected String mName;
 
 	@Column("nsfw")
-	private boolean mNsfw;
+	protected boolean mNsfw;
 
 	@Column("icon")
-	private String mPreviewImage;
+	@NotNull
+	protected String mPreviewImage;
 
-	// TODO: Update this on play
 	@Column("lastUsed")
-	private long mLastUsed;
+	protected long mLastUsed;
 
-	@Column("createAt")
-	private long mCreatedAt;
+	@Column("createdAt")
+	protected long mCreatedAt;
 
 	@Column("categories")
-	private String mCategoriesAsJson;
-	private List<Category> mCategories;
+	@NotNull
+	protected String mCategoriesAsJson;
+	protected List<Category> mCategories;
 
 	@Column("gifSetting")
-	private int mGifSetting;
+	@NotNull
+	protected int mGifSetting;
 
 	// TODO: Implement parcelable to pass this between activities
 
@@ -56,7 +70,16 @@ public class Channel extends Model {
 		mGifSetting = gifSetting.ordinal();
 	}
 
-	// TODO: Add validations and check them before creating
+	@Override
+	public boolean isValid() {
+		if (Util.isStringBlank(mName)) {
+			return false;
+		} else if (getCategories().isEmpty()) {
+			return false;
+		} else {
+			return true;
+		}
+	}
 
 	public Channel() {
 		// empty constructor for Sprinkles model creation
@@ -110,7 +133,7 @@ public class Channel extends Model {
 		saveCategoriesAsJson(mCategories);
 	}
 
-	private void saveCategoriesAsJson(List<Category> categories) {
+	protected void saveCategoriesAsJson(List<Category> categories) {
 		if (categories == null) {
 			categories = new ArrayList<Category>();
 		}
@@ -121,7 +144,7 @@ public class Channel extends Model {
 	/**
 	 * Convert the database string of categories into a list of Category objects
 	 */
-	private void getCategoriesFromList() {
+	protected void getCategoriesFromList() {
 		if (Util.isStringBlank(mCategoriesAsJson)) {
 			mCategories = new ArrayList<Category>();
 		} else {
@@ -171,12 +194,14 @@ public class Channel extends Model {
 	}
 
 	/**
-	 * 160x160 icon
+	 * Get the icon representing this channel.
 	 * 
+	 * @param size
+	 *            The thumbnail size to resize to
 	 * @return
 	 */
-	public String getLargeThumbUrl() {
-		return "http://i.imgur.com/" + mPreviewImage + "b.jpg";
+	public String getIcon(ImgurSize size) {
+		return ImageUtils.getImgurLink(mPreviewImage, size);
 	}
 
 	@Override
@@ -194,23 +219,23 @@ public class Channel extends Model {
 	}
 
 	public void setLastUsed(Date date) {
-		mLastUsed = date.getTime();		
+		mLastUsed = date.getTime();
 	}
-	
-	public Date getLastUsed(){
+
+	public Date getLastUsed() {
 		return new Date(mLastUsed);
 	}
-	
-	public Date getCreatedAt(){
+
+	public Date getCreatedAt() {
 		return new Date(mCreatedAt);
 	}
 
 	public void setName(String name) {
-		mName = name;		
+		mName = name;
 	}
 
 	public void setCategories(List<Category> categories) {
-		mCategories = categories;		
+		mCategories = categories;
 	}
 
 }

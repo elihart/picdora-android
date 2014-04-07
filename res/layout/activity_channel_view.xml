@@ -1,5 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.picdora.player.PicdoraViewPager xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/pager"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:sat="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" />
+    android:layout_height="match_parent"
+    android:background="@color/black" >
+
+    <com.picdora.channelPlayer.PicdoraViewPager
+        android:id="@+id/pager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/transparent" />
+
+    <com.picdora.ui.SatelliteMenu.SatelliteMenu
+        android:id="@+id/menu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_margin="8dp"
+        sat:closeOnClick="true"
+        sat:expandDuration="500"
+        sat:mainImage="@drawable/ic_action_favorite"
+        sat:satelliteDistance="170dp"
+        sat:totalSpacingDegree="90" />
+
+    <com.picdora.ui.PicdoraNotifier_
+        android:id="@+id/notifier"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:padding="8dp" />
+
+</RelativeLayout>

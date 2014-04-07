@@ -11,7 +11,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.picdora.R;
-import com.picdora.ui.FontHelper.STYLE;
+import com.picdora.ui.FontHelper.FontStyle;
 
 /**
  * Use this adapter to add options to the listview in the sliding menu
@@ -42,7 +42,7 @@ public class SlidingMenuAdapter extends ArrayAdapter<SlidingMenuItem> {
 		ImageView icon = (ImageView) v.findViewById(R.id.icon);
 
 		label.setText(item.getLabel());
-		FontHelper.setTypeFace(label, STYLE.REGULAR);
+		FontHelper.setTypeFace(label, FontStyle.REGULAR);
 		icon.setImageResource(item.getIcon());
 
 		return v;

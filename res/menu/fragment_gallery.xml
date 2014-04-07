@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:picdora="http://schemas.android.com/apk/res-auto" >
+
+    <item
+        android:id="@+id/size_spinner"
+        android:orderInCategory="50"
+        android:title="@string/gallery_size_spinner"
+        picdora:actionLayout="@layout/action_spinner_grid_size"
+        picdora:showAsAction="ifRoom"/>
+
+</menu>

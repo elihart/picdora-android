@@ -8,12 +8,14 @@ import se.emilsjolander.sprinkles.Migration;
 import se.emilsjolander.sprinkles.Sprinkles;
 import android.app.Application;
 
+import com.koushikdutta.ion.Ion;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.models.Category;
 import com.picdora.models.Channel;
+import com.picdora.models.ChannelImage;
 import com.picdora.models.Image;
 import com.picdora.sync.PicdoraSyncManager;
 import com.picdora.ui.FontHelper;
@@ -26,12 +28,14 @@ public class PicdoraApp extends Application {
 	@Pref
 	protected PicdoraPreferences_ mPrefs;
 
+	public static final boolean DEBUG = true;
+
 	@Override
 	public void onCreate() {
 		super.onCreate();
 
 		// resetApp();
-		
+
 		UiUtil.init(getApplicationContext());
 
 		FontHelper.init(getApplicationContext());
@@ -47,10 +51,13 @@ public class PicdoraApp extends Application {
 		mSyncManager.sync();
 	}
 
-	private void clearCache() {
-		ImageLoader.getInstance().clearDiscCache();
+	/**
+	 * Clear the memory caches of Ion and the UniversalImageLoader.
+	 * 
+	 */
+	public void clearMemoryCaches() {
+		Ion.getDefault(this).getBitmapCache().clear();
 		ImageLoader.getInstance().clearMemoryCache();
-
 	}
 
 	private void resetApp() {
@@ -75,26 +82,15 @@ public class PicdoraApp extends Application {
 
 	// Run db migrations with sprinkles
 	private void runMigrations() {
-		Sprinkles sprinkles = Sprinkles.getInstance(getApplicationContext());
+		Sprinkles sprinkles = Sprinkles.init(getApplicationContext());
 
 		// create models
 		Migration addModelsMigration = new Migration();
 		addModelsMigration.createTable(Image.class);
 		addModelsMigration.createTable(Category.class);
 		addModelsMigration.createTable(Channel.class);
+		addModelsMigration.createTable(ChannelImage.class);
 		sprinkles.addMigration(addModelsMigration);
-
-		// add category icons
-		Migration addCatIcons = new Migration();
-		addCatIcons.dropTable(Category.class);
-		addCatIcons.createTable(Category.class);
-		sprinkles.addMigration(addCatIcons);
-
-		// add channel icons
-		Migration addChannelIcons = new Migration();
-		addChannelIcons.dropTable(Channel.class);
-		addChannelIcons.createTable(Channel.class);
-		sprinkles.addMigration(addChannelIcons);
 	}
 
 	@Override
@@ -103,7 +99,7 @@ public class PicdoraApp extends Application {
 	}
 
 	private void trimMemory() {
-		ImageLoader.getInstance().clearMemoryCache();
+		clearMemoryCaches();
 		System.gc();
 	}
 

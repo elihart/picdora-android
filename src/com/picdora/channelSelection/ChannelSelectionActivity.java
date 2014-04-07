@@ -16,8 +16,9 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ImageButton;
 
-import com.picdora.ChannelHelper;
+import com.picdora.ChannelUtils;
 import com.picdora.PicdoraActivity;
 import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
@@ -81,11 +82,10 @@ public class ChannelSelectionActivity extends PicdoraActivity implements
 	 */
 	private void refreshChannels() {
 		if (channelFragment != null) {
-			// TODO: Filter out nsfw by preference
-			List<Channel> channels = ChannelHelper.getAllChannels(prefs
+			List<Channel> channels = ChannelUtils.getAllChannels(prefs
 					.showNsfw().get());
 			// TODO: Allow more sorting options
-			ChannelHelper.sortChannelsAlphabetically(channels);
+			ChannelUtils.sortChannelsAlphabetically(channels);
 			channelFragment.setChannels(channels);
 		}
 	}
@@ -135,6 +135,7 @@ public class ChannelSelectionActivity extends PicdoraActivity implements
 	public void onItemClick(AdapterView<?> parent, View view, int position,
 			long id) {
 
+
 		// disable buttons on the previously selected item
 		if (mSelectedView != null) {
 			mSelectedView.showButtons(false);
@@ -142,6 +143,9 @@ public class ChannelSelectionActivity extends PicdoraActivity implements
 
 		mSelectedView = (ChannelSelectionGridItem) view;
 		mSelectedView.showButtons(true);
+		
+		// on double click act like the play button was pressed
+		mSelectedView.setOnClickListener(doubleClickListener);
 
 		// set up listeners for the buttons
 		mSelectedView.findViewById(R.id.playButton).setOnClickListener(
@@ -149,8 +153,7 @@ public class ChannelSelectionActivity extends PicdoraActivity implements
 
 					@Override
 					public void onClick(View v) {
-						ChannelHelper.playChannel(mSelectedChannel, true,
-								mActivity);
+						ChannelUtils.playChannel(mSelectedChannel,	mActivity, true);
 					}
 				});
 
@@ -159,10 +162,21 @@ public class ChannelSelectionActivity extends PicdoraActivity implements
 
 					@Override
 					public void onClick(View v) {
-						ChannelHelper.showChannelDetail(mSelectedChannel,
+						ChannelUtils.showChannelDetail(mSelectedChannel,
 								mActivity);
 					}
 				});
 	}
+	
+	// on double click act like the play button was pressed
+	private OnClickListener doubleClickListener = new OnClickListener() {
+		
+		@Override
+		public void onClick(View v) {
+			ImageButton playButton = (ImageButton) mSelectedView.findViewById(R.id.playButton);
+			playButton.setPressed(true);
+			playButton.performClick();
+		}
+	};
 
 }

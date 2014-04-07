@@ -23,6 +23,7 @@ import android.os.AsyncTask;
 import android.os.SystemClock;
 import android.util.DisplayMetrics;
 
+import com.picdora.ImageUtils.ImgurSize;
 import com.picdora.loopj.AsyncHttpClient;
 import com.picdora.loopj.BinaryHttpResponseHandler;
 import com.picdora.loopj.RequestHandle;
@@ -31,11 +32,6 @@ import com.picdora.models.Image;
 public class PicdoraImageLoader {
 	// TODO: Optimize preloading and max connections based on internet speed and
 	// speed that the user is going through the pictures
-
-	// TODO: Large gifs take up too much space and cause problems. Maybe we can
-	// check the size of current downloads and reduce the amount of downloads
-	// when they exceed that. Or maybe we can download to file and then retrieve
-	// the file
 
 	// TODO: I think very fast scrolling causes lots of started/canceled
 	// downloads that clog things up and can cause timeout exceptions for
@@ -92,6 +88,12 @@ public class PicdoraImageLoader {
 		// if normal images might be redirected and caught as well... Need to
 		// get the redirect handler below working
 		client.setEnableRedirects(false);
+
+		/*
+		 * Setting a low timeout helps to clear out canceled images faster, but
+		 * it also can prematurely timeout normally loading images on slow
+		 * connections. TODO: optimize this.
+		 */
 		client.setTimeout(TIMEOUT);
 
 		// Listener for redirects. If we are redirected to the removed image
@@ -130,7 +132,7 @@ public class PicdoraImageLoader {
 	public interface LoadCallbacks {
 		public void onProgress(int percentComplete);
 
-		public void onSuccess(Drawable drawable);
+		public void onSuccess(Image image, Drawable drawable);
 
 		public void onError(LoadError error);
 
@@ -276,7 +278,7 @@ public class PicdoraImageLoader {
 	 * @param callbacks
 	 *            The callback methods to return the image to. Must not be null.
 	 */
-	private void getAndReturnImage(Image image, final LoadCallbacks callbacks) {
+	private void getAndReturnImage(final Image image, final LoadCallbacks callbacks) {
 		// query the cache in the background. On hit return the image, on miss
 		// download it
 		new AsyncTask<Image, Void, Drawable>() {
@@ -323,7 +325,7 @@ public class PicdoraImageLoader {
 			protected void onPostExecute(Drawable d) {
 				// on cache hit return the result
 				if (d != null) {
-					callbacks.onSuccess(d);
+					callbacks.onSuccess(image, d);
 				} else {
 					callbacks.onError(LoadError.FAILED_DECODE);
 				}
@@ -356,7 +358,7 @@ public class PicdoraImageLoader {
 		final Download download = new Download(new Date().getTime(), callbacks,
 				null, image, preload);
 
-		RequestHandle handle = client.get(image.getUrl(),
+		RequestHandle handle = client.get(image.getUrl(ImgurSize.FULL),
 				new BinaryHttpResponseHandler(ALLOWED_CONTENT_TYPES) {
 					@Override
 					public void onProgress(int progress, int size) {
@@ -727,7 +729,7 @@ public class PicdoraImageLoader {
 				if (helper.download.listeners != null) {
 					for (LoadCallbacks listener : helper.download.listeners) {
 						if (listener != null) {
-							listener.onSuccess(helper.drawable);
+							listener.onSuccess(helper.download.image, helper.drawable);
 						}
 					}
 				}

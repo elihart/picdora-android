@@ -21,7 +21,7 @@ public class FontHelper {
 
 	private static SparseArray<Typeface> mTypeFaceMap;
 
-	public enum STYLE {
+	public enum FontStyle {
 		BOLD, BOLD_ITALIC, ITALIC, MEDIUM, MEDIUM_ITALIC, REGULAR
 	}
 
@@ -31,7 +31,7 @@ public class FontHelper {
 	}
 
 	/**
-	 * Style a string with a particular Lyricoo font style
+	 * Style a string with a particular font style
 	 * 
 	 * @param text
 	 *            The text to style
@@ -39,11 +39,12 @@ public class FontHelper {
 	 *            The font to use
 	 * @return A span containing the styled text
 	 */
-	public static SpannableString styleString(String text, STYLE style) {
+	public static SpannableString styleString(String text, FontStyle style) {
 		SpannableString s = new SpannableString(text);
-		String font = getFontFilename(style);
-		s.setSpan(new TypefaceSpan(mAppContext, font), 0, s.length(),
-				Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+			String font = getFontFilename(style);
+			s.setSpan(new TypefaceSpan(mAppContext, font), 0, s.length(),
+					Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+		
 		return s;
 	}
 
@@ -53,7 +54,7 @@ public class FontHelper {
 	 * @param style
 	 * @return
 	 */
-	public static String getFontFilename(STYLE style) {
+	public static String getFontFilename(FontStyle style) {
 		switch (style) {
 		case BOLD:
 			return "Nobile-Bold.ttf";
@@ -78,7 +79,7 @@ public class FontHelper {
 	 * @param style
 	 * @return
 	 */
-	public static String getFontPath(STYLE style) {
+	public static String getFontPath(FontStyle style) {
 		return "fonts/" + getFontFilename(style);
 	}
 
@@ -90,7 +91,7 @@ public class FontHelper {
 	 * @param style
 	 * @return Whether or not the font was set successfully
 	 */
-	public static boolean setTypeFace(TextView text, STYLE style) {
+	public static boolean setTypeFace(TextView text, FontStyle style) {
 		try {
 			text.setTypeface(getTypeface(style));
 			return true;
@@ -107,7 +108,7 @@ public class FontHelper {
 	 * @return
 	 * @throws Exception
 	 */
-	private static Typeface getTypeface(STYLE style) throws Exception {
+	private static Typeface getTypeface(FontStyle style) throws Exception {
 		// cache the type faces for big efficiency gains when showing lots of
 		// text
 
@@ -127,9 +128,9 @@ public class FontHelper {
 		for (int i = 0; i < vg.getChildCount(); i++) {
 			View child = vg.getChildAt(i);
 			if (child instanceof Button) {
-				setTypeFace((TextView) child, STYLE.MEDIUM);
+				setTypeFace((TextView) child, FontStyle.MEDIUM);
 			} else if (child instanceof TextView) {
-				setTypeFace((TextView) child, STYLE.REGULAR);
+				setTypeFace((TextView) child, FontStyle.REGULAR);
 			}
 			if (child instanceof ViewGroup) {
 				setTypeFace((ViewGroup) child);

@@ -22,5 +22,14 @@
     <dimen name="dialog_title_separator_height">2dp</dimen>
     <dimen name="dialog_content_margin">8dp</dimen>
     <dimen name="dialog_button_padding">5dp</dimen>
+    
+    <!-- Notifier -->
+    <dimen name="notifier_text_size">14sp</dimen>
+    
+    <!-- Actionbar spinner -->    
+    <dimen name="action_spinner_icon_side_padding">5dp</dimen>
+    <dimen name="action_spinner_item_text">18dp</dimen>
+    <dimen name="action_spinner_item_side_padding">8dp</dimen>
+    <dimen name="action_spinner_item_vertical_padding">4dp</dimen>
 
 </resources>
