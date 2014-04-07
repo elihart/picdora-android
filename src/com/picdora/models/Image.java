@@ -17,15 +17,10 @@ import com.picdora.ImageUtils.ImgurSize;
 @Table("Images")
 public class Image extends Model {
 	/********** DB Fields ***********************/
-	/**
-	 * Default image id for an image that hasn't been saved to the db yet. This
-	 * is a number that won't conflict with saved image ids
-	 */
-	public static final int UNSAVED_IMAGE_ID = -1;
 
 	@PrimaryKey
 	@Column("id")
-	private long mId = UNSAVED_IMAGE_ID;
+	private long mId;
 
 	@Column("imgurId")
 	@NotNull

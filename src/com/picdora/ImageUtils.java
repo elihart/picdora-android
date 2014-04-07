@@ -389,9 +389,9 @@ public abstract class ImageUtils {
 	public static void setGifStatus(Image image, boolean gif) {
 		/*
 		 * If this isn't an image from the db or the gif value already matches
-		 * then don't save it.
+		 * then don't save it. The id will be 0 if it isn't from db.
 		 */
-		if (image.getId() == Image.UNSAVED_IMAGE_ID
+		if (image.getId() == 0
 				|| Boolean.valueOf(gif).equals(image.isGif())) {
 			return;
 		}

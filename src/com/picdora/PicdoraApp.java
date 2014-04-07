@@ -12,6 +12,8 @@ import com.koushikdutta.ion.Ion;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
+import com.picdora.collections.Collection;
+import com.picdora.collections.CollectionItem;
 import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.models.Category;
 import com.picdora.models.Channel;
@@ -91,6 +93,12 @@ public class PicdoraApp extends Application {
 		addModelsMigration.createTable(Channel.class);
 		addModelsMigration.createTable(ChannelImage.class);
 		sprinkles.addMigration(addModelsMigration);
+		
+		/* Add collections */
+		Migration collections = new Migration();
+		collections.createTable(Collection.class);
+		collections.createTable(CollectionItem.class);
+		sprinkles.addMigration(collections);
 	}
 
 	@Override
