@@ -361,7 +361,7 @@ public abstract class GalleryFragment extends Fragment implements
 				.getActionView(spinnerItem);
 
 		final GridSizeArrayAdapter adapter = new GridSizeArrayAdapter(
-				getActivity(), R.layout.action_spinner_item, GridSize.values());
+				getActivity(), R.layout.action_spinner_view_dropdown, GridSize.values());
 
 		mActionSizeSpinner.setAdapter(adapter);
 

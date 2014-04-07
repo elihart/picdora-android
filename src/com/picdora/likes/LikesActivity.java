@@ -160,7 +160,7 @@ public class LikesActivity extends PicdoraActivity {
 		channelsToShow.add(0, allChannelsDummy);
 
 		final ChannelSelectArrayAdapter adapter = new ChannelSelectArrayAdapter(
-				this, R.layout.action_spinner_item, channelsToShow);
+				this, R.layout.action_spinner_view_dropdown, channelsToShow);
 
 		mActionChannelSpinner.setAdapter(adapter);
 

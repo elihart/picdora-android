@@ -4,7 +4,6 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewGroup.LayoutParams;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
@@ -18,32 +17,38 @@ import com.picdora.ui.grid.GridSize;
  * 
  */
 public class GridSizeArrayAdapter extends ArrayAdapter<GridSize> {
-	private int mResource;
+	/* Ignore the resource passed in and use these instead */
+	private int mDropdownResource = R.layout.action_spinner_view_dropdown;
+	private int mViewResource = R.layout.action_spinner_view;
+
 	private LayoutInflater mInflater;
 
-	public GridSizeArrayAdapter(Context context, int resource,
-			GridSize[] sizes) {
+	public GridSizeArrayAdapter(Context context, int resource, GridSize[] sizes) {
 		super(context, resource, sizes);
 
-		mResource = resource;
 		mInflater = LayoutInflater.from(context);
 	}
 
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
-		// use the same view as dropdown
-		View v = getDropDownView(position, convertView, parent);
+		if (convertView == null) {
+			convertView = mInflater.inflate(mViewResource, null);
+		}
 
-		// but set the font to be bolder
-		FontHelper.setTypeFace(getHolder(v).text, FontStyle.MEDIUM);
-		
-		return v;
+		Holder holder = getHolder(convertView);
+
+		GridSize size = getItem(position);
+
+		holder.text.setText(size.getName());
+		FontHelper.setTypeFace(holder.text, FontStyle.MEDIUM);
+
+		return convertView;
 	}
 
 	@Override
 	public View getDropDownView(int position, View convertView, ViewGroup parent) {
 		if (convertView == null) {
-			convertView = mInflater.inflate(mResource, null);
+			convertView = mInflater.inflate(mDropdownResource, null);
 		}
 
 		Holder holder = getHolder(convertView);

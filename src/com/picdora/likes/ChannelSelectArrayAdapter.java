@@ -19,32 +19,39 @@ import com.picdora.ui.FontHelper.FontStyle;
  * 
  */
 public class ChannelSelectArrayAdapter extends ArrayAdapter<Channel> {
-	private int mResource;
+	/* Ignore the resource passed in and use these instead */
+	private int mDropdownResource = R.layout.action_spinner_view_dropdown;
+	private int mViewResource = R.layout.action_spinner_view;
+
 	private LayoutInflater mInflater;
 
 	public ChannelSelectArrayAdapter(Context context, int resource,
 			List<Channel> objects) {
 		super(context, resource, objects);
 
-		mResource = resource;
 		mInflater = LayoutInflater.from(context);
 	}
 
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
-		// use the same view as dropdown
-		View v = getDropDownView(position, convertView, parent);
+		if (convertView == null) {
+			convertView = mInflater.inflate(mViewResource, null);
+		}
 
-		// but set the font to be bolder
-		FontHelper.setTypeFace(getHolder(v).text, FontStyle.MEDIUM);
+		Holder holder = getHolder(convertView);
 
-		return v;
+		Channel channel = getItem(position);
+
+		holder.text.setText(channel.getName());
+		FontHelper.setTypeFace(holder.text, FontStyle.MEDIUM);
+
+		return convertView;
 	}
 
 	@Override
 	public View getDropDownView(int position, View convertView, ViewGroup parent) {
 		if (convertView == null) {
-			convertView = mInflater.inflate(mResource, null);
+			convertView = mInflater.inflate(mDropdownResource, null);
 		}
 
 		Holder holder = getHolder(convertView);
