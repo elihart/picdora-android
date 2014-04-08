@@ -3,15 +3,25 @@ package com.picdora.collections;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EFragment;
+import org.androidannotations.annotations.UiThread;
+
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 
 import com.picdora.R;
 import com.picdora.Util;
+import com.picdora.collections.CollectionUtil.OnCollectionCreatedListener;
+import com.picdora.ui.PicdoraDialog;
 import com.picdora.ui.grid.Selectable;
 import com.picdora.ui.grid.SelectionFragmentWithNew;
 
 @EFragment(R.layout.fragment_selection_grid_with_new)
-public class CollectionSelectionFragment extends SelectionFragmentWithNew {
+public class CollectionSelectionFragment extends SelectionFragmentWithNew
+		implements OnCollectionCreatedListener {
+	@Bean
+	protected CollectionUtil mUtils;
 
 	@Override
 	protected void onSelectionDeleted(List<Selectable> selection) {
@@ -46,7 +56,20 @@ public class CollectionSelectionFragment extends SelectionFragmentWithNew {
 
 	@Override
 	protected void createNew() {
-		Util.log("new");
+		mUtils.showCollectionCreationDialog(getActivity(), this);
+	}
+
+	@UiThread
+	@Override
+	public void onSuccess(Collection collection) {
+		Util.makeBasicToast(getActivity(), "Collection created!");
+		refreshItemsAsync();
+	}
+
+	@UiThread
+	@Override
+	public void onFailure(CollectionUtil.CreationError error) {
+		mUtils.alertCreationError(getActivity(), error, this);
 	}
 
 }

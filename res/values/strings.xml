@@ -77,6 +77,9 @@
     <string name="selection_cab_delete">Delete</string>
     <string name="selection_action_new">Create</string>
     <string name="selection_button_create_new">Create</string>
+    <string name="selection_delete_confirmation_title">Delete Selection?</string>
+    <string name="selection_delete_confirmation_message">Are you sure you want to delete the selected items?</string>
+    <string name="selection_delete_confirmation_positive">Delete</string>
 
     <!-- Likes Contextual Menu -->
     <string name="likes_menu_star">Add to collection</string>
@@ -89,5 +92,10 @@
     <string name="action_new_collection">Create Collection</string>
     <string name="collections_button_create_new">Create Collection</string>
     <string name="collections_empty_message">You haven\'t created any collections yet!</string>
+    <string name="collections_create_dialog_title">New Collection</string>
+    <string name="collections_create_dialog_hint">Collection Name</string>
+    <string name="collections_create_dialog_positive">Create</string>
+    <string name="collections_create_error_dialog_try_again">Try Again</string>
+    <string name="collections_create_error_dialog_title">Error</string>
 
 </resources>

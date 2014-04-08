@@ -236,11 +236,11 @@ public abstract class SelectionFragment extends Fragment implements
 	 */
 	private void doDeleteConfirmation() {
 		new PicdoraDialog.Builder(getActivity())
-				.setTitle(R.string.gallery_delete_confirmation_title)
-				.setMessage(R.string.gallery_delete_confirmation_message)
+				.setTitle(R.string.selection_delete_confirmation_title)
+				.setMessage(R.string.selection_delete_confirmation_message)
 				.setNegativeButton(R.string.dialog_default_negative, null)
 				.setPositiveButton(
-						R.string.gallery_delete_confirmation_positive,
+						R.string.selection_delete_confirmation_positive,
 						new OnClickListener() {
 
 							@Override
@@ -427,7 +427,7 @@ public abstract class SelectionFragment extends Fragment implements
 	 * should be overridden to implement the load logic.
 	 * 
 	 */
-	public synchronized void loadSelectablesAsync() {
+	public synchronized void refreshItemsAsync() {
 		mLoadInProgress = true;
 		showProgress();
 		/* Increment the latest batch id */

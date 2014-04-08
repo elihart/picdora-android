@@ -29,7 +29,8 @@ public class Collection extends Model implements Selectable {
 
 	@Column("icon")
 	@NotNull
-	protected String mPreviewImgurId;
+	protected String mPreviewImgurId = "";
+	// TODO: Find default image for collection and upload to imgur.
 
 	@Column("lastUsed")
 	protected long mLastUsed;
