@@ -5,40 +5,13 @@ import java.util.List;
 
 import org.androidannotations.annotations.EFragment;
 
-import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.ui.grid.Selectable;
-import com.picdora.ui.grid.SelectionFragment;
+import com.picdora.ui.grid.SelectionFragmentWithNew;
 
-@EFragment(R.layout.fragment_basic_grid)
-public class CollectionSelectionFragment extends SelectionFragment {
-
-	@Override
-	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-		inflater.inflate(R.menu.fragment_collection_selection, menu);
-		super.onCreateOptionsMenu(menu, inflater);
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-		case R.id.action_new_collection:
-			createNewCollection();
-			return true;
-		default:
-			return super.onOptionsItemSelected(item);
-		}
-	}
-
-	private void createNewCollection() {
-		// TODO Auto-generated method stub
-		
-	}
+@EFragment(R.layout.fragment_selection_grid_with_new)
+public class CollectionSelectionFragment extends SelectionFragmentWithNew {
 
 	@Override
 	protected void onSelectionDeleted(List<Selectable> selection) {
@@ -63,7 +36,17 @@ public class CollectionSelectionFragment extends SelectionFragment {
 
 	@Override
 	protected String getEmptyMessage() {
-		return "No collections.";
+		return getResources().getString(R.string.collections_empty_message);
+
+	}
+
+	protected String getCreateButtonText() {
+		return getResources().getString(R.string.collections_button_create_new);
+	}
+
+	@Override
+	protected void createNew() {
+		Util.log("new");
 	}
 
 }

@@ -21,6 +21,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -46,6 +47,8 @@ public abstract class SelectionFragment extends Fragment implements
 	protected ProgressBar progress;
 	@ViewById
 	protected TextView messageText;
+	@ViewById(R.id.message_container)
+	protected RelativeLayout mMessageContainer;
 	@ViewById
 	protected FrameLayout gridContainer;
 
@@ -267,11 +270,8 @@ public abstract class SelectionFragment extends Fragment implements
 		List<Selectable> result = new ArrayList<Selectable>(allItems);
 		result.removeAll(itemsToDelete);
 
-		/* Set the resulting list with the items removed */
-		mSelector.setItems(result);
-
-		/* Clear the selection */
-		clearSelection();
+		/* Set the resulting list with the items removed. This also clears the selection. */
+		setItemsToShow(result);
 
 		/* Pass the deleted items on to subclasses to handle cleanup */
 		onSelectionDeleted(itemsToDelete);
@@ -342,7 +342,7 @@ public abstract class SelectionFragment extends Fragment implements
 	protected void showProgress() {
 		progress.setVisibility(View.VISIBLE);
 		gridContainer.setVisibility(View.GONE);
-		messageText.setVisibility(View.GONE);
+		mMessageContainer.setVisibility(View.GONE);
 	}
 
 	/**
@@ -357,7 +357,7 @@ public abstract class SelectionFragment extends Fragment implements
 
 		progress.setVisibility(View.GONE);
 		gridContainer.setVisibility(View.GONE);
-		messageText.setVisibility(View.VISIBLE);
+		mMessageContainer.setVisibility(View.VISIBLE);
 	}
 
 	/**
@@ -367,7 +367,7 @@ public abstract class SelectionFragment extends Fragment implements
 	protected void showGrid() {
 		progress.setVisibility(View.GONE);
 		gridContainer.setVisibility(View.VISIBLE);
-		messageText.setVisibility(View.GONE);
+		mMessageContainer.setVisibility(View.GONE);
 	}
 
 	/**
@@ -427,7 +427,7 @@ public abstract class SelectionFragment extends Fragment implements
 	 * should be overridden to implement the load logic.
 	 * 
 	 */
-	public synchronized void loadSelectablesAsyc() {
+	public synchronized void loadSelectablesAsync() {
 		mLoadInProgress = true;
 		showProgress();
 		/* Increment the latest batch id */

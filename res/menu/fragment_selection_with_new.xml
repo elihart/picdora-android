@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" xmlns:picdora="http://schemas.android.com/apk/res-auto" >
+
+    <item
+        android:id="@+id/action_new"
+        android:icon="@drawable/ic_action_plus"
+        android:title="@string/selection_action_new"
+        picdora:showAsAction="ifRoom"/>
+    
+
+</menu>

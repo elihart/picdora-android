@@ -75,6 +75,8 @@
     <!-- Selection Fragment -->
     <string name="selection_cab_all">Select All</string>
     <string name="selection_cab_delete">Delete</string>
+    <string name="selection_action_new">Create</string>
+    <string name="selection_button_create_new">Create</string>
 
     <!-- Likes Contextual Menu -->
     <string name="likes_menu_star">Add to collection</string>
@@ -85,5 +87,7 @@
     
     <!-- Collections -->
     <string name="action_new_collection">Create Collection</string>
+    <string name="collections_button_create_new">Create Collection</string>
+    <string name="collections_empty_message">You haven\'t created any collections yet!</string>
 
 </resources>

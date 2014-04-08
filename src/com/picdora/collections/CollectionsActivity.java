@@ -21,7 +21,7 @@ public class CollectionsActivity extends PicdoraActivity {
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 		getSupportActionBar().setHomeButtonEnabled(true);
 		
-		mSelectionFrag.loadSelectablesAsyc();
+		mSelectionFrag.loadSelectablesAsync();
 	}
 
 	@Override
