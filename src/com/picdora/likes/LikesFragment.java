@@ -23,7 +23,7 @@ import com.picdora.ui.gallery.DbGalleryFragment;
  * On selection the user will have the option to remove the images from the
  * liked list, add them to a collection, or download them.
  */
-@EFragment(R.layout.fragment_image_grid)
+@EFragment(R.layout.fragment_basic_grid)
 public class LikesFragment extends DbGalleryFragment {
 	private List<Channel> mChannels;
 

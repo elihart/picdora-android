@@ -27,7 +27,7 @@ import com.picdora.models.Image;
  * access. Lastly, override {@link #getEmptyMessage()} to provide a message to
  * show if the resulting image set is empty.
  */
-@EFragment(R.layout.fragment_image_grid)
+@EFragment(R.layout.fragment_basic_grid)
 public abstract class DbGalleryFragment extends GalleryFragment {
 	/** Whether an image load task is currently running */
 	private volatile boolean mLoadInProgress = false;

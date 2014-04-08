@@ -13,7 +13,6 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.view.ActionMode;
 import android.view.Menu;
@@ -67,7 +66,7 @@ import com.picdora.ui.grid.ModelGridSelector.OnGridItemClickListener;
  * are selected.
  * 
  */
-@EFragment(R.layout.fragment_image_grid)
+@EFragment(R.layout.fragment_basic_grid)
 public abstract class GalleryFragment extends Fragment implements
 		OnGridItemClickListener<Image> {
 

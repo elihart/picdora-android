@@ -41,6 +41,10 @@ public class ModelGridSelector<T> {
 	 * item. Default to false.
 	 */
 	protected boolean mRequireLongClick = false;
+	/** The current size we are using for the grid. */
+	private GridSize mGridSize;
+	/** Default grid size */
+	private static final GridSize DEFAULT_GRID_SIZE = GridSize.MEDIUM;
 
 	/**
 	 * Create a new ImageGridSelector.
@@ -115,6 +119,9 @@ public class ModelGridSelector<T> {
 				return true;
 			}
 		});
+		
+		/* Init default size */
+		setGridSize(DEFAULT_GRID_SIZE);
 	}
 
 	/**
@@ -243,8 +250,17 @@ public class ModelGridSelector<T> {
 	 * @param size
 	 */
 	public void setGridSize(GridSize size) {
+		mGridSize = size;
 		mGrid.setColumnWidth(size.getRowWidth());
 		mAdapter.setImageSize(size.getImageSize());
+	}
+
+	/**
+	 * Get the size of a grid column.
+	 * 
+	 */
+	public GridSize getGridSize() {
+		return mGridSize;
 	}
 
 	/**
@@ -269,4 +285,5 @@ public class ModelGridSelector<T> {
 		mSelectedItems.addAll(getItems());
 		mAdapter.notifyDataSetChanged();
 	}
+
 }
