@@ -82,5 +82,8 @@
     <!-- Likes Menu -->
     <string name="likes_channel_spinner">Channel Selection</string>
     <string name="likes_channel_spinner_value_all">All Channels</string>
+    
+    <!-- Collections -->
+    <string name="action_new_collection">Create Collection</string>
 
 </resources>

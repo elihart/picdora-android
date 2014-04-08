@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
@@ -30,6 +31,10 @@ import com.picdora.R;
 import com.picdora.ui.PicdoraDialog;
 import com.picdora.ui.grid.ModelGridSelector.OnGridItemClickListener;
 
+/**
+ * Basic implementation for creating a fragment to display items for selection.
+ * 
+ */
 @EFragment(R.layout.fragment_basic_grid)
 public abstract class SelectionFragment extends Fragment implements
 		OnGridItemClickListener<Selectable> {
@@ -49,6 +54,14 @@ public abstract class SelectionFragment extends Fragment implements
 
 	/** ActionMode for showing contextual options for selection */
 	private ActionMode mActionMode;
+
+	/** Whether an load task is currently running */
+	private volatile boolean mLoadInProgress = false;
+	/**
+	 * The most recent id we gave to a load so when the task ends it can tell if
+	 * it was most recent or not
+	 */
+	private volatile int mCurrentLoadBatchId = 0;
 
 	/**
 	 * Whether any items are currently selected. False to begin with since
@@ -76,6 +89,9 @@ public abstract class SelectionFragment extends Fragment implements
 		 * all over again.
 		 */
 		setRetainInstance(true);
+
+		/* Let us add options to the action bar */
+		setHasOptionsMenu(true);
 
 		/*
 		 * If we retained state then we shouldn't recreate these.
@@ -302,7 +318,7 @@ public abstract class SelectionFragment extends Fragment implements
 			/*
 			 * Just a normal click with no selection going on.
 			 */
-			onSelectableClick(item);
+			onClick(item);
 		} else {
 			/*
 			 * Otherwise we are in selection mode so a click does the same thing
@@ -391,7 +407,7 @@ public abstract class SelectionFragment extends Fragment implements
 	 * 
 	 * @param item
 	 */
-	protected abstract void onSelectableClick(Selectable item);
+	protected abstract void onClick(Selectable item);
 
 	/**
 	 * Set the items to be displayed in the grid. Clears any currently selected
@@ -399,10 +415,77 @@ public abstract class SelectionFragment extends Fragment implements
 	 * 
 	 * @param items
 	 */
-	public void setSelectablesToShow(List<Selectable> items) {
+	@UiThread
+	public void setItemsToShow(List<Selectable> items) {
 		clearSelection();
 		mSelector.setItems(items);
+		showItems();
 	}
+
+	/**
+	 * Start a background task to load items to show. {@link #doItemLoad()}
+	 * should be overridden to implement the load logic.
+	 * 
+	 */
+	public synchronized void loadSelectablesAsyc() {
+		mLoadInProgress = true;
+		showProgress();
+		/* Increment the latest batch id */
+		asyncLoad(++mCurrentLoadBatchId);
+	}
+
+	/**
+	 * Call {@link #doItemLoad()} in the background. Display results on
+	 * completion only if a more recent load hasn't started after us.
+	 * 
+	 * @param batchId
+	 */
+	@Background
+	protected void asyncLoad(int batchId) {
+		List<Selectable> items = doItemLoad();
+
+		/*
+		 * Update the display on the ui thread if the fragment wasn't destroyed
+		 * while we were getting items and if our batch is the most recent
+		 */
+		if (isDestroyed()) {
+			mLoadInProgress = false;
+		} else if (batchId == mCurrentLoadBatchId) {
+			mLoadInProgress = false;
+			setItemsToShow(items);
+		}
+	}
+
+	/**
+	 * Override this to implement the loading logic for the items you want to
+	 * display. This will be called from a background thread so you don't have
+	 * to worry about handling that.
+	 * 
+	 * @return
+	 */
+	protected abstract List<Selectable> doItemLoad();
+
+	/**
+	 * Show the item grid if we have items, but if our item list is empty then
+	 * show a message instead.
+	 * 
+	 */
+	protected void showItems() {
+		if (mLoadInProgress) {
+			showProgress();
+		} else if (isEmpty()) {
+			showMessage(getEmptyMessage());
+		} else {
+			showGrid();
+		}
+	}
+
+	/**
+	 * Get a message to show when there are no items to show.
+	 * 
+	 * @return
+	 */
+	protected abstract String getEmptyMessage();
 
 	/**
 	 * Whether the list of items to show is empty.

@@ -8,11 +8,12 @@ import se.emilsjolander.sprinkles.annotations.Table;
 import se.emilsjolander.sprinkles.annotations.Unique;
 
 import com.picdora.Util;
+import com.picdora.ui.grid.Selectable;
 
 @Table(Collection.TABLE_NAME)
-public class Collection extends Model {
+public class Collection extends Model implements Selectable {
 	public static final String TABLE_NAME = "Collections";
-	
+
 	/********** DB Fields ***********************/
 	@AutoIncrementPrimaryKey
 	@Column("id")
@@ -99,8 +100,28 @@ public class Collection extends Model {
 
 	}
 
+	/**
+	 * The collection id.
+	 * 
+	 */
 	public long getId() {
 		return mId;
+	}
+
+	/**
+	 * The icon representing the collection.
+	 * 
+	 */
+	public String getIconId() {
+		return mPreviewImgurId;
+	}
+
+	/**
+	 * The name of the collection.
+	 * 
+	 */
+	public String getName() {
+		return mName;
 	}
 
 }

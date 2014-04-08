@@ -90,7 +90,7 @@ public class PicdoraApp extends Application {
 		Migration addModelsMigration = new Migration();
 		addModelsMigration.createTable(Image.class);
 		addModelsMigration.createTable(Category.class);
-		addModelsMigration.createTable(Channel.class);
+		addModelsMigration.createTable(Collection.class);
 		addModelsMigration.createTable(ChannelImage.class);
 		sprinkles.addMigration(addModelsMigration);
 		
