@@ -7,13 +7,9 @@ import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.UiThread;
 
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnClickListener;
-
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.collections.CollectionUtil.OnCollectionCreatedListener;
-import com.picdora.ui.PicdoraDialog;
 import com.picdora.ui.grid.Selectable;
 import com.picdora.ui.grid.SelectionFragmentWithNew;
 
@@ -23,15 +19,22 @@ public class CollectionSelectionFragment extends SelectionFragmentWithNew
 	@Bean
 	protected CollectionUtil mUtils;
 
+	@SuppressWarnings("unchecked")
 	@Override
 	protected void onSelectionDeleted(List<Selectable> selection) {
-		Util.log("delete");
-
+		/*
+		 * Some hacky casting to get the interface object back to a collection
+		 * object...
+		 */
+		List<Collection> collections = new ArrayList<Collection>(
+				(List<Collection>) (List<?>) selection);
+		mUtils.delete(collections);
 	}
 
 	@Override
 	protected void onClick(Selectable item) {
-		Util.log("click");
+		Collection collection = (Collection) item;
+		/* Show gallery fragment with the collection's images */
 
 	}
 

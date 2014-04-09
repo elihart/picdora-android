@@ -12,6 +12,7 @@ import org.androidannotations.annotations.UiThread.Propagation;
 import se.emilsjolander.sprinkles.CursorList;
 import se.emilsjolander.sprinkles.Query;
 import se.emilsjolander.sprinkles.Sprinkles;
+import se.emilsjolander.sprinkles.Transaction;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -224,5 +225,19 @@ public class CollectionUtil {
 							}
 						}).show();
 		
+	}
+
+	/** Delete the given Collections in the background.
+	 * 
+	 * @param selection
+	 */
+	@Background
+	public void delete(List<Collection> collections) {
+		Transaction t = new Transaction();
+		for(Collection c : collections){
+			c.delete(t);
+		}
+		t.setSuccessful(true);
+		t.finish();		
 	}
 }

@@ -175,7 +175,7 @@ public abstract class SelectionFragment extends Fragment implements
 	 * @param menu
 	 */
 	protected void onCreateSelectionMenu(MenuInflater inflater, Menu menu) {
-		inflater.inflate(R.menu.fragment_gallery_cab, menu);
+		inflater.inflate(R.menu.fragment_selection_cab, menu);
 	}
 
 	/**
