@@ -5,8 +5,10 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.ListAdapter;
 
 import com.picdora.R;
+import com.picdora.collections.CollectionListAdapter;
 
 public class PicdoraDialog extends Dialog {
 
@@ -19,6 +21,7 @@ public class PicdoraDialog extends Dialog {
 		private String mTitle;
 		private boolean mShowTitle = true;
 		private View mView;
+		private ListAdapter mAdapter;
 		private String mMessage;
 		private boolean mFullScreen = false;
 		private ButtonInfo mNegativeButton;
@@ -54,6 +57,12 @@ public class PicdoraDialog extends Dialog {
 
 		public Builder setView(View view) {
 			mView = view;
+			return this;
+		}
+
+		public Builder setAdapter(CollectionListAdapter adapter,
+				OnClickListener onClickListener) {
+			mAdapter = adapter;
 			return this;
 		}
 
@@ -185,12 +194,13 @@ public class PicdoraDialog extends Dialog {
 		public PicdoraDialog create() {
 			PicdoraDialog dialog = new PicdoraDialog(mContext,
 					R.style.picdora_dialog_style);
-			
-			// set the dialog to make room for the keyboard 
-			dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+
+			// set the dialog to make room for the keyboard
+			dialog.getWindow().setSoftInputMode(
+					WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 
 			PicdoraDialogView view = PicdoraDialogView_.build(mContext);
-			view.bind(dialog, mTitle, mShowTitle, mView, mMessage,
+			view.bind(dialog, mTitle, mShowTitle, mView, mMessage, mAdapter,
 					mPositiveButton, mNegativeButton, mNeutralButton,
 					mFullScreen);
 
@@ -199,7 +209,7 @@ public class PicdoraDialog extends Dialog {
 		}
 
 		public void show() {
-			create().show();			
+			create().show();
 		}
 
 	}

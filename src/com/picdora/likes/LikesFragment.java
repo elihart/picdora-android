@@ -3,6 +3,7 @@ package com.picdora.likes;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EFragment;
 
 import android.view.Menu;
@@ -11,6 +12,9 @@ import android.view.MenuItem;
 
 import com.picdora.ChannelUtils;
 import com.picdora.R;
+import com.picdora.collections.Collection;
+import com.picdora.collections.CollectionUtil;
+import com.picdora.collections.CollectionUtil.OnCollectionSelectedListener;
 import com.picdora.models.Channel;
 import com.picdora.models.Image;
 import com.picdora.ui.gallery.GalleryFragment;
@@ -27,6 +31,9 @@ import com.picdora.ui.grid.Selectable;
 @EFragment(R.layout.fragment_basic_grid)
 public class LikesFragment extends GalleryFragment {
 	private List<Channel> mChannels;
+	
+	@Bean
+	protected CollectionUtil mCollectionUtils;
 
 	/**
 	 * Use the given channels to source the liked images for display. Use
@@ -91,8 +98,14 @@ public class LikesFragment extends GalleryFragment {
 	 * 
 	 */
 	private void addToCollection() {
-		// TODO
-
+		mCollectionUtils.showCollectionSelectionDialog(getActivity(), new OnCollectionSelectedListener() {
+			
+			@Override
+			public void onCollectionSelected(Collection collection) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
 	}
 
 	@Override

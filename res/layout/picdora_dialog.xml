@@ -52,6 +52,14 @@
                 android:text="@string/dialog_default_message"
                 android:textColor="@color/picdora_dialog_message"
                 android:textSize="@dimen/dialog_message_text_size" />
+
+            <ListView
+                android:id="@+id/list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone" >
+            </ListView>
+
         </FrameLayout>
 
         <LinearLayout

@@ -9,6 +9,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.ListAdapter;
+import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -28,6 +30,8 @@ public class PicdoraDialogView extends RelativeLayout {
 	protected FrameLayout contentContainer;
 	@ViewById
 	protected TextView message;
+	@ViewById
+	protected ListView list;
 	@ViewById
 	protected LinearLayout buttonContainer;
 	@ViewById
@@ -57,9 +61,9 @@ public class PicdoraDialogView extends RelativeLayout {
 	}
 
 	public void bind(PicdoraDialog dialog, String title, boolean showTitle,
-			View view, String message, ButtonInfo positiveButtonInfo,
-			ButtonInfo negativeButtonInfo, ButtonInfo neutralButtonInfo,
-			boolean fullScreen) {
+			View view, String message, ListAdapter adapter,
+			ButtonInfo positiveButtonInfo, ButtonInfo negativeButtonInfo,
+			ButtonInfo neutralButtonInfo, boolean fullScreen) {
 
 		mDialog = dialog;
 
@@ -77,8 +81,14 @@ public class PicdoraDialogView extends RelativeLayout {
 
 		if (view != null) {
 			this.message.setVisibility(View.GONE);
+			this.list.setVisibility(View.GONE);
 			contentContainer.addView(view);
+		} else if (adapter != null) {
+			this.message.setVisibility(View.GONE);
+			this.list.setVisibility(View.VISIBLE);
+			this.list.setAdapter(adapter);
 		} else {
+			this.list.setVisibility(View.GONE);
 			this.message.setVisibility(View.VISIBLE);
 			if (message == null) {
 				this.message.setText(R.string.dialog_default_message);

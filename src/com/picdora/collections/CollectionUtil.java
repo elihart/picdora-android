@@ -105,6 +105,60 @@ public class CollectionUtil {
 		dialog.show();
 	}
 
+	@UiThread(propagation = Propagation.REUSE)
+	public void showCollectionSelectionDialog(final Activity activity,
+			final OnCollectionSelectedListener listener) {
+		
+		final CollectionListAdapter adapter = CollectionListAdapter_.getInstance_(activity);
+
+		final PicdoraDialog dialog = new PicdoraDialog.Builder(activity)
+				.setTitle(R.string.collections_create_dialog_title)
+				.setAdapter(adapter, new OnClickListener() {
+					
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						Collection c = adapter.getItem(which);
+						listener.onCollectionSelected(c);						
+					}
+				})
+				.setPositiveButton(R.string.collections_create_dialog_positive,
+						new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog, int id) {
+								showCollectionCreationDialog(activity, new OnCollectionCreatedListener() {
+									
+									@Override
+									public void onSuccess(Collection collection) {
+										showCollectionSelectionDialog(activity, listener);										
+									}
+									
+									@Override
+									public void onFailure(CreationError error) {
+										alertCreationError(activity, error, this);
+										
+									}
+								});
+							}
+						})
+				.setNegativeButton(R.string.dialog_default_negative, null)
+
+				.create();
+
+		dialog.show();
+	}
+
+	/**
+	 * Callback for the collection selection dialog.
+	 * 
+	 */
+	public interface OnCollectionSelectedListener {
+		/**
+		 * Called when the user selected a Collection from the selection dialog.
+		 * 
+		 * @param collection
+		 */
+		public void onCollectionSelected(Collection collection);
+	}
+
 	/**
 	 * Errors that can occur while creating a new collection.
 	 * 
