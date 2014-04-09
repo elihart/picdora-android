@@ -26,8 +26,11 @@ import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 
+import com.picdora.ImageUtils;
 import com.picdora.R;
 import com.picdora.Util;
+import com.picdora.models.ChannelImage;
+import com.picdora.models.Image;
 import com.picdora.ui.FontHelper;
 import com.picdora.ui.FontHelper.FontStyle;
 import com.picdora.ui.PicdoraDialog;
@@ -186,11 +189,14 @@ public class CollectionUtil {
 	 * them to try again or cancel.
 	 * 
 	 * @param context
-	 * @param error The error that was encountered.
-	 * @param listener A listener that will be used if the user decides to try again.
+	 * @param error
+	 *            The error that was encountered.
+	 * @param listener
+	 *            A listener that will be used if the user decides to try again.
 	 */
 	@UiThread(propagation = Propagation.REUSE)
-	public void alertCreationError(final Activity context, CreationError error, final OnCollectionCreatedListener listener) {
+	public void alertCreationError(final Activity context, CreationError error,
+			final OnCollectionCreatedListener listener) {
 		String msg = "Uh oh, somethign went wrong creating the collection :(";
 		switch (error) {
 		case NAME_TAKEN:
@@ -224,20 +230,49 @@ public class CollectionUtil {
 								showCollectionCreationDialog(context, listener);
 							}
 						}).show();
-		
+
 	}
 
-	/** Delete the given Collections in the background.
+	/**
+	 * Delete the given Collections in the background.
 	 * 
 	 * @param selection
 	 */
 	@Background
 	public void delete(List<Collection> collections) {
 		Transaction t = new Transaction();
-		for(Collection c : collections){
+		for (Collection c : collections) {
 			c.delete(t);
 		}
 		t.setSuccessful(true);
-		t.finish();		
+		t.finish();
+	}
+
+	/**
+	 * Load all the images in the given Collection..
+	 * 
+	 * @param collection
+	 * @return
+	 */
+	public List<Image> loadCollectionImages(Collection collection) {
+		// TODO: joins?
+		String query = "SELECT * FROM Images WHERE id IN (SELECT imageId FROM "
+				+ CollectionItem.TABLE_NAME + " WHERE collectionId="
+				+ collection.getId() + ")";
+
+		CursorList<Image> list = Query.many(Image.class, query, null).get();
+		List<Image> images = list.asList();
+		list.close();
+
+		return images;
+	}
+
+	@Background
+	public void deleteCollectionImages(Collection collection, List<Image> images) {
+		SQLiteDatabase db = Sprinkles.getDatabase();
+		String query = "DELETE " + CollectionItem.TABLE_NAME + " WHERE collectionId=" + collection.mId + " AND imageId IN " + ImageUtils.getImageIds(images);
+
+		db.compileStatement(query).execute();
+		
 	}
 }

@@ -413,4 +413,18 @@ public abstract class ImageUtils {
 		// TODO Auto-generated method stub
 
 	}
+
+	/** Get a comma separated list of Image ids for use in db queries.
+	 * 
+	 * @param images
+	 * @return
+	 */
+	public static String getImageIds(List<Image> images) {
+		List<Integer> ids = new ArrayList<Integer>();
+		for (Image i : images) {
+			ids.add((int) i.getId());
+		}
+
+		return ("(" + TextUtils.join(",", ids) + ")");
+	}
 }

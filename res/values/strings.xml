@@ -97,5 +97,6 @@
     <string name="collections_create_dialog_positive">Create</string>
     <string name="collections_create_error_dialog_try_again">Try Again</string>
     <string name="collections_create_error_dialog_title">Error</string>
+    <string name="collection_no_images">You haven\'t added any images to this collection yet!</string>
 
 </resources>

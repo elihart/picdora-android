@@ -2,7 +2,6 @@ package com.picdora.channelCreation;
 
 import org.androidannotations.annotations.EBean;
 
-import com.picdora.ImageUtils.ImgurSize;
 import com.picdora.models.Category;
 import com.picdora.ui.grid.ModelGridAdapter;
 

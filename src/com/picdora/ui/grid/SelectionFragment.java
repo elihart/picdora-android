@@ -8,7 +8,6 @@ import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
-import org.androidannotations.annotations.sharedpreferences.Pref;
 
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
@@ -27,7 +26,6 @@ import android.widget.TextView;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.PauseOnScrollListener;
 import com.picdora.PicdoraActivity;
-import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
 import com.picdora.ui.PicdoraDialog;
 import com.picdora.ui.grid.ModelGridSelector.OnGridItemClickListener;
@@ -40,9 +38,6 @@ import com.picdora.ui.grid.ModelGridSelector.OnGridItemClickListener;
 public abstract class SelectionFragment extends Fragment implements
 		OnGridItemClickListener<Selectable> {
 
-	@Pref
-	protected PicdoraPreferences_ mPrefs;
-
 	@ViewById
 	protected ProgressBar progress;
 	@ViewById
@@ -54,6 +49,8 @@ public abstract class SelectionFragment extends Fragment implements
 
 	protected SelectionAdapter mAdapter;
 	protected ModelGridSelector<Selectable> mSelector;
+	/** The default grid size */
+	private static final GridSize DEFAULT_GRID_SIZE = GridSize.MEDIUM;
 
 	/** ActionMode for showing contextual options for selection */
 	private ActionMode mActionMode;
@@ -71,6 +68,12 @@ public abstract class SelectionFragment extends Fragment implements
 	 * nothing is selected at start.
 	 */
 	private boolean mInSelection = false;
+
+	/**
+	 * True to show text overlaid on the item image, false otherwise. Defaults
+	 * to true.
+	 */
+	private boolean mShowText = true;
 
 	/**
 	 * If we should start a selection on a normal click. Defaults to false so
@@ -104,6 +107,7 @@ public abstract class SelectionFragment extends Fragment implements
 			showProgress();
 
 			mAdapter = SelectionAdapter_.getInstance_(getActivity());
+			mAdapter.setShowText(mShowText);
 
 			/*
 			 * Start with empty list of items and nothing selected.
@@ -121,6 +125,9 @@ public abstract class SelectionFragment extends Fragment implements
 
 			mSelector.setScrollListener(listener);
 			mSelector.setOnClickListener(this);
+
+			/* set the default grid size */
+			setGridSize(DEFAULT_GRID_SIZE);
 		}
 
 		/*
@@ -136,10 +143,6 @@ public abstract class SelectionFragment extends Fragment implements
 		/* Add grid view to the fragment */
 		gridContainer.addView(v);
 
-		/* set the default grid size */
-		GridSize size = GridSize.values()[mPrefs.gridSize().get()];
-		setGridSize(size);
-
 		/*
 		 * If we have a lingering action mode or selected items then create a
 		 * fresh action mode.
@@ -151,6 +154,19 @@ public abstract class SelectionFragment extends Fragment implements
 			 */
 			mActionMode = null;
 			onSelectionChanged(getSelection());
+		}
+	}
+
+	/**
+	 * Whether the grid items should show text overlaid on the image.
+	 * 
+	 * @param show
+	 *            True to show text, false otherwise.
+	 */
+	protected void setShowText(boolean show) {
+		mShowText = show;
+		if (mAdapter != null) {
+			mAdapter.setShowText(show);
 		}
 	}
 
@@ -213,10 +229,10 @@ public abstract class SelectionFragment extends Fragment implements
 			case R.id.delete:
 				doDeleteConfirmation();
 				return true;
-
+			default:
+				return onSelectionAction(item);
 			}
 
-			return onSelectionAction(item);
 		}
 
 		public void onDestroyActionMode(ActionMode mode) {
@@ -270,7 +286,10 @@ public abstract class SelectionFragment extends Fragment implements
 		List<Selectable> result = new ArrayList<Selectable>(allItems);
 		result.removeAll(itemsToDelete);
 
-		/* Set the resulting list with the items removed. This also clears the selection. */
+		/*
+		 * Set the resulting list with the items removed. This also clears the
+		 * selection.
+		 */
 		setItemsToShow(result);
 
 		/* Pass the deleted items on to subclasses to handle cleanup */
@@ -304,8 +323,18 @@ public abstract class SelectionFragment extends Fragment implements
 		mSelector.setGridSize(size);
 	}
 
+	/**
+	 * Get the current grid size, or if that is not available get the default
+	 * grid size that the grid will be init'd to.
+	 * 
+	 * @return
+	 */
 	public GridSize getGridSize() {
-		return mSelector.getGridSize();
+		if (mSelector == null) {
+			return DEFAULT_GRID_SIZE;
+		} else {
+			return mSelector.getGridSize();
+		}
 	}
 
 	@Override

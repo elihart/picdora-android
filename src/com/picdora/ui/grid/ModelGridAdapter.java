@@ -162,4 +162,14 @@ public abstract class ModelGridAdapter<T> extends BaseAdapter {
 		}
 	}
 
+	/**
+	 * Whether the grid items should show text overlaid on the image.
+	 * 
+	 * @param show
+	 *            True to show text, false otherwise.
+	 */
+	public void setShowText(boolean show) {
+		mShowText = show;
+	}
+
 }

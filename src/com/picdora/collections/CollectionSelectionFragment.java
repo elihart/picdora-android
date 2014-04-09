@@ -6,7 +6,9 @@ import java.util.List;
 import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.UiThread;
+import org.androidannotations.annotations.sharedpreferences.Pref;
 
+import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.collections.CollectionUtil.OnCollectionCreatedListener;
@@ -16,6 +18,10 @@ import com.picdora.ui.grid.SelectionFragmentWithNew;
 @EFragment(R.layout.fragment_selection_grid_with_new)
 public class CollectionSelectionFragment extends SelectionFragmentWithNew
 		implements OnCollectionCreatedListener {
+	
+	@Pref
+	protected PicdoraPreferences_ mPrefs;
+	
 	@Bean
 	protected CollectionUtil mUtils;
 
