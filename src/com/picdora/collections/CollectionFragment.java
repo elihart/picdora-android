@@ -24,7 +24,7 @@ public class CollectionFragment extends GalleryFragment {
 	 * later.
 	 */
 	@FragmentArg
-	protected String mImageAsJson;
+	protected String mCollectionAsJson;
 	@Bean
 	protected CollectionUtil mUtils;
 
@@ -38,7 +38,7 @@ public class CollectionFragment extends GalleryFragment {
 		 * load the images
 		 */
 		if (mCollection == null) {
-			mCollection = Util.fromJson(mImageAsJson, Collection.class);
+			mCollection = Util.fromJson(mCollectionAsJson, Collection.class);
 			refreshItemsAsync();
 		}
 	}

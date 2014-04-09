@@ -3,6 +3,7 @@ package com.picdora.collections;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.UiThread;
@@ -18,12 +19,24 @@ import com.picdora.ui.grid.SelectionFragmentWithNew;
 @EFragment(R.layout.fragment_selection_grid_with_new)
 public class CollectionSelectionFragment extends SelectionFragmentWithNew
 		implements OnCollectionCreatedListener {
-	
+
 	@Pref
 	protected PicdoraPreferences_ mPrefs;
-	
 	@Bean
 	protected CollectionUtil mUtils;
+	/** Whether we have done a first load of our collections */
+	private boolean mCollectionsInitd = false;
+
+	@AfterViews
+	protected void initCollectionSelection() {
+		/*
+		 * If we haven't yet loaded our collections then do it now. This will
+		 * prevent us from loading them multiple times upon rotation.
+		 */
+		if (!mCollectionsInitd) {
+			refreshItemsAsync();
+		}
+	}
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -40,8 +53,13 @@ public class CollectionSelectionFragment extends SelectionFragmentWithNew
 	@Override
 	protected void onClick(Selectable item) {
 		Collection collection = (Collection) item;
-		/* Show gallery fragment with the collection's images */
 
+		/* Show gallery fragment with the collection's images */
+		String json = Util.toJson(collection);
+		CollectionFragment newFrag = CollectionFragment_.builder()
+				.mCollectionAsJson(json).build();
+
+		((CollectionsActivity) getActivity()).showFragment(newFrag);
 	}
 
 	@Override
@@ -71,6 +89,10 @@ public class CollectionSelectionFragment extends SelectionFragmentWithNew
 	@UiThread
 	@Override
 	public void onSuccess(Collection collection) {
+		/*
+		 * Show a message that the collection was created, then refresh all
+		 * shown images from the db to include the new one.
+		 */
 		Util.makeBasicToast(getActivity(), "Collection created!");
 		refreshItemsAsync();
 	}
@@ -78,6 +100,10 @@ public class CollectionSelectionFragment extends SelectionFragmentWithNew
 	@UiThread
 	@Override
 	public void onFailure(CollectionUtil.CreationError error) {
+		/*
+		 * Show a dialog alert that the Collection creation failed and give the
+		 * reason. Give the user a change to try again.
+		 */
 		mUtils.alertCreationError(getActivity(), error, this);
 	}
 

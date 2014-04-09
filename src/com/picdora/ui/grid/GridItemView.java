@@ -24,6 +24,7 @@ import com.nineoldandroids.animation.ValueAnimator;
 import com.nineoldandroids.animation.ValueAnimator.AnimatorUpdateListener;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.picdora.R;
+import com.picdora.Util;
 import com.picdora.ui.FontHelper;
 import com.picdora.ui.FontHelper.FontStyle;
 import com.picdora.ui.UiUtil;
@@ -120,9 +121,10 @@ public class GridItemView extends RelativeLayout {
 	 * Set this grid item to display the given image and text
 	 * 
 	 * @param text
-	 *            The text to display. Can be null if {@link #mShowText} is disabled
+	 *            The text to display. Can be null if {@link #setShowText(boolean)} is
+	 *            set to false.
 	 * @param url
-	 *            The url of the image to display
+	 *            The url of the image to display. Null or empty to not show an image.
 	 * @param highlight
 	 *            Whether the item should be highlighted
 	 */
@@ -138,7 +140,9 @@ public class GridItemView extends RelativeLayout {
 			mText.setText(text.toUpperCase(java.util.Locale.US));
 		}
 
-		ImageLoader.getInstance().displayImage(url, mImage);
+		if (!Util.isStringBlank(url)) {
+			ImageLoader.getInstance().displayImage(url, mImage);
+		}
 	}
 
 	/**

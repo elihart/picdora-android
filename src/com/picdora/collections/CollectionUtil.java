@@ -29,7 +29,6 @@ import android.widget.LinearLayout;
 import com.picdora.ImageUtils;
 import com.picdora.R;
 import com.picdora.Util;
-import com.picdora.models.ChannelImage;
 import com.picdora.models.Image;
 import com.picdora.ui.FontHelper;
 import com.picdora.ui.FontHelper.FontStyle;
@@ -159,8 +158,18 @@ public class CollectionUtil {
 	 * 
 	 */
 	public interface OnCollectionCreatedListener {
+		/**
+		 * On collection created successfully.
+		 * 
+		 * @param collection
+		 */
 		public void onSuccess(Collection collection);
 
+		/**
+		 * On collection failed to create.
+		 * 
+		 * @param error
+		 */
 		public void onFailure(CreationError error);
 	}
 
@@ -270,9 +279,11 @@ public class CollectionUtil {
 	@Background
 	public void deleteCollectionImages(Collection collection, List<Image> images) {
 		SQLiteDatabase db = Sprinkles.getDatabase();
-		String query = "DELETE " + CollectionItem.TABLE_NAME + " WHERE collectionId=" + collection.mId + " AND imageId IN " + ImageUtils.getImageIds(images);
+		String query = "DELETE " + CollectionItem.TABLE_NAME
+				+ " WHERE collectionId=" + collection.mId + " AND imageId IN "
+				+ ImageUtils.getImageIds(images);
 
 		db.compileStatement(query).execute();
-		
+
 	}
 }
