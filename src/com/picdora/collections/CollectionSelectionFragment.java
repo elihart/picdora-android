@@ -59,7 +59,8 @@ public class CollectionSelectionFragment extends SelectionFragmentWithNew
 		CollectionFragment newFrag = CollectionFragment_.builder()
 				.mCollectionAsJson(json).build();
 
-		((CollectionsActivity) getActivity()).showFragment(newFrag);
+		((CollectionsActivity) getActivity())
+				.showCollectionDetailFragment(newFrag);
 	}
 
 	@Override

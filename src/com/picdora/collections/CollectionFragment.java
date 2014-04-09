@@ -7,6 +7,9 @@ import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.FragmentArg;
 
+import android.os.Bundle;
+
+import com.picdora.PicdoraActivity;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.models.Image;
@@ -33,19 +36,38 @@ public class CollectionFragment extends GalleryFragment {
 
 	@AfterViews
 	protected void initCollection() {
-		/**
-		 * If our Collection hasn't been init'd from json yet then do it and
-		 * load the images
+		/*
+		 * If our Collection hasn't been init'd from json yet then do it now.
 		 */
-		if (mCollection == null) {
-			mCollection = Util.fromJson(mCollectionAsJson, Collection.class);
+		getCollection();
+
+		/*
+		 * If we haven't loaded any images yet then do a refresh, otherwise make
+		 * sure we are showing the images
+		 */
+		if (isEmpty()) {
 			refreshItemsAsync();
+		} else {
+			showItems();
 		}
 	}
 
 	@Override
+	public void onActivityCreated(Bundle savedInstanceState) {
+		super.onActivityCreated(savedInstanceState);
+		/*
+		 * Change thea activity title to the name of the collection we are
+		 * displaying
+		 */
+		((PicdoraActivity) getActivity()).setActionBarTitle(getCollection()
+				.getName());
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
 	protected void onSelectionDeleted(List<Selectable> selection) {
-		mUtils.deleteCollectionImages(mCollection, (List<Image>) (List<?>) selection);
+		mUtils.deleteCollectionImages(mCollection,
+				(List<Image>) (List<?>) selection);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -58,6 +80,21 @@ public class CollectionFragment extends GalleryFragment {
 	@Override
 	protected String getEmptyMessage() {
 		return getResources().getString(R.string.collection_no_images);
+	}
+
+	/**
+	 * Get the collection that we are showing.
+	 * 
+	 * @return
+	 */
+	public Collection getCollection() {
+		/*
+		 * Init the collection from json if not done yet.
+		 */
+		if (mCollection == null) {
+			mCollection = Util.fromJson(mCollectionAsJson, Collection.class);
+		}
+		return mCollection;
 	}
 
 }

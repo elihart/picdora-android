@@ -6,26 +6,25 @@ import org.androidannotations.annotations.ViewById;
 
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentManager.OnBackStackChangedListener;
 import android.support.v4.app.FragmentTransaction;
 import android.view.Menu;
 import android.widget.FrameLayout;
 
 import com.picdora.PicdoraActivity;
 import com.picdora.R;
-import com.picdora.likes.LikesFragment;
-import com.picdora.likes.LikesFragment_;
 import com.picdora.ui.SlidingMenuHelper;
 
 @EActivity(R.layout.activity_collections)
 public class CollectionsActivity extends PicdoraActivity {
 	@ViewById(R.id.fragment_container)
 	protected FrameLayout mFragmentContainer;
-	
-	private static final String LIKES_FRAGMENT_TAG = "CollectionSelectionFrag";
+
+	private static final String SELECTION_FRAGMENT_TAG = "CollectionSelectionFrag";
 	private CollectionSelectionFragment mSelectionFrag;
+
+	private static final String DETAIL_FRAGMENT_TAG = "CollectionDetailFrag";
 	private CollectionFragment mDetailFrag;
-	
-	
 
 	@AfterViews
 	void initViews() {
@@ -33,22 +32,39 @@ public class CollectionsActivity extends PicdoraActivity {
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 		getSupportActionBar().setHomeButtonEnabled(true);
 
-		
 		/*
 		 * The fragment is set to retain state so we don't have to recreate it
 		 * on config changes.
 		 */
-		FragmentManager fm = getSupportFragmentManager();
+		final FragmentManager fm = getSupportFragmentManager();
 		mSelectionFrag = (CollectionSelectionFragment) fm
-				.findFragmentByTag(LIKES_FRAGMENT_TAG);
-		
+				.findFragmentByTag(SELECTION_FRAGMENT_TAG);
+
+
 		/* Create the fragment and add it if it doesn't yet exist */
 		if (mSelectionFrag == null) {
 			mSelectionFrag = new CollectionSelectionFragment_();
 			fm.beginTransaction()
 					.add(R.id.fragment_container, mSelectionFrag,
-							LIKES_FRAGMENT_TAG).commit();
+							SELECTION_FRAGMENT_TAG).commit();
 		}
+
+		fm.addOnBackStackChangedListener(new OnBackStackChangedListener() {
+
+			@Override
+			public void onBackStackChanged() {
+				/*
+				 * If the back stack is empty then we are not showing a detail
+				 * fragment so return to the main activity title.
+				 */
+				if (fm.getBackStackEntryCount() == 0) {
+					setActionBarTitle(getResources().getString(
+							R.string.title_activity_collections));
+					mDetailFrag = null;
+				}
+
+			}
+		});
 	}
 
 	@Override
@@ -59,11 +75,15 @@ public class CollectionsActivity extends PicdoraActivity {
 	}
 
 	/**
-	 * Swap out the current fragment with the given one.
+	 * Swap out the current fragment with the given one and add the transaction
+	 * to the backstack.
 	 * 
-	 * @param newFrag
+	 * @param frag
+	 *            The fragment to show.
+	 * @param tag
+	 *            The tag to associate the fragment with.
 	 */
-	public void showFragment(Fragment newFrag) {
+	public void showFragment(Fragment frag, String tag) {
 		FragmentTransaction transaction = getSupportFragmentManager()
 				.beginTransaction();
 
@@ -71,12 +91,22 @@ public class CollectionsActivity extends PicdoraActivity {
 		// fragment,
 		// and add the transaction to the back stack so the user can navigate
 		// back
-		transaction.replace(R.id.fragment_container, newFrag);
-		transaction.addToBackStack(null);
+		transaction.replace(R.id.fragment_container, frag, tag);
+		transaction.addToBackStack(DETAIL_FRAGMENT_TAG);
 
 		// Commit the transaction
 		transaction.commit();
 
+	}
+
+	/**
+	 * Set the fragment that should be show for Collection detail view.
+	 * 
+	 * @param frag
+	 */
+	public void showCollectionDetailFragment(CollectionFragment frag) {
+		mDetailFrag = frag;
+		showFragment(frag, DETAIL_FRAGMENT_TAG);
 	}
 
 }
