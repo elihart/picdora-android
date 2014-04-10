@@ -1,5 +1,6 @@
 package com.picdora.collections;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.androidannotations.annotations.Background;
@@ -29,6 +30,7 @@ import android.widget.LinearLayout;
 import com.picdora.ImageUtils;
 import com.picdora.R;
 import com.picdora.Util;
+import com.picdora.models.ChannelImage;
 import com.picdora.models.Image;
 import com.picdora.ui.FontHelper;
 import com.picdora.ui.FontHelper.FontStyle;
@@ -395,8 +397,7 @@ public class CollectionUtil {
 	 * @param imagesToAdd
 	 */
 	@Background
-	public void addImagesToCollection(Collection collection,
-			List<Image> imagesToAdd) {
+	public void addImages(Collection collection, List<Image> imagesToAdd) {
 		/*
 		 * TODO: Add uniqueness constraint based on imageid and collection id to
 		 * prevent duplicate images in a collection. Sprinkles should support
@@ -432,5 +433,21 @@ public class CollectionUtil {
 		SQLiteStatement s = db.compileStatement(query);
 
 		return s.simpleQueryForLong() > 0;
+	}
+
+	/**
+	 * Add the image to the collection in the background.
+	 * 
+	 * @param collection
+	 * @param image
+	 */
+	public void addImage(Collection collection, Image image) {
+		/*
+		 * Create a list with the single image and use the multiple image
+		 * method.
+		 */
+		List<Image> list = new ArrayList<Image>();
+		list.add(image);
+		addImages(collection, list);
 	}
 }

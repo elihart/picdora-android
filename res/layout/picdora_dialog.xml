@@ -73,7 +73,8 @@
                 android:paddingBottom="@dimen/dialog_button_padding"
                 android:paddingTop="@dimen/dialog_button_padding"
                 android:text="@string/dialog_default_negative"
-                android:textColor="@color/white" />
+                android:textColor="@color/white"
+                android:textSize="@dimen/dialog_button_text_size" />
 
             <Button
                 android:id="@+id/positiveButton"
@@ -84,7 +85,8 @@
                 android:paddingBottom="@dimen/dialog_button_padding"
                 android:paddingTop="@dimen/dialog_button_padding"
                 android:text="@string/dialog_default_positive"
-                android:textColor="@color/white" />
+                android:textColor="@color/white"
+                android:textSize="@dimen/dialog_button_text_size" />
         </LinearLayout>
     </LinearLayout>
 

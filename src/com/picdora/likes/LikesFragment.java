@@ -109,7 +109,7 @@ public class LikesFragment extends GalleryFragment {
 
 					@Override
 					public void onCollectionSelected(Collection collection) {
-						mCollectionUtils.addImagesToCollection(collection, imagesToAdd);
+						mCollectionUtils.addImages(collection, imagesToAdd);
 						
 						Util.makeBasicToast(getActivity(), "Selection added to the collection " + collection.getName());
 					}

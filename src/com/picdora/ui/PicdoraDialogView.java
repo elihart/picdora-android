@@ -85,26 +85,16 @@ public class PicdoraDialogView extends RelativeLayout {
 		setupButton(negativeButton, negativeButtonInfo);
 
 		// TODO: Create a neutral button if we need one
-		// setupButton(neutralButton, negativeButtonInfo);
+		// setupButton(neutralButton, neutralButtonInfo);
 
 		if (fullScreen) {
 			// remove the margin of the dialog and make it full screen
-			LayoutParams params = new RelativeLayout.LayoutParams(
-					RelativeLayout.LayoutParams.MATCH_PARENT,
-					RelativeLayout.LayoutParams.MATCH_PARENT);
+			RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
+					LinearLayout.LayoutParams.MATCH_PARENT,
+					LinearLayout.LayoutParams.MATCH_PARENT);
 
 			params.setMargins(0, 0, 0, 0);
 			rootView.setLayoutParams(params);
-
-			// move the buttons to the very bottom
-			params = (LayoutParams) buttonContainer.getLayoutParams();
-			// clear out the rule to be below the contentContainer to avoid
-			// circular dependency
-			params.addRule(RelativeLayout.BELOW, 0);
-			params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-			// stretch the content to the buttons
-			params = (LayoutParams) contentContainer.getLayoutParams();
-			params.addRule(RelativeLayout.ABOVE, buttonContainer.getId());
 		}
 	}
 
