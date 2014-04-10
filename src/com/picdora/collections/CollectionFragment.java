@@ -40,16 +40,6 @@ public class CollectionFragment extends GalleryFragment {
 		 * If our Collection hasn't been init'd from json yet then do it now.
 		 */
 		getCollection();
-
-		/*
-		 * If we haven't loaded any images yet then do a refresh, otherwise make
-		 * sure we are showing the images
-		 */
-		if (isEmpty()) {
-			refreshItemsAsync();
-		} else {
-			showItems();
-		}
 	}
 
 	@Override

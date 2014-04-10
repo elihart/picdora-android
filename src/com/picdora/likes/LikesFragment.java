@@ -12,6 +12,7 @@ import android.view.MenuItem;
 
 import com.picdora.ChannelUtils;
 import com.picdora.R;
+import com.picdora.Util;
 import com.picdora.collections.Collection;
 import com.picdora.collections.CollectionUtil;
 import com.picdora.collections.CollectionUtil.OnCollectionSelectedListener;
@@ -31,7 +32,7 @@ import com.picdora.ui.grid.Selectable;
 @EFragment(R.layout.fragment_basic_grid)
 public class LikesFragment extends GalleryFragment {
 	private List<Channel> mChannels;
-	
+
 	@Bean
 	protected CollectionUtil mCollectionUtils;
 
@@ -98,14 +99,17 @@ public class LikesFragment extends GalleryFragment {
 	 * 
 	 */
 	private void addToCollection() {
-		mCollectionUtils.showCollectionSelectionDialog(getActivity(), new OnCollectionSelectedListener() {
-			
-			@Override
-			public void onCollectionSelected(Collection collection) {
-				// TODO Auto-generated method stub
-				
-			}
-		});
+		String title = getResources().getString(
+				R.string.collections_add_to_collection);
+		mCollectionUtils.showCollectionSelectionDialog(getActivity(), title,
+				new OnCollectionSelectedListener() {
+
+					@Override
+					public void onCollectionSelected(Collection collection) {
+						Util.log(collection.toString());
+
+					}
+				});
 	}
 
 	@Override
@@ -124,8 +128,17 @@ public class LikesFragment extends GalleryFragment {
 	@SuppressWarnings("unchecked")
 	@Override
 	protected List<Selectable> doItemLoad() {
-		/* Load images from the db that belong to the selected channels. */
-		return (List<Selectable>) (List<?>) ChannelUtils
-				.getLikedImages(mChannels);
+		/*
+		 * If no channels have been loaded yet then we can't load images. Return
+		 * empty for now.
+		 */
+		if (mChannels == null || mChannels.isEmpty()) {
+			return new ArrayList<Selectable>();
+		} else {
+
+			/* Load images from the db that belong to the selected channels. */
+			return (List<Selectable>) (List<?>) ChannelUtils
+					.getLikedImages(mChannels);
+		}
 	}
 }

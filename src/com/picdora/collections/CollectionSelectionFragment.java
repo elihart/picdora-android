@@ -24,19 +24,6 @@ public class CollectionSelectionFragment extends SelectionFragmentWithNew
 	protected PicdoraPreferences_ mPrefs;
 	@Bean
 	protected CollectionUtil mUtils;
-	/** Whether we have done a first load of our collections */
-	private boolean mCollectionsInitd = false;
-
-	@AfterViews
-	protected void initCollectionSelection() {
-		/*
-		 * If we haven't yet loaded our collections then do it now. This will
-		 * prevent us from loading them multiple times upon rotation.
-		 */
-		if (!mCollectionsInitd) {
-			refreshItemsAsync();
-		}
-	}
 
 	@SuppressWarnings("unchecked")
 	@Override

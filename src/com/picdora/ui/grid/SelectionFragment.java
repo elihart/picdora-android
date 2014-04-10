@@ -86,6 +86,11 @@ public abstract class SelectionFragment extends Fragment implements
 	 * {@link #isDestroyed()}
 	 */
 	private volatile boolean mDestroyed = false;
+	/**
+	 * Whether the view has been destroyed. Use this to check for restarts due
+	 * to config changes.
+	 */
+	private boolean mViewDestroyed = false;
 
 	@AfterViews
 	protected void init() {
@@ -154,6 +159,24 @@ public abstract class SelectionFragment extends Fragment implements
 			 */
 			mActionMode = null;
 			onSelectionChanged(getSelection());
+		}
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		/*
+		 * The fragment is being shown so let's make sure we have the most up to
+		 * date items. However, if the view was destroyed and the fragment
+		 * wasn't destroyed then we were restarted due to config changes so
+		 * let's not refresh the images in that case but just make sure they are
+		 * showing.
+		 */
+		if (mViewDestroyed && !mDestroyed) {
+			mViewDestroyed = false;
+			showItems();
+		} else {
+			refreshItemsAsync();
 		}
 	}
 
@@ -557,6 +580,20 @@ public abstract class SelectionFragment extends Fragment implements
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
+		/*
+		 * This won't be called on config changes since we are set to retain
+		 * state
+		 */
 		mDestroyed = true;
+	}
+
+	@Override
+	public void onDestroyView() {
+		super.onDestroyView();
+		/*
+		 * Keep track of whether the view was destroyed to know when the
+		 * fragment is restarted due to config changes.
+		 */
+		mViewDestroyed = true;
 	}
 }

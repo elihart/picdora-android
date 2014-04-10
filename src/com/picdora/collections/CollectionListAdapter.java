@@ -1,8 +1,8 @@
 package com.picdora.collections;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import org.androidannotations.annotations.AfterInject;
 import org.androidannotations.annotations.EBean;
 import org.androidannotations.annotations.RootContext;
 import org.androidannotations.annotations.sharedpreferences.Pref;
@@ -23,14 +23,14 @@ public class CollectionListAdapter extends BaseAdapter {
 	@Pref
 	protected PicdoraPreferences_ mPrefs;
 
-    private List<Collection> collections;
+    private List<Collection> collections = new ArrayList<Collection>();
 
     @RootContext
     Context context;
-
-    @AfterInject
-    void initAdapter() {
-        collections = CollectionUtil.getAllCollections(mPrefs.showNsfw().get());
+    
+    public void setCollections(List<Collection> collections){
+    	this.collections = collections;
+    	notifyDataSetChanged();
     }
 
     @Override
@@ -61,5 +61,10 @@ public class CollectionListAdapter extends BaseAdapter {
     @Override
     public long getItemId(int position) {
         return getItem(position).getId();
+    }
+    
+    @Override
+    public boolean isEmpty(){
+    	return collections.isEmpty();
     }
 }

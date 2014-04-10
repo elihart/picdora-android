@@ -21,7 +21,6 @@ public class PicdoraDialog extends Dialog {
 		private String mTitle;
 		private boolean mShowTitle = true;
 		private View mView;
-		private ListAdapter mAdapter;
 		private String mMessage;
 		private boolean mFullScreen = false;
 		private ButtonInfo mNegativeButton;
@@ -57,12 +56,6 @@ public class PicdoraDialog extends Dialog {
 
 		public Builder setView(View view) {
 			mView = view;
-			return this;
-		}
-
-		public Builder setAdapter(CollectionListAdapter adapter,
-				OnClickListener onClickListener) {
-			mAdapter = adapter;
 			return this;
 		}
 
@@ -200,7 +193,7 @@ public class PicdoraDialog extends Dialog {
 					WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 
 			PicdoraDialogView view = PicdoraDialogView_.build(mContext);
-			view.bind(dialog, mTitle, mShowTitle, mView, mMessage, mAdapter,
+			view.bind(dialog, mTitle, mShowTitle, mView, mMessage,
 					mPositiveButton, mNegativeButton, mNeutralButton,
 					mFullScreen);
 

@@ -105,43 +105,89 @@ public class CollectionUtil {
 		dialog.show();
 	}
 
+	/**
+	 * Show a dialog with a list of all the collections in the database and
+	 * allow the user to pick one. They also have an option to create a new
+	 * collection which will launch the corresponding dialog.
+	 * 
+	 * @param activity
+	 * @param title
+	 *            The title to use for the dialog. Use null for default.
+	 * @param listener
+	 */
 	@UiThread(propagation = Propagation.REUSE)
 	public void showCollectionSelectionDialog(final Activity activity,
-			final OnCollectionSelectedListener listener) {
-		
-		final CollectionListAdapter adapter = CollectionListAdapter_.getInstance_(activity);
+			final String title, final OnCollectionSelectedListener listener) {
+
+		/*
+		 * Use the provided title if it isn't null, otherwise use our default.
+		 */
+		String titleToUse = title;
+		if (title == null) {
+			titleToUse = activity.getResources().getString(
+					R.string.collections_selection_dialog_title);
+		}
+
+		final CollectionListView list = CollectionListView_.build(activity);
 
 		final PicdoraDialog dialog = new PicdoraDialog.Builder(activity)
-				.setTitle(R.string.collections_create_dialog_title)
-				.setAdapter(adapter, new OnClickListener() {
-					
-					@Override
-					public void onClick(DialogInterface dialog, int which) {
-						Collection c = adapter.getItem(which);
-						listener.onCollectionSelected(c);						
-					}
-				})
-				.setPositiveButton(R.string.collections_create_dialog_positive,
+				.setTitle(titleToUse)
+				.setView(list)
+				.setPositiveButton(
+						R.string.collections_selection_dialog_positive,
 						new DialogInterface.OnClickListener() {
 							public void onClick(DialogInterface dialog, int id) {
-								showCollectionCreationDialog(activity, new OnCollectionCreatedListener() {
-									
-									@Override
-									public void onSuccess(Collection collection) {
-										showCollectionSelectionDialog(activity, listener);										
-									}
-									
-									@Override
-									public void onFailure(CreationError error) {
-										alertCreationError(activity, error, this);
-										
-									}
-								});
+								/*
+								 * The positive button allows the user to create
+								 * a new dialog. On click launch the collection
+								 * creation dialog.
+								 */
+								showCollectionCreationDialog(activity,
+										new OnCollectionCreatedListener() {
+
+											@Override
+											public void onSuccess(
+											/*
+											 * Created! Let's go back to showing
+											 * our initial selection dialog.
+											 */
+											Collection collection) {
+												showCollectionSelectionDialog(
+														activity, title,
+														listener);
+											}
+
+											@Override
+											public void onFailure(
+											/*
+											 * Show the failure dialog and allow
+											 * them to come back to this
+											 * creation listener.
+											 */
+											CreationError error) {
+												alertCreationError(activity,
+														error, this);
+
+											}
+										});
 							}
 						})
 				.setNegativeButton(R.string.dialog_default_negative, null)
 
 				.create();
+
+		/*
+		 * When a collection is selected dismiss the dialog and pass on the
+		 * result to the listener.
+		 */
+		list.setOnCollectionSelectedListener(new OnCollectionSelectedListener() {
+
+			@Override
+			public void onCollectionSelected(Collection collection) {
+				dialog.dismiss();
+				listener.onCollectionSelected(collection);
+			}
+		});
 
 		dialog.show();
 	}

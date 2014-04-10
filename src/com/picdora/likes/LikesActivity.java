@@ -84,14 +84,14 @@ public class LikesActivity extends PicdoraActivity {
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 		getSupportActionBar().setHomeButtonEnabled(true);
 	}
-	
+
 	@Override
-	public boolean dispatchTouchEvent(MotionEvent ev){
+	public boolean dispatchTouchEvent(MotionEvent ev) {
 		/* Collapse actionviews if there is a touch outside of the actionbar */
-		if(UiUtil.isEventInsideView(ev, mRootView)){
+		if (UiUtil.isEventInsideView(ev, mRootView)) {
 			collapseActionViews();
 		}
-		
+
 		return super.dispatchTouchEvent(ev);
 	}
 
@@ -233,6 +233,10 @@ public class LikesActivity extends PicdoraActivity {
 
 	}
 
+	/**
+	 * Collapse all expanded action views in the activity and all fragments.
+	 * 
+	 */
 	public void collapseActionViews() {
 		mActionChannelSpinner.collapse();
 		mLikesFragment.collapseActionViews();
