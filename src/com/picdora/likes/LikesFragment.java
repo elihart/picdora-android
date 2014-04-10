@@ -99,15 +99,19 @@ public class LikesFragment extends GalleryFragment {
 	 * 
 	 */
 	private void addToCollection() {
+		final List<Image> imagesToAdd = getSelectedImages();
+		
 		String title = getResources().getString(
 				R.string.collections_add_to_collection);
+		
 		mCollectionUtils.showCollectionSelectionDialog(getActivity(), title,
 				new OnCollectionSelectedListener() {
 
 					@Override
 					public void onCollectionSelected(Collection collection) {
-						Util.log(collection.toString());
-
+						mCollectionUtils.addImagesToCollection(collection, imagesToAdd);
+						
+						Util.makeBasicToast(getActivity(), "Selection added to the collection " + collection.getName());
 					}
 				});
 	}

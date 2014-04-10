@@ -182,7 +182,7 @@ public abstract class GalleryFragment extends SelectionFragment {
 	}
 
 	@SuppressWarnings("unchecked")
-	private List<Image> getSelectedImages() {
+	protected List<Image> getSelectedImages() {
 		return (List<Image>) (List<?>) getSelection();
 	}
 

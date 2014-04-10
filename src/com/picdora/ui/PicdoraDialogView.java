@@ -49,13 +49,6 @@ public class PicdoraDialogView extends RelativeLayout {
 		FontHelper.setTypeFace(title, FontStyle.MEDIUM);
 	}
 
-	public static class Builder {
-
-		public Builder() {
-
-		}
-	}
-
 	public void bind(PicdoraDialog dialog, String title, boolean showTitle,
 			View view, String message, ButtonInfo positiveButtonInfo,
 			ButtonInfo negativeButtonInfo, ButtonInfo neutralButtonInfo,

@@ -379,11 +379,58 @@ public class CollectionUtil {
 	@Background
 	public void deleteCollectionImages(Collection collection, List<Image> images) {
 		SQLiteDatabase db = Sprinkles.getDatabase();
-		String query = "DELETE " + CollectionItem.TABLE_NAME
+		String query = "DELETE from " + CollectionItem.TABLE_NAME
 				+ " WHERE collectionId=" + collection.mId + " AND imageId IN "
 				+ ImageUtils.getImageIds(images);
 
-		db.compileStatement(query).execute();
+		db.execSQL(query);
+	}
 
+	/**
+	 * Add the images to the collection in the background. If an image is
+	 * already in the collection then overwrite it instead of making a
+	 * duplicate.
+	 * 
+	 * @param collection
+	 * @param imagesToAdd
+	 */
+	@Background
+	public void addImagesToCollection(Collection collection,
+			List<Image> imagesToAdd) {
+		/*
+		 * TODO: Add uniqueness constraint based on imageid and collection id to
+		 * prevent duplicate images in a collection. Sprinkles should support
+		 * this soon so add it when it does. Right now we do a manual check for
+		 * each image which is slow.
+		 */
+
+		Transaction t = new Transaction();
+		for (Image i : imagesToAdd) {
+			/* Only add the image if the collection doesn't already contain it. */
+			if (!contains(collection, i)) {
+				new CollectionItem(collection, i).save(t);
+			}
+		}
+		t.setSuccessful(true);
+		t.finish();
+	}
+
+	/**
+	 * Check if the collection contains the given image.
+	 * 
+	 * @param collection
+	 * @param image
+	 * @return
+	 */
+	private boolean contains(Collection collection, Image image) {
+		SQLiteDatabase db = Sprinkles.getDatabase();
+
+		String query = "SELECT count(*) FROM " + CollectionItem.TABLE_NAME
+				+ " WHERE imageId=" + image.getId() + " AND collectionId="
+				+ collection.getId();
+
+		SQLiteStatement s = db.compileStatement(query);
+
+		return s.simpleQueryForLong() > 0;
 	}
 }
