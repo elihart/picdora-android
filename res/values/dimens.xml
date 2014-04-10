@@ -18,7 +18,7 @@
     <dimen name="dialog_title_text_size">22sp</dimen>
     <dimen name="dialog_title_side_padding">10dp</dimen>
     <dimen name="dialog_title_vertical_padding">5dp</dimen>
-    <dimen name="dialog_message_text_size">17sp</dimen>
+    <dimen name="dialog_message_text_size">18sp</dimen>
     <dimen name="dialog_message_margin">8dp</dimen>
     <dimen name="dialog_title_separator_height">2dp</dimen>
     <dimen name="dialog_content_margin">8dp</dimen>

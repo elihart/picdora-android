@@ -19,7 +19,7 @@ import com.picdora.ui.PicdoraDialog.ButtonInfo;
 @EViewGroup(R.layout.picdora_dialog)
 public class PicdoraDialogView extends RelativeLayout {
 	@ViewById
-	protected RelativeLayout rootView;
+	protected LinearLayout rootView;
 	@ViewById
 	protected LinearLayout titleContainer;
 	@ViewById
