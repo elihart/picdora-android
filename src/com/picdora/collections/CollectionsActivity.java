@@ -9,13 +9,11 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentManager.OnBackStackChangedListener;
 import android.support.v4.app.FragmentTransaction;
 import android.view.Menu;
-import android.view.MotionEvent;
 import android.widget.FrameLayout;
 
 import com.picdora.PicdoraActivity;
 import com.picdora.R;
 import com.picdora.ui.SlidingMenuHelper;
-import com.picdora.ui.UiUtil;
 
 @EActivity(R.layout.activity_collections)
 public class CollectionsActivity extends PicdoraActivity {
@@ -74,26 +72,6 @@ public class CollectionsActivity extends PicdoraActivity {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.collections, menu);
 		return true;
-	}
-	
-	@Override
-	public boolean dispatchTouchEvent(MotionEvent ev){
-		/* Collapse actionviews if there is a touch outside of the actionbar */
-		if(UiUtil.isEventInsideView(ev, mFragmentContainer)){
-			collapseActionViews();
-		}
-		
-		return super.dispatchTouchEvent(ev);
-	}
-	
-	/**
-	 * Collapse all expanded action views in the activity and all fragments.
-	 * 
-	 */
-	public void collapseActionViews() {
-		if(mDetailFrag != null){
-			mDetailFrag.collapseActionViews();
-		}
 	}
 
 	/**

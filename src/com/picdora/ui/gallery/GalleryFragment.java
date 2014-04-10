@@ -172,12 +172,9 @@ public abstract class GalleryFragment extends SelectionFragment {
 		FragmentManager fm = getActivity().getSupportFragmentManager();
 		frag.show(fm, "fragment_fullscreen");
 	}
-
-	/**
-	 * Collapse any open action views.
-	 * 
-	 */
-	public void collapseActionViews() {
+	
+	@Override
+	protected void onFragmentTouch(){
 		mActionSizeSpinner.collapse();
 	}
 

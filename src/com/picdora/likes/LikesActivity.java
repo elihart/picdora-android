@@ -239,7 +239,6 @@ public class LikesActivity extends PicdoraActivity {
 	 */
 	public void collapseActionViews() {
 		mActionChannelSpinner.collapse();
-		mLikesFragment.collapseActionViews();
 	}
 
 }

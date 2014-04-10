@@ -16,6 +16,7 @@ import android.support.v7.view.ActionMode;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -28,6 +29,7 @@ import com.nostra13.universalimageloader.core.assist.PauseOnScrollListener;
 import com.picdora.PicdoraActivity;
 import com.picdora.R;
 import com.picdora.ui.PicdoraDialog;
+import com.picdora.ui.grid.ExtendedRelativeLayout.OnDispatchTouchListener;
 import com.picdora.ui.grid.ModelGridSelector.OnGridItemClickListener;
 
 /**
@@ -37,7 +39,8 @@ import com.picdora.ui.grid.ModelGridSelector.OnGridItemClickListener;
 @EFragment(R.layout.fragment_basic_grid)
 public abstract class SelectionFragment extends Fragment implements
 		OnGridItemClickListener<Selectable> {
-
+	@ViewById
+	protected ExtendedRelativeLayout root;
 	@ViewById
 	protected ProgressBar progress;
 	@ViewById
@@ -160,6 +163,28 @@ public abstract class SelectionFragment extends Fragment implements
 			mActionMode = null;
 			onSelectionChanged(getSelection());
 		}
+
+		/*
+		 * Setup a dispatch listener so we can tell when there is a touch
+		 * anywhere in the fragment. This will let us know when to collapse
+		 * spinners in the action bar.
+		 */
+		root.setOnDispatchListener(new OnDispatchTouchListener() {
+
+			@Override
+			public void onDispatchTouch(MotionEvent ev) {
+				onFragmentTouch();
+			}
+		});
+	}
+
+	/**
+	 * Called when there is a touch event somewhere in the fragment. Does
+	 * nothing by default, but override to get a hook into the event.
+	 * 
+	 */
+	protected void onFragmentTouch() {
+
 	}
 
 	@Override

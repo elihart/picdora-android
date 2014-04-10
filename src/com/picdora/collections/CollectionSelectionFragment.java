@@ -3,7 +3,6 @@ package com.picdora.collections;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.UiThread;
@@ -65,6 +64,7 @@ public class CollectionSelectionFragment extends SelectionFragmentWithNew
 
 	}
 
+	@Override
 	protected String getCreateButtonText() {
 		return getResources().getString(R.string.collections_button_create_new);
 	}
@@ -94,5 +94,4 @@ public class CollectionSelectionFragment extends SelectionFragmentWithNew
 		 */
 		mUtils.alertCreationError(getActivity(), error, this);
 	}
-
 }
