@@ -6,6 +6,7 @@ import java.util.List;
 import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EBean;
 import org.androidannotations.annotations.RootContext;
+import org.androidannotations.annotations.UiThread;
 
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
@@ -13,7 +14,6 @@ import android.content.DialogInterface.OnClickListener;
 import com.picdora.ImageUtils;
 import com.picdora.ImageUtils.OnDownloadCompleteListener;
 import com.picdora.R;
-import com.picdora.Util;
 import com.picdora.collections.Collection;
 import com.picdora.collections.CollectionUtil;
 import com.picdora.collections.CollectionUtil.OnCollectionSelectedListener;
@@ -31,7 +31,7 @@ import com.picdora.ui.SatelliteMenu.SatelliteMenuItem;
 public class MenuManager {
 	@RootContext
 	protected ChannelViewActivity mActivity;
-	
+
 	@Bean
 	protected CollectionUtil mCollectionUtils;
 
@@ -95,6 +95,23 @@ public class MenuManager {
 				}
 			}
 		});
+
+		/*
+		 * Show the menu for a little while after it has been created, and then
+		 * hide it if it isn't used.
+		 */
+		delayedCloseAfterStart();
+	}
+
+	/**
+	 * Do a delayed close and hide the menu if is isn't open.
+	 * 
+	 */
+	@UiThread(delay = 8000)
+	protected void delayedCloseAfterStart() {
+		if (!mMenu.isOpen()) {
+			mMenu.hideMenu(true);
+		}
 	}
 
 	/**
@@ -142,17 +159,19 @@ public class MenuManager {
 	/**
 	 * Show a dialog to add the current image to a collection.
 	 */
-	protected void starClicked() {		
+	protected void starClicked() {
 		String title = mActivity.getResources().getString(
 				R.string.collections_add_to_collection);
-		
+
 		mCollectionUtils.showCollectionSelectionDialog(mActivity, title,
 				new OnCollectionSelectedListener() {
 
 					@Override
 					public void onCollectionSelected(Collection collection) {
-						mCollectionUtils.addImage(collection, mCurrentImage.getImage());						
-						mActivity.showNotification("Image added to \"" + collection.getName() + "\"");
+						mCollectionUtils.addImage(collection,
+								mCurrentImage.getImage());
+						mActivity.showNotification("Image added to \""
+								+ collection.getName() + "\"");
 					}
 				});
 	}
