@@ -20,7 +20,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.RelativeLayout;
 
-import com.picdora.ChannelUtils;
+import com.picdora.ChannelUtil;
 import com.picdora.PicdoraActivity;
 import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
@@ -128,7 +128,7 @@ public class LikesActivity extends PicdoraActivity {
 	@Background
 	protected void initChannels() {
 		// get all channels from db.
-		mChannels = ChannelUtils.getAllChannels(mPrefs.showNsfw().get());
+		mChannels = ChannelUtil.getAllChannels(mPrefs.showNsfw().get());
 
 		/*
 		 * If the activity was destroyed while we were getting those then don't

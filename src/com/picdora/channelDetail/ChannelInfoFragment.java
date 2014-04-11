@@ -28,7 +28,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.picdora.CategoryUtils;
-import com.picdora.ChannelUtils;
+import com.picdora.ChannelUtil;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.channelCreation.CategoryListAdapter;
@@ -127,7 +127,7 @@ public class ChannelInfoFragment extends Fragment implements
 	 */
 	@Background
 	protected void getAndSetImageViewCount() {
-		int count = ChannelUtils.getNumImagesViewed(mChannel);
+		int count = ChannelUtil.getNumImagesViewed(mChannel);
 		setImageViewCount(count);
 	}
 
@@ -168,7 +168,7 @@ public class ChannelInfoFragment extends Fragment implements
 
 	@Background(serial = "update")
 	protected void saveChannel() {
-		long imageCount = ChannelUtils.getImageCount(mChannel, false);
+		long imageCount = ChannelUtil.getImageCount(mChannel, false);
 		mChannel.save();
 
 		if (imageCount < LOW_IMAGE_THRESHOLD) {
@@ -246,7 +246,7 @@ public class ChannelInfoFragment extends Fragment implements
 		// if the name is the same don't do anything
 		if (Util.isStringBlank(name) || name.equals(mChannel.getName())) {
 			return;
-		} else if (ChannelUtils.isNameTaken(name)) {
+		} else if (ChannelUtil.isNameTaken(name)) {
 			showNameTakenError(name);
 		} else {
 			updateChannelName(name);

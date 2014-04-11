@@ -10,7 +10,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
-import com.picdora.ChannelUtils;
+import com.picdora.ChannelUtil;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.collections.Collection;
@@ -125,7 +125,7 @@ public class LikesFragment extends GalleryFragment {
 	@Override
 	protected void onSelectionDeleted(List<Selectable> selection) {
 		/* Remove the given images from the currently selected channels */
-		ChannelUtils.deleteLikes(mChannels, (List<Image>) (List<?>) selection);
+		ChannelUtil.deleteLikes(mChannels, (List<Image>) (List<?>) selection);
 
 	}
 
@@ -141,7 +141,7 @@ public class LikesFragment extends GalleryFragment {
 		} else {
 
 			/* Load images from the db that belong to the selected channels. */
-			return (List<Selectable>) (List<?>) ChannelUtils
+			return (List<Selectable>) (List<?>) ChannelUtil
 					.getLikedImages(mChannels);
 		}
 	}

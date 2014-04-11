@@ -16,9 +16,10 @@ import com.google.gson.reflect.TypeToken;
 import com.picdora.ImageUtils;
 import com.picdora.ImageUtils.ImgurSize;
 import com.picdora.Util;
+import com.picdora.ui.grid.Selectable;
 
 @Table("Channels")
-public class Channel extends Model {
+public class Channel extends Model implements Selectable {
 	/*
 	 * TODO: What happens to liked ChannelImages when the channel is deleted? We
 	 * may want to save them, or ask the user if they still want them. Maybe add
@@ -236,6 +237,12 @@ public class Channel extends Model {
 
 	public void setCategories(List<Category> categories) {
 		mCategories = categories;
+	}
+
+	/** For the Selectable interface and use with the selection fragment. */
+	@Override
+	public String getIconId() {
+		return mPreviewImage;
 	}
 
 }

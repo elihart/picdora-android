@@ -7,12 +7,14 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 
+import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EBean;
 import org.androidannotations.annotations.RootContext;
 
 import se.emilsjolander.sprinkles.CursorList;
 import se.emilsjolander.sprinkles.Query;
 import se.emilsjolander.sprinkles.Sprinkles;
+import se.emilsjolander.sprinkles.Transaction;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -29,7 +31,7 @@ import com.picdora.models.ChannelImage;
 import com.picdora.models.Image;
 
 @EBean
-public class ChannelUtils {
+public class ChannelUtil {
 	@RootContext
 	Context context;
 
@@ -73,7 +75,7 @@ public class ChannelUtils {
 	public static long getImageCount(Channel channel, boolean unseen) {
 		SQLiteDatabase db = Sprinkles.getDatabase();
 		String query = "SELECT count(*) FROM Images WHERE categoryId IN "
-				+ ChannelUtils.getCategoryIdsString(channel);
+				+ ChannelUtil.getCategoryIdsString(channel);
 
 		// add the gif setting
 		switch (channel.getGifSetting()) {
@@ -243,5 +245,20 @@ public class ChannelUtils {
 				+ " AND image IN " + ImageUtils.getImgurIds(images);
 
 		db.compileStatement(query).execute();
+	}
+
+	/**
+	 * Delete all channels in the list asynchronously.
+	 * 
+	 * @param channels
+	 */
+	@Background
+	public void deleteChannels(List<Channel> channels) {
+		Transaction t = new Transaction();
+		for (Channel c : channels) {
+			c.delete(t);
+		}
+		t.setSuccessful(true);
+		t.finish();
 	}
 }

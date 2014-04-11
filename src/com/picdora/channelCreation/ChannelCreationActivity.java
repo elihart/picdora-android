@@ -21,7 +21,7 @@ import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.view.MenuItem;
 import android.widget.TextView;
 
-import com.picdora.ChannelUtils;
+import com.picdora.ChannelUtil;
 import com.picdora.PicdoraActivity;
 import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
@@ -252,7 +252,7 @@ public class ChannelCreationActivity extends PicdoraActivity {
 					channelInfoState.gifSetting);
 		}
 
-		long count = ChannelUtils.getImageCount(channel, false);
+		long count = ChannelUtil.getImageCount(channel, false);
 		if (count == 0) {
 			showNoImagesDialog();
 		} else if (count < 100) {
@@ -338,7 +338,7 @@ public class ChannelCreationActivity extends PicdoraActivity {
 		/* If we're doing a preview then don't save the channel
 		 * 
 		 */
-		ChannelUtils.playChannel(channel, this, !preview);
+		ChannelUtil.playChannel(channel, this, !preview);
 	}
 
 	@UiThread

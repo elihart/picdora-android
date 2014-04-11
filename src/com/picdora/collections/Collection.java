@@ -8,6 +8,7 @@ import se.emilsjolander.sprinkles.annotations.Table;
 import se.emilsjolander.sprinkles.annotations.Unique;
 
 import com.picdora.Util;
+import com.picdora.models.Image;
 import com.picdora.ui.grid.Selectable;
 
 @Table(Collection.TABLE_NAME)
@@ -123,6 +124,15 @@ public class Collection extends Model implements Selectable {
 	 */
 	public String getName() {
 		return mName;
+	}
+
+	/**
+	 * Set the given image as the preview icon for this collection.
+	 * 
+	 * @param image
+	 */
+	public void setIcon(Image image) {
+		mPreviewImgurId = image.getImgurId();
 	}
 
 }

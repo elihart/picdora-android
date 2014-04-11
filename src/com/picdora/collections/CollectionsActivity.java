@@ -25,6 +25,8 @@ public class CollectionsActivity extends PicdoraActivity {
 
 	private static final String DETAIL_FRAGMENT_TAG = "CollectionDetailFrag";
 	private CollectionFragment mDetailFrag;
+	
+	/* TODO: Sort collections in selection. */
 
 	@AfterViews
 	void initViews() {

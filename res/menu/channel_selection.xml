@@ -1,10 +1,4 @@
-<menu xmlns:android="http://schemas.android.com/apk/res/android" 
-    xmlns:picdora="http://schemas.android.com/apk/res-auto">
-
-    <item android:id="@+id/action_new_channel"
-          android:icon="@drawable/ic_action_plus"
-          picdora:showAsAction="always"
-          android:title="@string/action_new_channel"/>
-
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:picdora="http://schemas.android.com/apk/res-auto" >
 
 </menu>

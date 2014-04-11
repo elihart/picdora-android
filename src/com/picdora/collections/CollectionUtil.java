@@ -398,6 +398,10 @@ public class CollectionUtil {
 	 */
 	@Background
 	public void addImages(Collection collection, List<Image> imagesToAdd) {
+		if (imagesToAdd.isEmpty()) {
+			return;
+		}
+
 		/*
 		 * TODO: Add uniqueness constraint based on imageid and collection id to
 		 * prevent duplicate images in a collection. Sprinkles should support
@@ -414,6 +418,10 @@ public class CollectionUtil {
 		}
 		t.setSuccessful(true);
 		t.finish();
+
+		/* Add the first image as the new preview icon for the channel */
+		collection.setIcon(imagesToAdd.get(0));
+		collection.save();
 	}
 
 	/**
