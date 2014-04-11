@@ -294,6 +294,20 @@ public abstract class SelectionFragment extends Fragment implements
 	};
 
 	/**
+	 * Return the menu contained by our action mode, or null if there is no
+	 * action mode at the moment.
+	 * 
+	 * @return
+	 */
+	protected Menu getActionModeMenu() {
+		if (mActionMode != null) {
+			return mActionMode.getMenu();
+		} else {
+			return null;
+		}
+	}
+
+	/**
 	 * Show a confirmation dialog on whether the user wants to delete the
 	 * selection. On confirmation do the deletion, on cancel do nothing.
 	 * 

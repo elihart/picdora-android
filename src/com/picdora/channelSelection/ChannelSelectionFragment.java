@@ -35,6 +35,39 @@ public class ChannelSelectionFragment extends SelectionFragmentWithNew {
 	}
 
 	@Override
+	protected void onSelectionChanged(List<Selectable> selection) {
+		super.onSelectionChanged(selection);
+
+		/*
+		 * We need to modify the action mode menu depending on how many items
+		 * are selected. If only one is selected then we can show the play and
+		 * settings options, otherwise we need to hide them.
+		 */
+
+		if (selection.isEmpty()) {
+			return;
+		}
+
+		Menu menu = getActionModeMenu();
+		if (menu == null) {
+			return;
+		}
+
+		MenuItem playItem = menu.findItem(R.id.action_play);
+		MenuItem settingsItem = menu.findItem(R.id.action_settings);
+
+		boolean isSingleChannelSelected = selection.size() == 1;
+
+		if (playItem != null) {
+			playItem.setVisible(isSingleChannelSelected);
+		}
+
+		if (settingsItem != null) {
+			settingsItem.setVisible(isSingleChannelSelected);
+		}
+	}
+
+	@Override
 	protected boolean onSelectionAction(MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.action_play:
@@ -91,13 +124,13 @@ public class ChannelSelectionFragment extends SelectionFragmentWithNew {
 
 	@Override
 	protected String getEmptyMessage() {
-		return getResources().getString(R.string.collections_empty_message);
+		return getResources().getString(R.string.channel_selection_empty);
 
 	}
 
 	@Override
 	protected String getCreateButtonText() {
-		return getResources().getString(R.string.collections_button_create_new);
+		return getResources().getString(R.string.channel_create_button);
 	}
 
 	@Override

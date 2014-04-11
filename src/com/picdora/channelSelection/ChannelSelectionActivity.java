@@ -5,7 +5,6 @@ import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.ViewById;
 
 import android.support.v4.app.FragmentManager;
-import android.view.Menu;
 import android.widget.FrameLayout;
 
 import com.picdora.PicdoraActivity;
@@ -51,12 +50,5 @@ public class ChannelSelectionActivity extends PicdoraActivity {
 					.add(R.id.fragment_container, frag, SELECTION_FRAGMENT_TAG)
 					.commit();
 		}
-	}
-
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.channel_selection, menu);
-		return true;
 	}
 }

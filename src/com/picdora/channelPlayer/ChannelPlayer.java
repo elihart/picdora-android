@@ -239,6 +239,7 @@ public class ChannelPlayer {
 			query += " AND nsfw=0";
 		}
 
+		/* TODO: We need to reuse images at some point... */
 		query += " AND imgurId NOT IN (SELECT image FROM Views WHERE channelId="
 				+ mChannel.getId() + ")";
 
