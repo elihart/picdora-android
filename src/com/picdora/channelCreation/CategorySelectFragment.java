@@ -62,9 +62,12 @@ public class CategorySelectFragment extends SelectionFragment {
 		super.setUserVisibleHint(isVisibleToUser);
 		/*
 		 * When we are shown make sure we are filtering using the most up to
-		 * date setting.
+		 * date setting. If this is called before the categories are loaded in
+		 * onResume then there's a null pointer since it tries to load a non
+		 * existing list. To prevent that we don't filter if the categories
+		 * aren't set yet and wait for it to be done in the normal load.
 		 */
-		if (isVisibleToUser) {
+		if (isVisibleToUser && mActivity != null && allCategories != null) {
 			filterCategories(mActivity.getNsfwSetting());
 		}
 	}
