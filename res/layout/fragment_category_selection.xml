@@ -1,16 +1,42 @@
-<?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/rootView"
+<com.picdora.ui.grid.ExtendedRelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/activityBackground" >
+    android:background="@color/white" >
 
     <FrameLayout
         android:id="@+id/gridContainer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-        
-    </FrameLayout>
+        android:layout_height="match_parent"
+        android:layout_above="@+id/menu"
+        android:layout_alignParentTop="true" />
+
+    <RelativeLayout
+        android:id="@+id/message_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:visibility="gone" >
+
+        <TextView
+            android:id="@+id/messageText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:gravity="center"
+            android:paddingLeft="25dp"
+            android:paddingRight="25dp"
+            android:textSize="25sp" />
+    </RelativeLayout>
+
+    <ProgressBar
+        android:id="@+id/progress"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:visibility="gone" />
 
     <LinearLayout
         android:id="@+id/menu"
@@ -25,10 +51,10 @@
             android:id="@+id/previewButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingTop="5dp"
-            android:paddingBottom="5dp"
             android:layout_weight="1"
             android:background="@drawable/orange_button"
+            android:paddingBottom="5dp"
+            android:paddingTop="5dp"
             android:text="Preview"
             android:textColor="@color/white" />
 
@@ -36,10 +62,10 @@
             android:id="@+id/clearButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingTop="5dp"
-            android:paddingBottom="5dp"
             android:layout_weight="1"
             android:background="@drawable/black_button"
+            android:paddingBottom="5dp"
+            android:paddingTop="5dp"
             android:text="Clear"
             android:textColor="@color/white" />
 
@@ -47,12 +73,12 @@
             android:id="@+id/createButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingTop="5dp"
-            android:paddingBottom="5dp"
             android:layout_weight="1"
             android:background="@drawable/blue_button"
+            android:paddingBottom="5dp"
+            android:paddingTop="5dp"
             android:text="Create"
             android:textColor="@color/white" />
     </LinearLayout>
 
-</RelativeLayout>
+</com.picdora.ui.grid.ExtendedRelativeLayout>

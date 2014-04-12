@@ -119,7 +119,7 @@ public class ModelGridSelector<T> {
 				return true;
 			}
 		});
-		
+
 		/* Init default size */
 		setGridSize(DEFAULT_GRID_SIZE);
 	}
@@ -141,6 +141,18 @@ public class ModelGridSelector<T> {
 	 */
 	public List<T> getSelectedItems() {
 		return mSelectedItems;
+	}
+	
+
+	/**
+	 * Set the list of items to be selected.
+	 * 
+	 * @param items
+	 */
+	public void setSelectedItems(List<T> items){
+		mSelectedItems.clear();
+		mSelectedItems.addAll(items);
+		mAdapter.notifyDataSetChanged();
 	}
 
 	/**

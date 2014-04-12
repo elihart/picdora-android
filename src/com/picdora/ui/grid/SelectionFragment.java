@@ -7,6 +7,7 @@ import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.UiThread;
+import org.androidannotations.annotations.UiThread.Propagation;
 import org.androidannotations.annotations.ViewById;
 
 import android.content.DialogInterface;
@@ -83,6 +84,12 @@ public abstract class SelectionFragment extends Fragment implements
 	 * that selection won't start until a long click.
 	 */
 	private boolean mSelectOnShortClick = false;
+
+	/**
+	 * Whether the action mode should be shown when a selection is made. Default
+	 * is true.
+	 */
+	private boolean mShowActionMode = true;
 
 	/**
 	 * Keep track of whether the fragment has been destroyed. For use in
@@ -225,9 +232,19 @@ public abstract class SelectionFragment extends Fragment implements
 	 * @param select
 	 *            True to select on short click.
 	 */
-	public void selectOnShortClick(boolean select) {
+	public void setSelectOnShortClick(boolean select) {
 		mSelectOnShortClick = select;
 		mSelector.setRequireLongClick(!mSelectOnShortClick);
+	}
+
+	/**
+	 * Set whether the action mode options bar should be shown for a selection.
+	 * Default is true.
+	 * 
+	 * @param b
+	 */
+	protected void setShowSelectionOptions(boolean show) {
+		mShowActionMode = show;
 	}
 
 	/**
@@ -429,7 +446,7 @@ public abstract class SelectionFragment extends Fragment implements
 	/**
 	 * Show the progress bar and hide the items grid.
 	 */
-	@UiThread
+	@UiThread(propagation = Propagation.REUSE)
 	protected void showProgress() {
 		progress.setVisibility(View.VISIBLE);
 		gridContainer.setVisibility(View.GONE);
@@ -442,7 +459,7 @@ public abstract class SelectionFragment extends Fragment implements
 	 * @param msg
 	 *            The message to show
 	 */
-	@UiThread
+	@UiThread(propagation = Propagation.REUSE)
 	protected void showMessage(String msg) {
 		messageText.setText(msg);
 
@@ -454,7 +471,7 @@ public abstract class SelectionFragment extends Fragment implements
 	/**
 	 * Show the items grid and hide the progress bar and message text
 	 */
-	@UiThread
+	@UiThread(propagation = Propagation.REUSE)
 	protected void showGrid() {
 		progress.setVisibility(View.GONE);
 		gridContainer.setVisibility(View.VISIBLE);
@@ -473,7 +490,7 @@ public abstract class SelectionFragment extends Fragment implements
 	 */
 	protected void onSelectionChanged(List<Selectable> selection) {
 		/* Start an action mode to show options for the selected items */
-		if (mActionMode == null && !selection.isEmpty()) {
+		if (mActionMode == null && !selection.isEmpty() && mShowActionMode) {
 			mActionMode = ((PicdoraActivity) getActivity())
 					.startSupportActionMode(mActionModeCallback);
 		}
@@ -506,11 +523,21 @@ public abstract class SelectionFragment extends Fragment implements
 	 * 
 	 * @param items
 	 */
-	@UiThread
+	@UiThread(propagation = Propagation.REUSE)
 	public void setItemsToShow(List<Selectable> items) {
 		clearSelection();
 		mSelector.setItems(items);
 		showItems();
+	}
+
+	/**
+	 * Set the items that should be selected. This will clear any currently
+	 * selected items and replace them with the items in the given list.
+	 * 
+	 * @param selectable
+	 */
+	protected void setSelectedItems(List<Selectable> items) {
+		mSelector.setSelectedItems(items);
 	}
 
 	/**
@@ -605,7 +632,7 @@ public abstract class SelectionFragment extends Fragment implements
 		mSelector.getSelectedItems().clear();
 		mAdapter.notifyDataSetChanged();
 
-		onSelectionChanged(mSelector.getSelectedItems());
+		onSelectionChanged(getSelection());
 	}
 
 	/**
@@ -634,5 +661,18 @@ public abstract class SelectionFragment extends Fragment implements
 		 * fragment is restarted due to config changes.
 		 */
 		mViewDestroyed = true;
+	}
+
+	/**
+	 * Cast a list of objects to a list of Selectables. No type checking is done
+	 * so the client must ensure the proper items are passed in.
+	 * 
+	 * @param list
+	 *            A list of items that implement Selectable.
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	protected List<Selectable> toSelectable(List<?> list) {
+		return (List<Selectable>) (List<?>) list;
 	}
 }

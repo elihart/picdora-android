@@ -3,33 +3,19 @@ package com.picdora.channelCreation;
 import java.util.List;
 
 import org.androidannotations.annotations.AfterViews;
-import org.androidannotations.annotations.Background;
+import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EActivity;
-import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
 import org.androidannotations.annotations.sharedpreferences.Pref;
 
-import android.app.Dialog;
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnCancelListener;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.view.MenuItem;
-import android.widget.TextView;
 
-import com.picdora.ChannelUtil;
 import com.picdora.PicdoraActivity;
 import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
-import com.picdora.Util;
 import com.picdora.models.Category;
-import com.picdora.models.Channel;
-import com.picdora.models.ChannelPreview;
-import com.picdora.ui.PicdoraDialog;
 
 /**
  * This activity guides the user through creating a new channel. It consists of
@@ -46,65 +32,51 @@ public class ChannelCreationActivity extends PicdoraActivity {
 	ChannelCreationViewPager pager;
 	@Pref
 	PicdoraPreferences_ prefs;
+	@Bean
+	ChannelCreationUtil mUtils;
 
-	private PagerAdapter pagerAdapter;
+	private ChannelCreationPagerAdapter pagerAdapter;
 
-	private int mCurrentPage;
+	/**
+	 * Store the selected categories so we can restore them after coming back
+	 * from Preview if the activity was destroyed
+	 */
+	private List<Category> mSelectedCategories;
 
-	// store the selected categories so we can restore them after coming back
-	// from Preview if the activity was destroyed
-	private static List<Category> selectedCategoriesState;
-	// keep track of the info reported by the info fragment and make it static
-	// so we can save state
-	private static ChannelCreationInfo channelInfoState;
+	/** The new channel info submitted from the info fragment. */
+	private ChannelCreationInfo mInfo;
 
-	// Loading dialog to show while channel is created
-	private Dialog busyDialog;
-
-	private OnFilterCategoriesListener categoryFilterListener;
-
-	// Whether the user has opted to show nsfw images in the settings, and a
-	// listener to listen for this setting to change. If nsfw is turned off in
-	// settings then we won't show the nsfw radio group
-	private boolean allowNsfwPreference;
-
-	// whether nsfw categories should be displayed. Don't include them, include
-	// them and sfw, show only nsfw. If Allow nsfwPreference is false then this
-	// will be NONE
+	/**
+	 * Whether nsfw categories should be displayed.
+	 */
 	public enum NsfwSetting {
-		NONE, ALLOWED, ONLY
+		/** Don't show anything nsfw. */
+		NONE,
+		/** Show both nsfw and sfw. */
+		ALLOWED,
+		/** Show only nsfw */
+		ONLY
 	}
 
-	// keep track of when we are loading the created channel so we don't allow
-	// duplicates
-	private boolean loadingChannel = false;
-
 	@Override
-	public void onCreate(Bundle state) {
-		super.onCreate(state);
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
 
-		if (state == null) {
-			clearSavedState();
+		/* Restore state if we have it. */
+		CreationState state = (CreationState) getRetainedState();
+		if (state != null) {
+			mInfo = state.info;
+			mSelectedCategories = state.categories;
 		}
 	}
 
-	private void clearSavedState() {
-		selectedCategoriesState = null;
-		channelInfoState = null;
-	}
-
-	private void saveState(ChannelCreationInfo info) {
-		channelInfoState = info;
-	}
-
-	private void saveState(List<Category> categories) {
-		selectedCategoriesState = categories;
+	@Override
+	protected Object onRetainState() {
+		return new CreationState(mSelectedCategories, mInfo);
 	}
 
 	@AfterViews
 	void initViews() {
-		allowNsfwPreference = prefs.showNsfw().get();
-
 		pagerAdapter = new ChannelCreationPagerAdapter(
 				getSupportFragmentManager());
 		pager.setAdapter(pagerAdapter);
@@ -119,8 +91,7 @@ public class ChannelCreationActivity extends PicdoraActivity {
 
 			@Override
 			public void onPageSelected(int position) {
-				setLoadingStatus(false);
-				mCurrentPage = position;
+				mUtils.setLoadingStatus(false);
 				// change title to this category
 				if (position == 0) {
 					pager.setPagingEnabled(false);
@@ -139,37 +110,14 @@ public class ChannelCreationActivity extends PicdoraActivity {
 
 			}
 		});
-
-		mCurrentPage = 0;
-	}
-
-	private class ChannelCreationPagerAdapter extends FragmentPagerAdapter {
-		Fragment[] frags = { new ChannelInfoFragment_(),
-				new CategorySelectFragment_() };
-
-		public ChannelCreationPagerAdapter(FragmentManager fm) {
-			super(fm);
-		}
-
-		@Override
-		public Fragment getItem(int position) {
-			return frags[position];
-		}
-
-		@Override
-		public int getCount() {
-			return frags.length;
-		}
 	}
 
 	@Override
 	public void onBackPressed() {
-		// cancel loading
-		if (loadingChannel) {
-			setLoadingStatus(false);
+		// cancel loading if it is in progress
+		if (mUtils.isLoading()) {
+			mUtils.setLoadingStatus(false);
 		} else if (pager.getCurrentItem() == 0) {
-			// clear state since we're leaving the activity
-			clearSavedState();
 			// leave the activity if we're on the first page
 			super.onBackPressed();
 		} else {
@@ -178,218 +126,90 @@ public class ChannelCreationActivity extends PicdoraActivity {
 		}
 	}
 
+	/**
+	 * Submit the channel info that the user entered and go on to the category
+	 * select screen.
+	 * 
+	 * @param info
+	 */
 	public void submitChannelInfo(ChannelCreationInfo info) {
-		saveState(info);
-
-		// if the settings preference is no NSFW then let's override this, just
-		// in case...
-		if (!allowNsfwPreference) {
-			channelInfoState.nsfwSetting = NsfwSetting.NONE;
-		}
-
-		categoryFilterListener.onFilterCategories(info.nsfwSetting);
+		mInfo = info;
+		((CategorySelectFragment) pagerAdapter.getRegisteredFragment(1))
+				.onFilterCategories(info.nsfwSetting);
 		pager.setCurrentItem(1, true);
-	}
-
-	public boolean getNsfwPreference() {
-		return allowNsfwPreference;
-	}
-
-	// set up interface for activity to tell us how to filter categories
-	public interface OnFilterCategoriesListener {
-		public void onFilterCategories(NsfwSetting setting);
-	}
-
-	public void setOnFilterCategoriesListener(
-			OnFilterCategoriesListener listener) {
-		categoryFilterListener = listener;
 	}
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
+		/*
+		 * If the home (up) button is pressed then cancel and loading in
+		 * progress first, otherwise go to the previous fragment, and if we are
+		 * on the first fragment then go back (default).
+		 */
 		switch (item.getItemId()) {
 		case android.R.id.home:
 			// cancel loading
-			setLoadingStatus(false);
+			mUtils.setLoadingStatus(false);
 
-			// if we're on the second page, return to the first page on up
-			// pressed. Otherwise let it do the default (return to parent)
-			if (mCurrentPage == 1) {
+			/*
+			 * If we're on the second page, return to the first page on up
+			 * pressed. Otherwise let it do the default (return to parent)
+			 */
+			if (pager.getCurrentItem() == 1) {
 				pager.setCurrentItem(0, true);
 				return true;
-			} else {
-				// clear state since we're leaving the activity
-				clearSavedState();
 			}
-		}
-
-		return super.onOptionsItemSelected(item);
-	}
-
-	@Background
-	public void submitChannelCategories(List<Category> categories,
-			boolean preview) {
-		// if we're already loading, don't load again
-		if (loadingChannel) {
-			return;
-		} else {
-			setLoadingStatus(true);
-		}
-
-		if (categories == null || categories.isEmpty()) {
-			setLoadingStatus(false);
-			return;
-		} else {
-			saveState(categories);
-		}
-
-		Channel channel = null;
-		if (preview) {
-			channel = new ChannelPreview(categories,
-					channelInfoState.gifSetting);
-		} else {
-			channel = new Channel(channelInfoState.channelName, categories,
-					channelInfoState.gifSetting);
-		}
-
-		long count = ChannelUtil.getImageCount(channel, false);
-		if (count == 0) {
-			showNoImagesDialog();
-		} else if (count < 100) {
-			showLowImageCountDialog(count, channel, preview);
-		} else {
-			// TODO: Maybe a confirmation dialog with settings reviewed
-			launchChannel(channel, preview);
+		default:
+			return super.onOptionsItemSelected(item);
 		}
 	}
 
-	public static List<Category> getSelectedCategoriesState() {
-		return selectedCategoriesState;
+	/**
+	 * Create a channel with the given categories.
+	 * 
+	 * @param categories
+	 * @param preview
+	 *            Whether the channel should just be a preview and not saved.
+	 */
+	public void createChannel(List<Category> categories, boolean preview) {
+		mSelectedCategories = categories;
+		mUtils.createChannel(categories, mInfo, preview);
 	}
 
-	@UiThread
-	protected void showNoImagesDialog() {
-		new PicdoraDialog.Builder(this)
-				.setMessage(
-						"The categories and settings you chose don't match any images! Try changing the gif setting or choosing more categories.")
-				.setTitle("Warning!")
-				.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog, int id) {
-						setLoadingStatus(false);
-					}
-				})
-
-				.show();
+	/**
+	 * Get the saved state of selected categories.
+	 * 
+	 * @return The saved list, or null if there is no saved state for them.
+	 */
+	public List<Category> getSelectedCategoriesState() {
+		return mSelectedCategories;
 	}
 
-	@UiThread
-	protected void showLowImageCountDialog(long count, final Channel channel,
-			final boolean preview) {
-		String positive = "";
-		if (preview) {
-			positive = "Preview anyway";
-		} else {
-			positive = "Create anyway";
-		}
-		new PicdoraDialog.Builder(this)
-				.setMessage(
-						"The categories and settings you chose only match "
-								+ count + " images!")
-				.setTitle("Warning!")
-				.setPositiveButton(positive,
-						new DialogInterface.OnClickListener() {
-							public void onClick(DialogInterface dialog, int id) {
-								launchChannel(channel, preview);
-							}
-						})
-				.setNegativeButton("Change settings",
-						new DialogInterface.OnClickListener() {
-							public void onClick(DialogInterface dialog, int id) {
-								setLoadingStatus(false);
-							}
-						})
+	/**
+	 * Helper class to save the state of the creation activity.
+	 * 
+	 */
+	private class CreationState {
+		List<Category> categories;
+		ChannelCreationInfo info;
 
-				.show();
-	}
-
-	@UiThread
-	protected void launchChannel(Channel channel, boolean preview) {
-		// if the loading was canceled then don't keep going, otherwise clear
-		// the loading screen
-		if (!loadingChannel) {
-			return;
-		} else {
-			setLoadingStatus(false);
-		}
-
-		// if the user chose to create the channel then validate, clear the
-		// saved channel info we have, and tell the activity to finish after the
-		// new channel starts
-		if (!preview) {
-			if (!channel.isValid()) {
-				Util.makeBasicToast(this, "Uh oh, invalid channel!");
-				return;
-			}
-
-			clearSavedState();
-			finish();
-		}
-
-		/* If we're doing a preview then don't save the channel
-		 * 
-		 */
-		ChannelUtil.playChannel(channel, this, !preview);
-	}
-
-	@UiThread
-	protected void setLoadingStatus(boolean loading) {
-		loadingChannel = loading;
-		// pager.setPagingEnabled(!loading);
-
-		if (loading) {
-			// show loading screen
-			showBusyDialog("Creating Channel...");
-		} else {
-			dismissBusyDialog();
+		public CreationState(List<Category> categories, ChannelCreationInfo info) {
+			super();
+			this.categories = categories;
+			this.info = info;
 		}
 	}
 
-	public void showBusyDialog(String message) {
-		busyDialog = new Dialog(this, R.style.picdora_dialog_style);
-		busyDialog.setContentView(R.layout.lightbox_dialog);
-		((TextView) busyDialog.findViewById(R.id.dialogText)).setText(message);
-
-		// if the user presses back while the loading dialog is up we want to
-		// cancel the whole activity and go back. Otherwise just the dialog will
-		// be canceled and they'll be left with a blank screen
-		busyDialog.setOnCancelListener(new OnCancelListener() {
-
-			@Override
-			public void onCancel(DialogInterface dialog) {
-				dialog.dismiss();
-				finish();
-			}
-		});
-
-		busyDialog.show();
-	}
-
-	public void dismissBusyDialog() {
-		if (busyDialog != null)
-			try {
-				busyDialog.dismiss();
-			} catch (IllegalArgumentException e) {
-				// catch the "View not attached to Window Manager" errors
-			}
-
-		busyDialog = null;
-	}
-
-	public static NsfwSetting getNsfwFilter() {
-		if (channelInfoState == null) {
+	/**
+	 * Get the nsfw setting the user has chosen.
+	 * 
+	 * @return
+	 */
+	public NsfwSetting getNsfwSetting() {
+		if (mInfo == null) {
 			return NsfwSetting.NONE;
 		} else {
-			return channelInfoState.nsfwSetting;
+			return mInfo.nsfwSetting;
 		}
 	}
 }

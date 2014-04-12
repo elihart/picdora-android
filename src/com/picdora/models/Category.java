@@ -11,9 +11,10 @@ import se.emilsjolander.sprinkles.annotations.Table;
 
 import com.picdora.ImageUtils;
 import com.picdora.ImageUtils.ImgurSize;
+import com.picdora.ui.grid.Selectable;
 
 @Table("Categories")
-public class Category extends Model {
+public class Category extends Model implements Selectable {
 	/********** DB Fields ***********************/
 	@PrimaryKey
 	@Column("id")
