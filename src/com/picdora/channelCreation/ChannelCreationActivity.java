@@ -8,7 +8,6 @@ import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.ViewById;
 import org.androidannotations.annotations.sharedpreferences.Pref;
 
-import android.os.Bundle;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.view.MenuItem;
 
@@ -19,10 +18,9 @@ import com.picdora.models.Category;
 
 /**
  * This activity guides the user through creating a new channel. It consists of
- * a viewpager with two fragments. The first collections info about the channel
+ * a viewpager with two fragments. The first collects info about the channel
  * - name, gif setting, and nsfw setting. The second allows the user to choose
- * which categories to include
- * 
+ * which categories to include. 
  * 
  */
 
@@ -36,12 +34,6 @@ public class ChannelCreationActivity extends PicdoraActivity {
 	ChannelCreationUtil mUtils;
 
 	private ChannelCreationPagerAdapter pagerAdapter;
-
-	/**
-	 * Store the selected categories so we can restore them after coming back
-	 * from Preview if the activity was destroyed
-	 */
-	private List<Category> mSelectedCategories;
 
 	/** The new channel info submitted from the info fragment. */
 	private ChannelCreationInfo mInfo;
@@ -58,25 +50,11 @@ public class ChannelCreationActivity extends PicdoraActivity {
 		ONLY
 	}
 
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-
-		/* Restore state if we have it. */
-		CreationState state = (CreationState) getRetainedState();
-		if (state != null) {
-			mInfo = state.info;
-			mSelectedCategories = state.categories;
-		}
-	}
-
-	@Override
-	protected Object onRetainState() {
-		return new CreationState(mSelectedCategories, mInfo);
-	}
-
 	@AfterViews
 	void initViews() {
+		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+		getSupportActionBar().setHomeButtonEnabled(true);
+		
 		pagerAdapter = new ChannelCreationPagerAdapter(
 				getSupportFragmentManager());
 		pager.setAdapter(pagerAdapter);
@@ -134,9 +112,7 @@ public class ChannelCreationActivity extends PicdoraActivity {
 	 */
 	public void submitChannelInfo(ChannelCreationInfo info) {
 		mInfo = info;
-		((CategorySelectFragment) pagerAdapter.getRegisteredFragment(1))
-				.onFilterCategories(info.nsfwSetting);
-		pager.setCurrentItem(1, true);
+		pager.setCurrentItem(pagerAdapter.getCategoryFragmentPosition(), true);
 	}
 
 	@Override
@@ -152,11 +128,12 @@ public class ChannelCreationActivity extends PicdoraActivity {
 			mUtils.setLoadingStatus(false);
 
 			/*
-			 * If we're on the second page, return to the first page on up
-			 * pressed. Otherwise let it do the default (return to parent)
+			 * If we're not on the first page then go back 1 page. Otherwise let
+			 * it do the default (return to parent)
 			 */
-			if (pager.getCurrentItem() == 1) {
-				pager.setCurrentItem(0, true);
+			int pos = pager.getCurrentItem();
+			if (pos > 0) {
+				pager.setCurrentItem(pos - 1, true);
 				return true;
 			}
 		default:
@@ -171,33 +148,8 @@ public class ChannelCreationActivity extends PicdoraActivity {
 	 * @param preview
 	 *            Whether the channel should just be a preview and not saved.
 	 */
-	public void createChannel(List<Category> categories, boolean preview) {
-		mSelectedCategories = categories;
+	public void setChannelCategories(List<Category> categories, boolean preview) {
 		mUtils.createChannel(categories, mInfo, preview);
-	}
-
-	/**
-	 * Get the saved state of selected categories.
-	 * 
-	 * @return The saved list, or null if there is no saved state for them.
-	 */
-	public List<Category> getSelectedCategoriesState() {
-		return mSelectedCategories;
-	}
-
-	/**
-	 * Helper class to save the state of the creation activity.
-	 * 
-	 */
-	private class CreationState {
-		List<Category> categories;
-		ChannelCreationInfo info;
-
-		public CreationState(List<Category> categories, ChannelCreationInfo info) {
-			super();
-			this.categories = categories;
-			this.info = info;
-		}
 	}
 
 	/**

@@ -175,14 +175,15 @@ public class ChannelCreationUtil {
 
 	@UiThread(propagation = Propagation.REUSE)
 	public void dismissBusyDialog() {
-		if (busyDialog != null)
+		if (busyDialog != null) {
 			try {
 				busyDialog.dismiss();
 			} catch (IllegalArgumentException e) {
 				// catch the "View not attached to Window Manager" errors
 			}
 
-		busyDialog = null;
+			busyDialog = null;
+		}
 	}
 
 	/**

@@ -58,15 +58,15 @@ public class CategorySelectFragment extends SelectionFragment {
 	}
 
 	@Override
-	public void onResume() {
-		super.onResume();
-		/* Restore any selected categories */
-		List<Category> selectedCategories = mActivity
-				.getSelectedCategoriesState();
-		if (selectedCategories != null) {
-			setSelectedItems(toSelectable(selectedCategories));
+	public void setUserVisibleHint(boolean isVisibleToUser) {
+		super.setUserVisibleHint(isVisibleToUser);
+		/*
+		 * When we are shown make sure we are filtering using the most up to
+		 * date setting.
+		 */
+		if (isVisibleToUser) {
+			filterCategories(mActivity.getNsfwSetting());
 		}
-		setOptionsEnabled(!getSelectedCategories().isEmpty());
 	}
 
 	/**
@@ -128,12 +128,12 @@ public class CategorySelectFragment extends SelectionFragment {
 
 	@Click
 	void previewButtonClicked() {
-		mActivity.createChannel(getSelectedCategories(), true);
+		mActivity.setChannelCategories(getSelectedCategories(), true);
 	}
 
 	@Click
 	void createButtonClicked() {
-		mActivity.createChannel(getSelectedCategories(), false);
+		mActivity.setChannelCategories(getSelectedCategories(), false);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -160,7 +160,6 @@ public class CategorySelectFragment extends SelectionFragment {
 
 	@Override
 	protected List<Selectable> doItemLoad() {
-		Util.log("load");
 		setupCategoryLists();
 		/*
 		 * Get the current nsfw filter setting and use it to get the correctly
@@ -178,11 +177,11 @@ public class CategorySelectFragment extends SelectionFragment {
 	}
 
 	/**
-	 * Call to filter which categories are shown based on a nsfw setting.
+	 * Filter which categories are shown based on a nsfw setting.
 	 * 
 	 * @param setting
 	 */
-	public void onFilterCategories(NsfwSetting setting) {
+	public void filterCategories(NsfwSetting setting) {
 		/* Decide which category list to use based on the setting. */
 		List<Category> filteredList = getFilteredList(setting);
 
@@ -194,7 +193,7 @@ public class CategorySelectFragment extends SelectionFragment {
 				getSelectedCategories());
 
 		Iterator<Category> it = selectedCategories.iterator();
-		for (; it.hasNext();) {
+		while (it.hasNext()) {
 			if (!filteredList.contains(it.next())) {
 				it.remove();
 			}

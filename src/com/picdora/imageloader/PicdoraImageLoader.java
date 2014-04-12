@@ -94,7 +94,7 @@ public class PicdoraImageLoader {
 		 * it also can prematurely timeout normally loading images on slow
 		 * connections. TODO: optimize this.
 		 */
-		client.setTimeout(TIMEOUT);
+		//client.setTimeout(TIMEOUT);
 
 		// Listener for redirects. If we are redirected to the removed image
 		// page then tell it not to redirect and instead go to failure

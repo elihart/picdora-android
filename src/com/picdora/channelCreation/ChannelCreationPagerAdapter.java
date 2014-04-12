@@ -13,7 +13,7 @@ import android.view.ViewGroup;
 public class ChannelCreationPagerAdapter extends FragmentPagerAdapter {
 	Fragment[] frags = { new ChannelInfoFragment_(),
 			new CategorySelectFragment_() };
-	
+
 	SparseArray<Fragment> registeredFragments = new SparseArray<Fragment>();
 
 	public ChannelCreationPagerAdapter(FragmentManager fm) {
@@ -32,7 +32,7 @@ public class ChannelCreationPagerAdapter extends FragmentPagerAdapter {
 
 	/*
 	 * Strategy for accessing fragments in the pager. Instantiate item is called
-	 * everytime the fragment is loaded. From http://stackoverflow.com
+	 * every time the fragment is loaded. From http://stackoverflow.com
 	 * /questions/8785221/retrieve-a-fragment-from-a-viewpager
 	 */
 
@@ -58,5 +58,41 @@ public class ChannelCreationPagerAdapter extends FragmentPagerAdapter {
 	 */
 	public Fragment getRegisteredFragment(int position) {
 		return registeredFragments.get(position);
+	}
+
+	/**
+	 * Get the position of the category select fragment in the pager.
+	 * 
+	 * @return
+	 */
+	public int getCategoryFragmentPosition() {
+		return 1;
+	}
+
+	/**
+	 * Get the category select fragment in the pager.
+	 * 
+	 * @return The fragment, or null if it hasn't been instantiated yet.
+	 */
+	public CategorySelectFragment getCategoryFragment() {
+		return (CategorySelectFragment) frags[getCategoryFragmentPosition()];
+	}
+
+	/**
+	 * Get the position of the channel info fragment in the pager.
+	 * 
+	 * @return
+	 */
+	public int getInfoFragmentPosition() {
+		return 0;
+	}
+
+	/**
+	 * Get the info fragment in the pager.
+	 * 
+	 * @return The fragment, or null if it hasn't been instantiated yet.
+	 */
+	public ChannelInfoFragment getInfoFragment() {
+		return (ChannelInfoFragment) frags[getInfoFragmentPosition()];
 	}
 }

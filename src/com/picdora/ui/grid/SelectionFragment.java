@@ -1,6 +1,7 @@
 package com.picdora.ui.grid;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.androidannotations.annotations.AfterViews;
@@ -101,6 +102,9 @@ public abstract class SelectionFragment extends Fragment implements
 	 * to config changes.
 	 */
 	private boolean mViewDestroyed = false;
+	
+	/** A copy of the selected items used to restore selected state after refreshing the items to show. */
+	private List<Selectable> mSavedSelection;
 
 	@AfterViews
 	protected void init() {
@@ -536,17 +540,22 @@ public abstract class SelectionFragment extends Fragment implements
 	 * 
 	 * @param selectable
 	 */
+	@UiThread(propagation = Propagation.REUSE)
 	protected void setSelectedItems(List<Selectable> items) {
 		mSelector.setSelectedItems(items);
 	}
 
 	/**
 	 * Start a background task to load items to show. {@link #doItemLoad()}
-	 * should be overridden to implement the load logic.
+	 * should be overridden to implement the load logic. This will remember
+	 * which items are currently selected and will reselect them if the
+	 * refreshed list contains them.
 	 * 
 	 */
 	public synchronized void refreshItemsAsync() {
 		mLoadInProgress = true;
+		/* Copy the current selection so we can try to restore it after the load. */
+		mSavedSelection = new ArrayList<Selectable>(getSelection());
 		showProgress();
 		/* Increment the latest batch id */
 		asyncLoad(++mCurrentLoadBatchId);
@@ -570,8 +579,26 @@ public abstract class SelectionFragment extends Fragment implements
 			mLoadInProgress = false;
 		} else if (batchId == mCurrentLoadBatchId) {
 			mLoadInProgress = false;
-			setItemsToShow(items);
+			handleLoadResult(items);
 		}
+	}
+
+	@UiThread
+	protected void handleLoadResult(List<Selectable> items) {
+		setItemsToShow(items);
+		/* Restore selection if there was one.  */
+		if(mSavedSelection != null){
+			/* Remove any of the selection items that aren't in the new item list. */
+			Iterator<Selectable> it = mSavedSelection.iterator();
+			while (it.hasNext()) {
+				if (!items.contains(it.next())) {
+					it.remove();
+				}
+			}
+			
+			setSelectedItems(mSavedSelection);
+			mSavedSelection = null;
+		}		
 	}
 
 	/**
@@ -628,6 +655,7 @@ public abstract class SelectionFragment extends Fragment implements
 	 * once the list is cleared.
 	 * 
 	 */
+	@UiThread(propagation = Propagation.REUSE)
 	public void clearSelection() {
 		mSelector.getSelectedItems().clear();
 		mAdapter.notifyDataSetChanged();
