@@ -12,8 +12,8 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.support.v4.view.ViewPager.OnPageChangeListener;
 
+import com.astuetz.PagerSlidingTabStrip;
 import com.picdora.ChannelUtil;
 import com.picdora.PicdoraActivity;
 import com.picdora.R;
@@ -30,6 +30,8 @@ import com.picdora.ui.PicdoraDialog;
 public class ChannelDetailActivity extends PicdoraActivity {
 	@ViewById(R.id.pager)
 	protected ViewPager mPager;
+	@ViewById(R.id.tabs)
+	protected PagerSlidingTabStrip mTabs;
 	protected ChannelDetailPagerAdapter mAdapter;
 	protected Channel mChannel;
 
@@ -43,7 +45,8 @@ public class ChannelDetailActivity extends PicdoraActivity {
 
 		mAdapter = new ChannelDetailPagerAdapter(getSupportFragmentManager());
 		mPager.setAdapter(mAdapter);
-		
+		mTabs.setViewPager(mPager);	
+		//mTabs.setShouldExpand(true);
 	}
 
 	@OptionsItem
@@ -89,6 +92,8 @@ public class ChannelDetailActivity extends PicdoraActivity {
 	public class ChannelDetailPagerAdapter extends FragmentPagerAdapter {
 		Fragment[] frags = { new ChannelInfoFragment_(),
 				new DetailLikesFragment_() };
+		
+		String[] titles = {"Settings", "Likes"};
 
 		public ChannelDetailPagerAdapter(FragmentManager fm) {
 			super(fm);
@@ -102,6 +107,11 @@ public class ChannelDetailActivity extends PicdoraActivity {
 		@Override
 		public int getCount() {
 			return frags.length;
+		}
+		
+		@Override
+		public CharSequence getPageTitle(int position) {
+		return titles[position];
 		}
 	}
 

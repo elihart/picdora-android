@@ -44,6 +44,10 @@ import com.picdora.ui.grid.ModelGridSelector;
 @EFragment(R.layout.fragment_channel_detail_info)
 public class ChannelInfoFragment extends Fragment implements
 		OnCheckedChangeListener {
+	/*
+	 * TODO: Needs a big ui overhaul.
+	 */
+	
 	// if the user chooses channel settings that match less than this many
 	// images then show a warning
 	private static final long LOW_IMAGE_THRESHOLD = 100;
