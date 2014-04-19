@@ -31,6 +31,10 @@ import com.picdora.ui.grid.SelectionFragment;
  */
 @EFragment(R.layout.fragment_category_selection)
 public class CategorySelectFragment extends SelectionFragment {
+	/*
+	 * TODO: Minor issue- if the activity is destroyed the selection state isn't
+	 * saved. It is only saved on config changes.
+	 */
 
 	@ViewById
 	Button previewButton;

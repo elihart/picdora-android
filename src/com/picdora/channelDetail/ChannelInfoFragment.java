@@ -74,15 +74,7 @@ public class ChannelInfoFragment extends Fragment implements
 		gifSetting.setOnCheckedChangeListener(this);
 
 		mActivity = (ChannelDetailActivity) getActivity();
-	}
-
-	/**
-	 * Set the channel whose info we should display
-	 * 
-	 * @param channel
-	 */
-	public void setChannel(Channel channel) {
-		mChannel = channel;
+		mChannel = mActivity.getChannel();
 		updateInfo();
 	}
 
@@ -286,7 +278,8 @@ public class ChannelInfoFragment extends Fragment implements
 		 * Make a copy of the selected categories so our choices don't propogate
 		 * until we want them to.
 		 */
-		List<Category> selectedCategories = new ArrayList<Category>(mChannel.getCategories());
+		List<Category> selectedCategories = new ArrayList<Category>(
+				mChannel.getCategories());
 
 		CategoryListAdapter adapter = CategoryListAdapter_
 				.getInstance_(mActivity);

@@ -16,7 +16,6 @@ import com.picdora.collections.Collection;
 import com.picdora.collections.CollectionItem;
 import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.models.Category;
-import com.picdora.models.Channel;
 import com.picdora.models.ChannelImage;
 import com.picdora.models.Image;
 import com.picdora.sync.PicdoraSyncManager;

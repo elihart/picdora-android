@@ -195,7 +195,7 @@ public abstract class SelectionFragment extends Fragment implements
 	 * 
 	 */
 	protected void onFragmentTouch() {
-
+		// Nada. Let a subclass implement if needed.
 	}
 
 	@Override
