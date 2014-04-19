@@ -30,6 +30,7 @@ public class PicdoraApp extends Application {
 	protected PicdoraPreferences_ mPrefs;
 
 	public static final boolean DEBUG = true;
+	public static final boolean SFW_VERSION = false;
 
 	@Override
 	public void onCreate() {
@@ -50,6 +51,11 @@ public class PicdoraApp extends Application {
 		// clearCache();
 
 		mSyncManager.sync();
+		
+		/* In the sfw version we make sure the nsfw preference is set to false. */
+		if(SFW_VERSION){
+			mPrefs.showNsfw().put(false);
+		}
 	}
 
 	/**
