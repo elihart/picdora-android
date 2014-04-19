@@ -3,13 +3,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-    <RelativeLayout
+    <LinearLayout
         android:id="@+id/rootView"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:layout_margin="@dimen/dialog_side_margin"
-        android:background="@color/picdora_dialog_background" >
+        android:background="@color/picdora_dialog_background"
+        android:gravity="center_vertical"
+        android:orientation="vertical" >
 
         <LinearLayout
             android:id="@+id/titleContainer"
@@ -22,9 +24,12 @@
                 android:id="@+id/title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="@dimen/dialog_title_margin"
                 android:drawablePadding="@dimen/dialog_icon_margin"
                 android:gravity="left|center_vertical"
+                android:paddingBottom="@dimen/dialog_title_vertical_padding"
+                android:paddingLeft="@dimen/dialog_title_side_padding"
+                android:paddingRight="@dimen/dialog_title_side_padding"
+                android:paddingTop="@dimen/dialog_title_vertical_padding"
                 android:text="@string/dialog_default_title"
                 android:textColor="@color/picdora_dialog_title"
                 android:textSize="@dimen/dialog_title_text_size" />
@@ -40,15 +45,14 @@
             android:id="@+id/contentContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/titleContainer"
-            android:measureAllChildren="false">
+            android:layout_weight="1" >
 
             <TextView
                 android:id="@+id/message"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:padding="@dimen/dialog_message_margin"
                 android:gravity="left|center_vertical"
+                android:padding="@dimen/dialog_message_margin"
                 android:text="@string/dialog_default_message"
                 android:textColor="@color/picdora_dialog_message"
                 android:textSize="@dimen/dialog_message_text_size" />
@@ -58,7 +62,6 @@
             android:id="@+id/buttonContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/contentContainer"
             android:orientation="horizontal" >
 
             <Button
@@ -70,7 +73,8 @@
                 android:paddingBottom="@dimen/dialog_button_padding"
                 android:paddingTop="@dimen/dialog_button_padding"
                 android:text="@string/dialog_default_negative"
-                android:textColor="@color/white" />
+                android:textColor="@color/white"
+                android:textSize="@dimen/dialog_button_text_size" />
 
             <Button
                 android:id="@+id/positiveButton"
@@ -81,8 +85,9 @@
                 android:paddingBottom="@dimen/dialog_button_padding"
                 android:paddingTop="@dimen/dialog_button_padding"
                 android:text="@string/dialog_default_positive"
-                android:textColor="@color/white" />
+                android:textColor="@color/white"
+                android:textSize="@dimen/dialog_button_text_size" />
         </LinearLayout>
-    </RelativeLayout>
+    </LinearLayout>
 
 </RelativeLayout>

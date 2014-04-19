@@ -12,9 +12,10 @@ import com.koushikdutta.ion.Ion;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
+import com.picdora.collections.Collection;
+import com.picdora.collections.CollectionItem;
 import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.models.Category;
-import com.picdora.models.Channel;
 import com.picdora.models.ChannelImage;
 import com.picdora.models.Image;
 import com.picdora.sync.PicdoraSyncManager;
@@ -29,6 +30,7 @@ public class PicdoraApp extends Application {
 	protected PicdoraPreferences_ mPrefs;
 
 	public static final boolean DEBUG = true;
+	public static final boolean SFW_VERSION = false;
 
 	@Override
 	public void onCreate() {
@@ -49,6 +51,11 @@ public class PicdoraApp extends Application {
 		// clearCache();
 
 		mSyncManager.sync();
+		
+		/* In the sfw version we make sure the nsfw preference is set to false. */
+		if(SFW_VERSION){
+			mPrefs.showNsfw().put(false);
+		}
 	}
 
 	/**
@@ -88,9 +95,15 @@ public class PicdoraApp extends Application {
 		Migration addModelsMigration = new Migration();
 		addModelsMigration.createTable(Image.class);
 		addModelsMigration.createTable(Category.class);
-		addModelsMigration.createTable(Channel.class);
+		addModelsMigration.createTable(Collection.class);
 		addModelsMigration.createTable(ChannelImage.class);
 		sprinkles.addMigration(addModelsMigration);
+		
+		/* Add collections */
+		Migration collections = new Migration();
+		collections.createTable(Collection.class);
+		collections.createTable(CollectionItem.class);
+		sprinkles.addMigration(collections);
 	}
 
 	@Override

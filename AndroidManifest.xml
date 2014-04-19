@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.picdora"
     android:versionCode="1"
-    android:versionName="1.02" >
+    android:versionName="1.03" >
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -50,12 +50,12 @@
             android:label="@string/title_activity_resume" >
         </activity>
         <activity
-            android:name="com.picdora.settings.SettingsActivity"
+            android:name="com.picdora.settings.SettingsActivity_"
             android:label="@string/title_activity_settings" >
         </activity>
         <activity
-            android:name="com.picdora.favorites.FavoritesActivity_"
-            android:label="@string/title_activity_favorites" >
+            android:name="com.picdora.collections.CollectionsActivity_"
+            android:label="@string/title_activity_collections" >
         </activity>
         <activity
             android:name="com.picdora.likes.LikesActivity_"

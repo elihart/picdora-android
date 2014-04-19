@@ -2,14 +2,19 @@ package com.picdora.channelDetail;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EActivity;
-import org.androidannotations.annotations.FragmentById;
 import org.androidannotations.annotations.OptionsItem;
 import org.androidannotations.annotations.OptionsMenu;
+import org.androidannotations.annotations.ViewById;
 
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.ViewPager;
 
-import com.picdora.ChannelUtils;
+import com.astuetz.PagerSlidingTabStrip;
+import com.picdora.ChannelUtil;
 import com.picdora.PicdoraActivity;
 import com.picdora.R;
 import com.picdora.Util;
@@ -23,8 +28,11 @@ import com.picdora.ui.PicdoraDialog;
 @EActivity(R.layout.activity_channel_detail)
 @OptionsMenu(R.menu.channel_detail)
 public class ChannelDetailActivity extends PicdoraActivity {
-	@FragmentById
-	protected ChannelInfoFragment infoFragment;
+	@ViewById(R.id.pager)
+	protected ViewPager mPager;
+	@ViewById(R.id.tabs)
+	protected PagerSlidingTabStrip mTabs;
+	protected ChannelDetailPagerAdapter mAdapter;
 	protected Channel mChannel;
 
 	@AfterViews
@@ -35,12 +43,15 @@ public class ChannelDetailActivity extends PicdoraActivity {
 
 		setActionBarTitle(mChannel.getName());
 
-		infoFragment.setChannel(mChannel);
+		mAdapter = new ChannelDetailPagerAdapter(getSupportFragmentManager());
+		mPager.setAdapter(mAdapter);
+		mTabs.setViewPager(mPager);	
+		//mTabs.setShouldExpand(true);
 	}
 
 	@OptionsItem
 	protected void playChannel() {
-		ChannelUtils.playChannel(mChannel, this,  true);
+		ChannelUtil.playChannel(mChannel, this,  true);
 	}
 
 	@OptionsItem
@@ -76,6 +87,36 @@ public class ChannelDetailActivity extends PicdoraActivity {
 		mChannel.setName(name);
 		setActionBarTitle(name);
 		mChannel.saveAsync();
+	}
+	
+	public class ChannelDetailPagerAdapter extends FragmentPagerAdapter {
+		Fragment[] frags = { new ChannelInfoFragment_(),
+				new DetailLikesFragment_() };
+		
+		String[] titles = {"Settings", "Likes"};
+
+		public ChannelDetailPagerAdapter(FragmentManager fm) {
+			super(fm);
+		}
+
+		@Override
+		public Fragment getItem(int position) {
+			return frags[position];
+		}
+
+		@Override
+		public int getCount() {
+			return frags.length;
+		}
+		
+		@Override
+		public CharSequence getPageTitle(int position) {
+		return titles[position];
+		}
+	}
+
+	public Channel getChannel() {
+		return mChannel;
 	}
 
 }

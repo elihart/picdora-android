@@ -20,7 +20,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.RelativeLayout;
 
-import com.picdora.ChannelUtils;
+import com.picdora.ChannelUtil;
 import com.picdora.PicdoraActivity;
 import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
@@ -84,14 +84,14 @@ public class LikesActivity extends PicdoraActivity {
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 		getSupportActionBar().setHomeButtonEnabled(true);
 	}
-	
+
 	@Override
-	public boolean dispatchTouchEvent(MotionEvent ev){
+	public boolean dispatchTouchEvent(MotionEvent ev) {
 		/* Collapse actionviews if there is a touch outside of the actionbar */
-		if(UiUtil.isEventInsideView(ev, mRootView)){
+		if (UiUtil.isEventInsideView(ev, mRootView)) {
 			collapseActionViews();
 		}
-		
+
 		return super.dispatchTouchEvent(ev);
 	}
 
@@ -128,7 +128,7 @@ public class LikesActivity extends PicdoraActivity {
 	@Background
 	protected void initChannels() {
 		// get all channels from db.
-		mChannels = ChannelUtils.getAllChannels(mPrefs.showNsfw().get());
+		mChannels = ChannelUtil.getAllChannels(mPrefs.showNsfw().get());
 
 		/*
 		 * If the activity was destroyed while we were getting those then don't
@@ -233,9 +233,12 @@ public class LikesActivity extends PicdoraActivity {
 
 	}
 
+	/**
+	 * Collapse all expanded action views in the activity and all fragments.
+	 * 
+	 */
 	public void collapseActionViews() {
 		mActionChannelSpinner.collapse();
-		mLikesFragment.collapseActionViews();
 	}
 
 }

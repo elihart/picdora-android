@@ -13,7 +13,7 @@ import org.androidannotations.annotations.sharedpreferences.Pref;
 import se.emilsjolander.sprinkles.CursorList;
 import se.emilsjolander.sprinkles.Query;
 
-import com.picdora.ChannelUtils;
+import com.picdora.ChannelUtil;
 import com.picdora.PicdoraPreferences_;
 import com.picdora.models.Channel;
 import com.picdora.models.ChannelImage;
@@ -221,7 +221,7 @@ public class ChannelPlayer {
 		// build the query. Start by only selecting images from categories that
 		// this channel includes
 		String query = "SELECT * FROM Images WHERE categoryId IN "
-				+ ChannelUtils.getCategoryIdsString(mChannel);
+				+ ChannelUtil.getCategoryIdsString(mChannel);
 
 		// add the gif setting
 		switch (mChannel.getGifSetting()) {
@@ -239,6 +239,7 @@ public class ChannelPlayer {
 			query += " AND nsfw=0";
 		}
 
+		/* TODO: We need to reuse images at some point... */
 		query += " AND imgurId NOT IN (SELECT image FROM Views WHERE channelId="
 				+ mChannel.getId() + ")";
 

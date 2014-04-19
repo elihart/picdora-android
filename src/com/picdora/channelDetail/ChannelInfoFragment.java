@@ -28,7 +28,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.picdora.CategoryUtils;
-import com.picdora.ChannelUtils;
+import com.picdora.ChannelUtil;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.channelCreation.CategoryListAdapter;
@@ -44,6 +44,10 @@ import com.picdora.ui.grid.ModelGridSelector;
 @EFragment(R.layout.fragment_channel_detail_info)
 public class ChannelInfoFragment extends Fragment implements
 		OnCheckedChangeListener {
+	/*
+	 * TODO: Needs a big ui overhaul.
+	 */
+	
 	// if the user chooses channel settings that match less than this many
 	// images then show a warning
 	private static final long LOW_IMAGE_THRESHOLD = 100;
@@ -74,15 +78,7 @@ public class ChannelInfoFragment extends Fragment implements
 		gifSetting.setOnCheckedChangeListener(this);
 
 		mActivity = (ChannelDetailActivity) getActivity();
-	}
-
-	/**
-	 * Set the channel whose info we should display
-	 * 
-	 * @param channel
-	 */
-	public void setChannel(Channel channel) {
-		mChannel = channel;
+		mChannel = mActivity.getChannel();
 		updateInfo();
 	}
 
@@ -127,7 +123,7 @@ public class ChannelInfoFragment extends Fragment implements
 	 */
 	@Background
 	protected void getAndSetImageViewCount() {
-		int count = ChannelUtils.getNumImagesViewed(mChannel);
+		int count = ChannelUtil.getNumImagesViewed(mChannel);
 		setImageViewCount(count);
 	}
 
@@ -168,7 +164,7 @@ public class ChannelInfoFragment extends Fragment implements
 
 	@Background(serial = "update")
 	protected void saveChannel() {
-		long imageCount = ChannelUtils.getImageCount(mChannel, false);
+		long imageCount = ChannelUtil.getImageCount(mChannel, false);
 		mChannel.save();
 
 		if (imageCount < LOW_IMAGE_THRESHOLD) {
@@ -246,7 +242,7 @@ public class ChannelInfoFragment extends Fragment implements
 		// if the name is the same don't do anything
 		if (Util.isStringBlank(name) || name.equals(mChannel.getName())) {
 			return;
-		} else if (ChannelUtils.isNameTaken(name)) {
+		} else if (ChannelUtil.isNameTaken(name)) {
 			showNameTakenError(name);
 		} else {
 			updateChannelName(name);
@@ -286,7 +282,8 @@ public class ChannelInfoFragment extends Fragment implements
 		 * Make a copy of the selected categories so our choices don't propogate
 		 * until we want them to.
 		 */
-		List<Category> selectedCategories = new ArrayList<Category>(mChannel.getCategories());
+		List<Category> selectedCategories = new ArrayList<Category>(
+				mChannel.getCategories());
 
 		CategoryListAdapter adapter = CategoryListAdapter_
 				.getInstance_(mActivity);

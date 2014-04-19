@@ -12,12 +12,10 @@ import android.widget.ListView;
 
 import com.picdora.PicdoraActivity;
 import com.picdora.R;
-import com.picdora.channelPlayer.ChannelViewActivity;
-import com.picdora.channelPlayer.ResumeActivity_;
 import com.picdora.channelSelection.ChannelSelectionActivity_;
-import com.picdora.favorites.FavoritesActivity_;
+import com.picdora.collections.CollectionsActivity_;
 import com.picdora.likes.LikesActivity_;
-import com.picdora.settings.SettingsActivity;
+import com.picdora.settings.SettingsActivity_;
 
 public class SlidingMenuHelper {
 	// TODO: Hide contextual action buttons on drawer show
@@ -37,9 +35,9 @@ public class SlidingMenuHelper {
 		items.add(new SlidingMenuItem(R.drawable.ic_action_like, "Likes",
 				LikesActivity_.class));
 		items.add(new SlidingMenuItem(R.drawable.ic_action_star,
-				"Collections", FavoritesActivity_.class));
+				"Collections", CollectionsActivity_.class));
 		items.add(new SlidingMenuItem(R.drawable.ic_action_settings,
-				"Settings", SettingsActivity.class));
+				"Settings", SettingsActivity_.class));
 
 		return items;
 	}

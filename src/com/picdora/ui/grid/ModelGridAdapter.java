@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
 import com.picdora.ImageUtils;
+import com.picdora.Util;
 import com.picdora.ImageUtils.ImgurSize;
 
 /**
@@ -108,7 +109,17 @@ public abstract class ModelGridAdapter<T> extends BaseAdapter {
 
 		boolean highlight = getSelectedItems().contains(item);
 
-		String url = ImageUtils.getImgurLink(getImgurId(item), mImageSize);
+		/*
+		 * Get the imgurId of the item and use it to generate a url for the item
+		 * to show. If the imgur id isn't available then pass a null url and the
+		 * view won't load an image.
+		 */
+		String imgurId = getImgurId(item);
+		String url = null;
+		if (!Util.isStringBlank(imgurId)) {
+			url = ImageUtils.getImgurLink(getImgurId(item), mImageSize);
+		}
+
 		itemView.bind(getText(item), url, highlight);
 
 		return itemView;
@@ -160,6 +171,16 @@ public abstract class ModelGridAdapter<T> extends BaseAdapter {
 			mImageSize = imageSize;
 			notifyDataSetInvalidated();
 		}
+	}
+
+	/**
+	 * Whether the grid items should show text overlaid on the image.
+	 * 
+	 * @param show
+	 *            True to show text, false otherwise.
+	 */
+	public void setShowText(boolean show) {
+		mShowText = show;
 	}
 
 }

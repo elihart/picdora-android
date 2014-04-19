@@ -4,6 +4,7 @@ import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.ViewById;
+import org.androidannotations.annotations.sharedpreferences.Pref;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -19,10 +20,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
-import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.TextView;
 
-import com.picdora.ChannelUtils;
+import com.picdora.ChannelUtil;
+import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.channelCreation.ChannelCreationActivity.NsfwSetting;
@@ -38,8 +39,7 @@ import com.picdora.ui.FontHelper.FontStyle;
  * 
  */
 @EFragment(R.layout.fragment_channel_creation_info)
-public class ChannelInfoFragment extends Fragment implements
-		OnCheckedChangeListener {
+public class ChannelInfoFragment extends Fragment {
 	@ViewById
 	RadioGroup gifSetting;
 	@ViewById
@@ -67,8 +67,10 @@ public class ChannelInfoFragment extends Fragment implements
 	@ViewById
 	Button nextButton;
 
+	@Pref
+	protected PicdoraPreferences_ mPrefs;
+
 	private ChannelCreationActivity activity;
-	private ChannelCreationInfo info;
 
 	@AfterViews
 	void initViews() {
@@ -88,15 +90,17 @@ public class ChannelInfoFragment extends Fragment implements
 
 			@Override
 			public void onFocusChange(View v, boolean hasFocus) {
-				if (channelName != null) {
-					if (!hasFocus) {
-						validateChannelName(channelName.getText().toString());
-						hideKeyboard();
-					}
+				if (!hasFocus) {
+					validateChannelName(channelName.getText().toString());
+					hideKeyboard();
 				}
 			}
 		});
 
+		/*
+		 * Hide any error messages showing when the user changes the edit text
+		 * input.
+		 */
 		channelName.addTextChangedListener(new TextWatcher() {
 
 			@Override
@@ -109,25 +113,23 @@ public class ChannelInfoFragment extends Fragment implements
 			@Override
 			public void beforeTextChanged(CharSequence s, int start, int count,
 					int after) {
-				// TODO Auto-generated method stub
-
+				// Don't care
 			}
 
 			@Override
 			public void afterTextChanged(Editable s) {
-				// TODO Auto-generated method stub
-
+				// Don't care
 			}
 		});
-
-		nsfwSetting.setOnCheckedChangeListener(this);
-		gifSetting.setOnCheckedChangeListener(this);
-
-		setChannelInfo();
 	}
 
-	private void setChannelInfo() {
-		info = new ChannelCreationInfo(getGifSetting(), getNsfwSetting(),
+	/**
+	 * Get the currently entered channel information.
+	 * 
+	 * @return
+	 */
+	public ChannelCreationInfo collectInfo() {
+		return new ChannelCreationInfo(getGifSetting(), getNsfwSetting(),
 				channelName.getText().toString());
 	}
 
@@ -136,18 +138,10 @@ public class ChannelInfoFragment extends Fragment implements
 		super.onActivityCreated(state);
 
 		activity = (ChannelCreationActivity) getActivity();
-		setNsfwGroupVisibility(activity.getNsfwPreference());
-
+		/* Don't show the nsfw options if nsfw is turned off. */
+		setNsfwGroupVisibility(mPrefs.showNsfw().get());
+		/* Bring up the keyboard for entering a channel name. */
 		channelName.requestFocus();
-	}
-
-	@Override
-	public void onCheckedChanged(RadioGroup group, int checkedId) {
-		if (!Util.isStringBlank(channelName.getText().toString())) {
-			hideKeyboard();
-		}
-
-		setChannelInfo();
 	}
 
 	protected void hideKeyboard() {
@@ -172,7 +166,7 @@ public class ChannelInfoFragment extends Fragment implements
 		if (Util.isStringBlank(name)) {
 			channelName.setError("You have to give your channel a name!");
 			return false;
-		} else if (ChannelUtils.isNameTaken(name)) {
+		} else if (ChannelUtil.isNameTaken(name)) {
 			channelName.setError("You've already used that name!");
 			return false;
 		} else {
@@ -214,12 +208,10 @@ public class ChannelInfoFragment extends Fragment implements
 	@Click
 	void nextButtonClicked() {
 		// TODO: Validate in background, put a progress bar, disable further
-		// input, then come back here
-		setChannelInfo();
-		if (!validateChannelName(info.channelName)) {
-			return;
-		} else {
-
+		// input, then come back here. The lag right now isn't noticeable
+		// though...
+		ChannelCreationInfo info = collectInfo();
+		if (validateChannelName(info.channelName)) {
 			activity.submitChannelInfo(info);
 			hideKeyboard();
 		}
@@ -242,10 +234,6 @@ public class ChannelInfoFragment extends Fragment implements
 	}
 
 	private void setNsfwGroupVisibility(boolean visible) {
-		if (nsfwSetting == null) {
-			return;
-		}
-
 		if (visible) {
 			nsfwLabel.setVisibility(View.VISIBLE);
 			nsfwSetting.setVisibility(View.VISIBLE);

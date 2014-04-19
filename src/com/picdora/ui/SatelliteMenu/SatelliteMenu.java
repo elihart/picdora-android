@@ -535,12 +535,12 @@ public class SatelliteMenu extends FrameLayout {
 
 		AnimationSet animation = new AnimationSet(false);
 		animation.addAnimation(fadeOut);
-		imgMain.setAnimation(animation);
+		imgMain.startAnimation(animation);
 
 		animation.setAnimationListener(new AnimationListener() {
 			public void onAnimationEnd(Animation animation) {
 				/*
-				 * if our fading hasn't been interrupted then set the menu as
+				 * If our fading hasn't been interrupted then set the menu as
 				 * invisible when we finish
 				 */
 				if (menuFadingOut) {
@@ -550,7 +550,7 @@ public class SatelliteMenu extends FrameLayout {
 			}
 
 			public void onAnimationStart(Animation animation) {
-
+				
 			}
 
 			@Override
@@ -697,5 +697,14 @@ public class SatelliteMenu extends FrameLayout {
 				return new SavedState[size];
 			}
 		};
+	}
+
+	/**
+	 * Whether the menu is currently open.
+	 * 
+	 * @return
+	 */
+	public boolean isOpen() {
+		return rotated;
 	}
 }

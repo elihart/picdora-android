@@ -3,8 +3,10 @@ package com.picdora.channelPlayer;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EBean;
 import org.androidannotations.annotations.RootContext;
+import org.androidannotations.annotations.UiThread;
 
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
@@ -12,6 +14,9 @@ import android.content.DialogInterface.OnClickListener;
 import com.picdora.ImageUtils;
 import com.picdora.ImageUtils.OnDownloadCompleteListener;
 import com.picdora.R;
+import com.picdora.collections.Collection;
+import com.picdora.collections.CollectionUtil;
+import com.picdora.collections.CollectionUtil.OnCollectionSelectedListener;
 import com.picdora.models.ChannelImage;
 import com.picdora.ui.PicdoraDialog;
 import com.picdora.ui.SatelliteMenu.SatelliteMenu;
@@ -26,6 +31,9 @@ import com.picdora.ui.SatelliteMenu.SatelliteMenuItem;
 public class MenuManager {
 	@RootContext
 	protected ChannelViewActivity mActivity;
+
+	@Bean
+	protected CollectionUtil mCollectionUtils;
 
 	protected SatelliteMenu mMenu;
 
@@ -87,6 +95,23 @@ public class MenuManager {
 				}
 			}
 		});
+
+		/*
+		 * Show the menu for a little while after it has been created, and then
+		 * hide it if it isn't used.
+		 */
+		delayedCloseAfterStart();
+	}
+
+	/**
+	 * Do a delayed close and hide the menu if is isn't open.
+	 * 
+	 */
+	@UiThread(delay = 8000)
+	protected void delayedCloseAfterStart() {
+		if (!mMenu.isOpen()) {
+			mMenu.hideMenu(true);
+		}
 	}
 
 	/**
@@ -135,22 +160,20 @@ public class MenuManager {
 	 * Show a dialog to add the current image to a collection.
 	 */
 	protected void starClicked() {
-		// TODO: Create collection select view
+		String title = mActivity.getResources().getString(
+				R.string.collections_add_to_collection);
 
-		new PicdoraDialog.Builder(mActivity)
-				.setTitle(R.string.channel_view_star_dialog_title)
-				.setMessage(R.string.channel_view_star_dialog_message)
-				.setNegativeButton(R.string.dialog_default_negative, null)
-				.setPositiveButton(
-						R.string.channel_view_star_dialog_positive_button,
-						new OnClickListener() {
+		mCollectionUtils.showCollectionSelectionDialog(mActivity, title,
+				new OnCollectionSelectedListener() {
 
-							@Override
-							public void onClick(DialogInterface dialog,
-									int which) {
-								mActivity.showNotification("Image added to collection");
-							}
-						}).show();
+					@Override
+					public void onCollectionSelected(Collection collection) {
+						mCollectionUtils.addImage(collection,
+								mCurrentImage.getImage());
+						mActivity.showNotification("Image added to \""
+								+ collection.getName() + "\"");
+					}
+				});
 	}
 
 	/**

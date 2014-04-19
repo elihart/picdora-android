@@ -3,17 +3,23 @@ package com.picdora.likes;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EFragment;
 
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
-import com.picdora.ChannelUtils;
+import com.picdora.ChannelUtil;
 import com.picdora.R;
+import com.picdora.Util;
+import com.picdora.collections.Collection;
+import com.picdora.collections.CollectionUtil;
+import com.picdora.collections.CollectionUtil.OnCollectionSelectedListener;
 import com.picdora.models.Channel;
 import com.picdora.models.Image;
-import com.picdora.ui.gallery.DbGalleryFragment;
+import com.picdora.ui.gallery.GalleryFragment;
+import com.picdora.ui.grid.Selectable;
 
 /**
  * A special case of the {@link #GalleryFragment} where Liked images from
@@ -23,9 +29,12 @@ import com.picdora.ui.gallery.DbGalleryFragment;
  * On selection the user will have the option to remove the images from the
  * liked list, add them to a collection, or download them.
  */
-@EFragment(R.layout.fragment_image_grid)
-public class LikesFragment extends DbGalleryFragment {
+@EFragment(R.layout.fragment_basic_grid)
+public class LikesFragment extends GalleryFragment {
 	private List<Channel> mChannels;
+
+	@Bean
+	protected CollectionUtil mCollectionUtils;
 
 	/**
 	 * Use the given channels to source the liked images for display. Use
@@ -44,13 +53,13 @@ public class LikesFragment extends DbGalleryFragment {
 		 * bother changing anything. Otherwise do a fresh load to update the
 		 * images for the new channels.
 		 */
-		if (!channels.equals(mChannels)){
+		if (!channels.equals(mChannels)) {
 			mChannels = channels;
-			loadImagesFromDb();
-		} 
+			refreshItemsAsync();
+		}
 		/* Make sure we are showing the images */
 		else {
-			showImages();
+			showItems();
 		}
 	}
 
@@ -78,9 +87,10 @@ public class LikesFragment extends DbGalleryFragment {
 		case R.id.star:
 			addToCollection();
 			return true;
+		default:
+			return super.onSelectionAction(item);
 		}
 
-		return false;
 	}
 
 	/**
@@ -89,29 +99,50 @@ public class LikesFragment extends DbGalleryFragment {
 	 * 
 	 */
 	private void addToCollection() {
-		// TODO
+		final List<Image> imagesToAdd = getSelectedImages();
+		
+		String title = getResources().getString(
+				R.string.collections_add_to_collection);
+		
+		mCollectionUtils.showCollectionSelectionDialog(getActivity(), title,
+				new OnCollectionSelectedListener() {
 
-	}
-
-	@Override
-	protected void onSelectionDeleted(List<Image> deletedImages) {
-		/* Remove the given images from the currently selected channels */
-		ChannelUtils.deleteLikes(mChannels, deletedImages);
-	}
-
-	@Override
-	protected List<Image> getImagesFromDb() {
-		return ChannelUtils.getLikedImages(mChannels);
+					@Override
+					public void onCollectionSelected(Collection collection) {
+						mCollectionUtils.addImages(collection, imagesToAdd);
+						
+						Util.makeBasicToast(getActivity(), "Selection added to the collection " + collection.getName());
+					}
+				});
 	}
 
 	@Override
 	protected String getEmptyMessage() {
-		String msg = "You haven't liked any images yet!";
-		if (mChannels.size() == 1) {
-			msg = "You haven't liked any images in the channel "
-					+ mChannels.get(0).getName();
-		}
+		return "You haven't liked any images yet!";
+	}
 
-		return msg;
+	@SuppressWarnings("unchecked")
+	@Override
+	protected void onSelectionDeleted(List<Selectable> selection) {
+		/* Remove the given images from the currently selected channels */
+		ChannelUtil.deleteLikes(mChannels, (List<Image>) (List<?>) selection);
+
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	protected List<Selectable> doItemLoad() {
+		/*
+		 * If no channels have been loaded yet then we can't load images. Return
+		 * empty for now.
+		 */
+		if (mChannels == null || mChannels.isEmpty()) {
+			return new ArrayList<Selectable>();
+		} else {
+
+			/* Load images from the db that belong to the selected channels. */
+			return (List<Selectable>) (List<?>) ChannelUtil
+					.getLikedImages(mChannels);
+		}
 	}
 }

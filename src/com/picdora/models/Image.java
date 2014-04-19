@@ -13,19 +13,15 @@ import se.emilsjolander.sprinkles.annotations.Table;
 
 import com.picdora.ImageUtils;
 import com.picdora.ImageUtils.ImgurSize;
+import com.picdora.ui.grid.Selectable;
 
 @Table("Images")
-public class Image extends Model {
+public class Image extends Model implements Selectable {
 	/********** DB Fields ***********************/
-	/**
-	 * Default image id for an image that hasn't been saved to the db yet. This
-	 * is a number that won't conflict with saved image ids
-	 */
-	public static final int UNSAVED_IMAGE_ID = -1;
 
 	@PrimaryKey
 	@Column("id")
-	private long mId = UNSAVED_IMAGE_ID;
+	private long mId;
 
 	@Column("imgurId")
 	@NotNull
@@ -200,5 +196,18 @@ public class Image extends Model {
 		Image img = (Image) obj;
 		return img.getImgurId().equalsIgnoreCase(mImgurId);
 	}
+	
+	/* Implement this methods for the Selectable interface so Images can be used in a selection grid */
+
+	@Override
+	public String getIconId() {
+		return mImgurId;
+	}
+
+	@Override
+	public String getName() {
+		return null;
+	}
+	/****************************************************************************************/
 
 }
