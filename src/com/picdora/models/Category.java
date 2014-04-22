@@ -9,8 +9,7 @@ import se.emilsjolander.sprinkles.annotations.NotNull;
 import se.emilsjolander.sprinkles.annotations.PrimaryKey;
 import se.emilsjolander.sprinkles.annotations.Table;
 
-import com.picdora.ImageUtils;
-import com.picdora.ImageUtils.ImgurSize;
+import com.picdora.Util;
 import com.picdora.ui.grid.Selectable;
 
 @Table("Categories")
@@ -27,28 +26,31 @@ public class Category extends Model implements Selectable {
 	@Column("nsfw")
 	private boolean mNsfw;
 
-	@Column("porn")
-	private boolean mPorn;
-
 	@Column("icon")
 	@NotNull
 	private String mPreviewImage;
+	
+	@Column("updated")
+	private long mLastUpdated;
 
-	public Category(int id, String name, boolean porn, boolean nsfw, String icon) {
+	public Category(int id, String name, boolean nsfw, String icon) {
 		super();
 		mId = id;
 		mName = name;
 		mNsfw = nsfw;
-		mPorn = porn;
 		mPreviewImage = icon;
 	}
 
 	public Category() {
 
 	}
+	
+	@Override
+	protected void beforeSave() {
+		mLastUpdated = Util.getUnixTime();
+	}
 
 	public Category(JSONObject jsonObject) {
-		mId = -1;
 		try {
 			mId = jsonObject.getInt("id");
 		} catch (JSONException e) {
@@ -64,12 +66,6 @@ public class Category extends Model implements Selectable {
 
 		try {
 			mNsfw = jsonObject.getBoolean("nsfw");
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-
-		try {
-			mPorn = jsonObject.getBoolean("porn");
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
@@ -93,10 +89,6 @@ public class Category extends Model implements Selectable {
 		return mNsfw;
 	}
 
-	public boolean getPorn() {
-		return mPorn;
-	}
-
 	// base equals and hashcode on id
 	@Override
 	public boolean equals(Object obj) {
@@ -108,16 +100,12 @@ public class Category extends Model implements Selectable {
 			return false;
 
 		Category cat = (Category) obj;
-		return cat.getId() == mId;
+		return cat.mId == mId;
 	}
 
 	@Override
 	public int hashCode() {
 		return (int) mId;
-	}
-
-	public String getPreviewUrl(ImgurSize size) {
-		return ImageUtils.getImgurLink(mPreviewImage, size);
 	}
 
 	/** Get the imgur id of the icon to use for this category.

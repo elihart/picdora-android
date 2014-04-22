@@ -124,15 +124,25 @@ public class Util {
 		}
 		return buffer.toString();
 	}
-	
+
 	private static long startTime;
-	public static void startTimer(){
+
+	public static void startTimer() {
 		startTime = System.currentTimeMillis();
 	}
-	
-	public static void lap(String msg){
+
+	public static void lap(String msg) {
 		long curr = System.currentTimeMillis();
 		log(msg + " : " + (curr - startTime));
-		startTime =  curr;
+		startTime = curr;
+	}
+
+	/**
+	 * Get the current unix time: the number of seconds since 1970.
+	 * 
+	 * @return
+	 */
+	public static long getUnixTime() {
+		return System.currentTimeMillis() / 1000L;
 	}
 }

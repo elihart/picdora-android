@@ -1,18 +1,17 @@
 package com.picdora.models;
 
-import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import se.emilsjolander.sprinkles.CursorList;
 import se.emilsjolander.sprinkles.Model;
+import se.emilsjolander.sprinkles.Query;
+import se.emilsjolander.sprinkles.Transaction;
 import se.emilsjolander.sprinkles.annotations.AutoIncrementPrimaryKey;
 import se.emilsjolander.sprinkles.annotations.Column;
 import se.emilsjolander.sprinkles.annotations.NotNull;
 import se.emilsjolander.sprinkles.annotations.Table;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.picdora.ImageUtils;
 import com.picdora.ImageUtils.ImgurSize;
 import com.picdora.Util;
@@ -48,15 +47,14 @@ public class Channel extends Model implements Selectable {
 	@NotNull
 	protected String mPreviewImage;
 
+	/** The unix time that the channel was last played */
 	@Column("lastUsed")
 	protected long mLastUsed;
 
+	/** The unix time that the channel was created. */
 	@Column("createdAt")
 	protected long mCreatedAt;
 
-	@Column("categories")
-	@NotNull
-	protected String mCategoriesAsJson;
 	protected List<Category> mCategories;
 
 	@Column("gifSetting")
@@ -75,7 +73,7 @@ public class Channel extends Model implements Selectable {
 	public boolean isValid() {
 		if (Util.isStringBlank(mName)) {
 			return false;
-		} else if (getCategories().isEmpty()) {
+		} else if (mCategories == null || mCategories.isEmpty()) {
 			return false;
 		} else {
 			return true;
@@ -88,8 +86,8 @@ public class Channel extends Model implements Selectable {
 
 	@Override
 	protected void beforeCreate() {
-		mCreatedAt = System.currentTimeMillis();
-		mLastUsed = System.currentTimeMillis();
+		mCreatedAt = Util.getUnixTime();
+		mLastUsed = Util.getUnixTime();
 
 		mPreviewImage = getCategories().get(0).getIconId();
 
@@ -123,7 +121,7 @@ public class Channel extends Model implements Selectable {
 
 	public List<Category> getCategories() {
 		if (mCategories == null) {
-			getCategoriesFromList();
+			getCategoriesFromDb();
 		}
 		return mCategories;
 	}
@@ -131,41 +129,53 @@ public class Channel extends Model implements Selectable {
 	@Override
 	protected void beforeSave() {
 		// create a json string to represent the categories in the database
-		saveCategoriesAsJson(mCategories);
-	}
-
-	protected void saveCategoriesAsJson(List<Category> categories) {
-		if (categories == null) {
-			categories = new ArrayList<Category>();
-		}
-
-		mCategoriesAsJson = new Gson().toJson(mCategories);
+		saveCategoriesToDb();
 	}
 
 	/**
-	 * Convert the database string of categories into a list of Category objects
+	 * Get the categories that characterize this channel from the db. Does a
+	 * synchronous db access!
+	 * 
 	 */
-	protected void getCategoriesFromList() {
-		if (Util.isStringBlank(mCategoriesAsJson)) {
-			mCategories = new ArrayList<Category>();
-		} else {
-			Type type = new TypeToken<List<Category>>() {
-			}.getType();
-			mCategories = new Gson().fromJson(mCategoriesAsJson, type);
-		}
+	private List<Category> getCategoriesFromDb() {
+		/* Get all the categories saved to this channel. */
+		String query = "select * from Categories where id in "
+				+ "(select categoryId from ChannelCategories where channelId=?)";
+
+		CursorList<Category> result = Query.many(Category.class, query, mId)
+				.get();
+		List<Category> categories = result.asList();
+		result.close();
+
+		return categories;
 	}
 
-	public String getCategoriesAsJson() {
-		// update the json with the current categories in case they were changed
-		if (mCategories != null) {
-			saveCategoriesAsJson(mCategories);
+	/**
+	 * Save the categories that characterize this channel to the db. Does a
+	 * synchronous db access! Make sure categories have been set before this is
+	 * called otherwise there will be a NPE.
+	 * 
+	 */
+	private void saveCategoriesToDb() {
+		/*
+		 * TODO: Could maybe optimize this to not delete everything before
+		 * saving the new ones if the deletions aren't necessary
+		 */
+
+		/* Clear the existing categories before getting the new ones. */
+		List<Category> categories = getCategoriesFromDb();
+
+		Transaction t = new Transaction();
+		for (Category c : categories) {
+			c.delete(t);
 		}
 
-		if (mCategoriesAsJson == null) {
-			return "";
-		} else {
-			return mCategoriesAsJson;
+		/* Add the new categories to the db */
+		for (Category c : mCategories) {
+			new ChannelCategory(c, this).save(t);
 		}
+		t.setSuccessful(true);
+		t.finish();
 	}
 
 	@Override
@@ -185,12 +195,15 @@ public class Channel extends Model implements Selectable {
 		Channel ch = (Channel) obj;
 
 		// If either channel wasn't taken out of the database it won't have an
-		// id, so compare names instead
+		// id, so compare info instead
 
-		return ch.getId() == getId() && ch.getName().equals(getName())
-				&& ch.isNsfw() == isNsfw()
-				&& ch.getGifSetting() == getGifSetting()
-				&& ch.getCategoriesAsJson().equals(getCategoriesAsJson());
+		return ch.mId == mId
+				&& ch.mName.equals(mName)
+				&& ch.mNsfw == mNsfw
+				&& ch.mGifSetting == mGifSetting
+				&& ((ch.mCategories == null && mCategories == null) || (ch.mCategories != null
+						&& mCategories != null && ch.mCategories
+							.containsAll(mCategories)));
 
 	}
 
@@ -220,7 +233,8 @@ public class Channel extends Model implements Selectable {
 	}
 
 	public void setLastUsed(Date date) {
-		mLastUsed = date.getTime();
+		/* Turn the millisecond value to unix time in seconds. */
+		mLastUsed = date.getTime() / 1000L;
 	}
 
 	public Date getLastUsed() {
