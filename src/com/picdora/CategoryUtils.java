@@ -7,6 +7,7 @@ import java.util.List;
 
 import se.emilsjolander.sprinkles.CursorList;
 import se.emilsjolander.sprinkles.Query;
+import android.text.TextUtils;
 
 import com.picdora.models.Category;
 
@@ -49,6 +50,22 @@ public abstract class CategoryUtils {
 		list.close();
 
 		return categories;
+	}
+	
+	/**
+	 * get a comma separated list of category ids for use in a sql query
+	 * 
+	 * @param categories The categories whose id's we want.
+	 * 
+	 * @return
+	 */
+	public static String getCategoryIdsString(List<Category> categories) {
+		List<Integer> ids = new ArrayList<Integer>();
+		for (Category cat : categories) {
+			ids.add((int) cat.getId());
+		}
+
+		return ("(" + TextUtils.join(",", ids) + ")");
 	}
 
 }

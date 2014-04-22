@@ -1,7 +1,5 @@
 package com.picdora.channelCreation;
 
-import java.util.List;
-
 import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EBean;
 import org.androidannotations.annotations.RootContext;
@@ -14,7 +12,6 @@ import android.widget.TextView;
 
 import com.picdora.ChannelUtil;
 import com.picdora.R;
-import com.picdora.models.Category;
 import com.picdora.models.Channel;
 import com.picdora.models.ChannelPreview;
 import com.picdora.ui.PicdoraDialog;
@@ -38,52 +35,75 @@ public class ChannelCreationUtil {
 	/**
 	 * Create a channel with the given categories and info.
 	 * 
-	 * @param categories
 	 * @param info
-	 * @param preview
-	 *            Whether the channel should just be a preview and not saved.
 	 */
 	@Background
-	public void createChannel(List<Category> categories,
-			ChannelCreationInfo info, boolean preview) {
+	public void createChannel(ChannelCreationInfo info,
+			boolean ignoreLowImageCount) {
 
 		// if we're already loading, don't load again
 		if (mIsLoadingChannel) {
 			return;
 		}
 		/* Don't load if there aren't any categories. */
-		else if (categories == null || categories.isEmpty()) {
+		else if (info.categories == null || info.categories.isEmpty()) {
 			return;
-		} else {
+		}
+		/* Otherwise show the loading screen. */
+		else {
 			setLoadingStatus(true);
 		}
 
-		Channel channel = null;
-		if (preview) {
-			channel = new ChannelPreview(categories, info.gifSetting);
-		} else {
-			channel = new Channel(info.channelName, categories, info.gifSetting);
-		}
-
 		/*
-		 * Stop if the channel is invalid. TODO: Maybe show an error message?
-		 * This really shouldn't happen though because we have validations and
-		 * locks before this point.
+		 * If we've already alerted the user to a low image count and they
+		 * ignore it then go on to launch.
 		 */
-		if (!preview && !channel.isValid()) {
-			setLoadingStatus(false);
-			return;
+		if (!ignoreLowImageCount) {
+			/*
+			 * Check how many images these settings match and notify the user if
+			 * the count is low so they can either modify the settings or ignore
+			 * the warning.
+			 */
+			long count = ChannelUtil.getImageCount(info.gifSetting,
+					info.categories, false);
+
+			if (count == 0) {
+				showNoImagesDialog();
+				return;
+			} else if (count < 100) {
+				/*
+				 * Show the warning. Allows them to ignore it and come back here
+				 * again.
+				 */
+				showLowImageCountDialog(count, info);
+				return;
+			}
 		}
 
-		long count = ChannelUtil.getImageCount(channel, false);
-		if (count == 0) {
-			showNoImagesDialog();
-		} else if (count < 100) {
-			showLowImageCountDialog(count, channel, preview);
+		/* Create the channel. */
+		Channel channel = null;
+		if (info.preview) {
+			channel = new ChannelPreview(info.categories, info.gifSetting);
 		} else {
-			// TODO: Maybe a confirmation dialog with settings reviewed
-			launchChannel(channel, preview);
+			/* Can't set the categories until the channel is saved. */
+			channel = new Channel(info.channelName, info.gifSetting);
+			/*
+			 * If it's not valid then break the loading. We've done validations
+			 * on everything up until this point though so we should be good to
+			 * go.
+			 */
+			if (!channel.isValid()) {
+				setLoadingStatus(false);
+				return;
+			}
+			/* Save to db so we get a channel id. */
+			channel.save();
+			/* Set and save the categories now that we have an id. */
+			channel.setCategories(info.categories);
+			channel.save();
 		}
+
+		launchChannel(channel, info.preview);
 	}
 
 	@UiThread(propagation = Propagation.REUSE)
@@ -94,6 +114,7 @@ public class ChannelCreationUtil {
 				.setTitle("Warning!")
 				.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int id) {
+						/* Stop the loading screen. */
 						setLoadingStatus(false);
 					}
 				})
@@ -102,14 +123,15 @@ public class ChannelCreationUtil {
 	}
 
 	@UiThread(propagation = Propagation.REUSE)
-	protected void showLowImageCountDialog(long count, final Channel channel,
-			final boolean preview) {
+	protected void showLowImageCountDialog(long count,
+			final ChannelCreationInfo info) {
 		String positive = "";
-		if (preview) {
+		if (info.preview) {
 			positive = "Preview anyway";
 		} else {
 			positive = "Create anyway";
 		}
+
 		new PicdoraDialog.Builder(mActivity)
 				.setMessage(
 						"The categories and settings you chose only match "
@@ -118,12 +140,20 @@ public class ChannelCreationUtil {
 				.setPositiveButton(positive,
 						new DialogInterface.OnClickListener() {
 							public void onClick(DialogInterface dialog, int id) {
-								launchChannel(channel, preview);
+								/*
+								 * Redo the channel creation, ignoring the low
+								 * image count.
+								 */
+								createChannel(info, true);
 							}
 						})
 				.setNegativeButton("Change settings",
 						new DialogInterface.OnClickListener() {
 							public void onClick(DialogInterface dialog, int id) {
+								/*
+								 * Stop the loading screen and let the user
+								 * change the channel settings.
+								 */
 								setLoadingStatus(false);
 							}
 						})
@@ -147,9 +177,10 @@ public class ChannelCreationUtil {
 		}
 
 		/*
-		 * If we're doing a preview then don't save the channel
+		 * Play the channel. Don't need to update last played time to now since
+		 * it was just created (or it's a preview.)
 		 */
-		ChannelUtil.playChannel(channel, mActivity, !preview);
+		ChannelUtil.playChannel(channel, mActivity, false);
 	}
 
 	@UiThread(propagation = Propagation.REUSE)

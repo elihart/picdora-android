@@ -12,8 +12,6 @@ import se.emilsjolander.sprinkles.annotations.Column;
 import se.emilsjolander.sprinkles.annotations.NotNull;
 import se.emilsjolander.sprinkles.annotations.Table;
 
-import com.picdora.ImageUtils;
-import com.picdora.ImageUtils.ImgurSize;
 import com.picdora.Util;
 import com.picdora.ui.grid.Selectable;
 
@@ -63,17 +61,25 @@ public class Channel extends Model implements Selectable {
 
 	// TODO: Implement parcelable to pass this between activities
 
-	public Channel(String name, List<Category> categories, GifSetting gifSetting) {
+	/**
+	 * Create a new channel with a unique name. The channel must be first saved
+	 * to the database before categories can be added.
+	 * 
+	 * @param name
+	 * @param gifSetting
+	 */
+	public Channel(String name, GifSetting gifSetting) {
+		if (Util.isStringBlank(name)) {
+			throw new IllegalArgumentException("Name can't be blank");
+		}
+
 		mName = name;
-		mCategories = categories;
 		mGifSetting = gifSetting.ordinal();
 	}
 
 	@Override
 	public boolean isValid() {
 		if (Util.isStringBlank(mName)) {
-			return false;
-		} else if (mCategories == null || mCategories.isEmpty()) {
 			return false;
 		} else {
 			return true;
@@ -88,15 +94,6 @@ public class Channel extends Model implements Selectable {
 	protected void beforeCreate() {
 		mCreatedAt = Util.getUnixTime();
 		mLastUsed = Util.getUnixTime();
-
-		mPreviewImage = getCategories().get(0).getIconId();
-
-		for (Category c : getCategories()) {
-			if (c.isNsfw()) {
-				mNsfw = true;
-				break;
-			}
-		}
 	}
 
 	public long getId() {
@@ -104,11 +101,7 @@ public class Channel extends Model implements Selectable {
 	}
 
 	public String getName() {
-		if (mName == null) {
-			return "";
-		} else {
-			return mName;
-		}
+		return mName;
 	}
 
 	public boolean isNsfw() {
@@ -119,6 +112,12 @@ public class Channel extends Model implements Selectable {
 		return GifSetting.values()[mGifSetting];
 	}
 
+	/**
+	 * Get the categories set to this channel. May do a db access to load the
+	 * categories, so there is potential for a synchronous db access.
+	 * 
+	 * @return
+	 */
 	public List<Category> getCategories() {
 		if (mCategories == null) {
 			getCategoriesFromDb();
@@ -207,17 +206,6 @@ public class Channel extends Model implements Selectable {
 
 	}
 
-	/**
-	 * Get the icon representing this channel.
-	 * 
-	 * @param size
-	 *            The thumbnail size to resize to
-	 * @return
-	 */
-	public String getIcon(ImgurSize size) {
-		return ImageUtils.getImgurLink(mPreviewImage, size);
-	}
-
 	@Override
 	public String toString() {
 		String result = mName + " gif: " + mGifSetting + " Categories: ";
@@ -232,6 +220,11 @@ public class Channel extends Model implements Selectable {
 
 	}
 
+	/**
+	 * Get the last time the channel was used, in Unix time.
+	 * 
+	 * @param date
+	 */
 	public void setLastUsed(Date date) {
 		/* Turn the millisecond value to unix time in seconds. */
 		mLastUsed = date.getTime() / 1000L;
@@ -249,8 +242,41 @@ public class Channel extends Model implements Selectable {
 		mName = name;
 	}
 
+	/**
+	 * Set the categories to be used for this channel. Updates the channel icon
+	 * to use an image from the categories, and set the channel nsfw setting
+	 * based on the categories. This must only be used once the channel has been
+	 * saved to the database. You should manually save the channel after setting
+	 * the categories.
+	 * 
+	 * @param categories
+	 */
 	public void setCategories(List<Category> categories) {
+		if (categories == null) {
+			throw new IllegalArgumentException("Categories can't be null");
+		}
+		if (categories.isEmpty()) {
+			throw new IllegalArgumentException("Categories can't be empty");
+		}
+		/*
+		 * The channel must be saved before setting categories because the
+		 * categories are saved in a table, indexed with the channel id. If the
+		 * channel isn't saved it won't have an id yet to associate with!
+		 */
+		if (mId < 1) {
+			throw new IllegalArgumentException("Channel hasn't been saved yet");
+		}
+
 		mCategories = categories;
+
+		mPreviewImage = getCategories().get(0).getIconId();
+
+		for (Category c : getCategories()) {
+			if (c.isNsfw()) {
+				mNsfw = true;
+				break;
+			}
+		}
 	}
 
 	/** For the Selectable interface and use with the selection fragment. */

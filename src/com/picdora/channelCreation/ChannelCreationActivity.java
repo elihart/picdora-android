@@ -18,9 +18,9 @@ import com.picdora.models.Category;
 
 /**
  * This activity guides the user through creating a new channel. It consists of
- * a viewpager with two fragments. The first collects info about the channel
- * - name, gif setting, and nsfw setting. The second allows the user to choose
- * which categories to include. 
+ * a viewpager with two fragments. The first collects info about the channel -
+ * name, gif setting, and nsfw setting. The second allows the user to choose
+ * which categories to include.
  * 
  */
 
@@ -54,7 +54,7 @@ public class ChannelCreationActivity extends PicdoraActivity {
 	void initViews() {
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 		getSupportActionBar().setHomeButtonEnabled(true);
-		
+
 		pagerAdapter = new ChannelCreationPagerAdapter(
 				getSupportFragmentManager());
 		pager.setAdapter(pagerAdapter);
@@ -149,7 +149,13 @@ public class ChannelCreationActivity extends PicdoraActivity {
 	 *            Whether the channel should just be a preview and not saved.
 	 */
 	public void setChannelCategories(List<Category> categories, boolean preview) {
-		mUtils.createChannel(categories, mInfo, preview);
+		mInfo.categories = categories;
+		mInfo.preview = preview;
+		/*
+		 * Try to create the channel, don't skip showing the low image count
+		 * warning since this will be the first attempt at the creation.
+		 */
+		mUtils.createChannel(mInfo, false);
 	}
 
 	/**

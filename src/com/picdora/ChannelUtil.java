@@ -27,6 +27,7 @@ import com.picdora.channelDetail.ChannelDetailActivity_;
 import com.picdora.channelPlayer.ChannelViewActivity_;
 import com.picdora.models.Category;
 import com.picdora.models.Channel;
+import com.picdora.models.Channel.GifSetting;
 import com.picdora.models.ChannelImage;
 import com.picdora.models.Image;
 
@@ -36,25 +37,29 @@ public class ChannelUtil {
 	Context context;
 
 	/**
-	 * Launch the ChannelViewActivity with the given channel.
+	 * Launch the ChannelViewActivity with the given channel. Update the last
+	 * played time to now and save the channel asynchronously.
 	 * 
 	 * @param channel
 	 *            The channel to play.
 	 * @param activity
 	 *            The activity context to launch the ChannelViewActivity from.
-	 * @param save
+	 * @param updateLastPlayedTime
 	 *            Whether the channel should be saved and it's Last Used field
-	 *            updated to now. Save is synchronous!
+	 *            updated to now. Save is asynchronous, so watch out for race
+	 *            conditions with the View activity getting updated data,
+	 *            specifically the id being set on save callback when it is
+	 *            created.
 	 */
 	public static void playChannel(Channel channel, Activity activity,
-			boolean save) {
+			boolean updateLastPlayedTime) {
 		if (channel == null) {
 			throw new IllegalArgumentException("Channel can't be null");
 		}
 
-		if (save) {
+		if (updateLastPlayedTime) {
 			channel.setLastUsed(new Date());
-			channel.save();
+			channel.saveAsync();
 		}
 
 		Intent intent = new Intent(activity, ChannelViewActivity_.class);
@@ -72,13 +77,14 @@ public class ChannelUtil {
 	 * @param unseen
 	 *            Whether or not to just count images where view count is 0
 	 */
-	public static long getImageCount(Channel channel, boolean unseen) {
+	public static long getImageCount(GifSetting gifSetting,
+			List<Category> categories, boolean unseen) {
 		SQLiteDatabase db = Sprinkles.getDatabase();
 		String query = "SELECT count(*) FROM Images WHERE categoryId IN "
-				+ ChannelUtil.getCategoryIdsString(channel);
+				+ CategoryUtils.getCategoryIdsString(categories);
 
 		// add the gif setting
-		switch (channel.getGifSetting()) {
+		switch (gifSetting) {
 		case ALLOWED:
 			break;
 		case NONE:
@@ -96,22 +102,6 @@ public class ChannelUtil {
 		SQLiteStatement s = db.compileStatement(query);
 
 		return s.simpleQueryForLong();
-	}
-
-	/**
-	 * get a comma separated list of categories ids for use in a sql query
-	 * 
-	 * @return
-	 */
-	public static String getCategoryIdsString(Channel channel) {
-		List<Category> categories = channel.getCategories();
-
-		List<Integer> ids = new ArrayList<Integer>();
-		for (Category cat : categories) {
-			ids.add((int) cat.getId());
-		}
-
-		return ("(" + TextUtils.join(",", ids) + ")");
 	}
 
 	/**

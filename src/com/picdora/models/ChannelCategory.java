@@ -24,16 +24,23 @@ public class ChannelCategory extends Model {
 	public ChannelCategory() {
 		// empty constructor for sprinkles
 	}
-	
-	public ChannelCategory(Category category, Channel channel){
-		if(category.getId() < 1 ){
+
+	/**
+	 * Save a category to a channel. The channel cannot have duplicate
+	 * categories.
+	 * 
+	 * @param category
+	 * @param channel
+	 */
+	public ChannelCategory(Category category, Channel channel) {
+		if (category.getId() < 1) {
 			throw new IllegalArgumentException("Category does not have id");
 		}
-		
-		else if(channel.getId() < 1){
+
+		else if (channel.getId() < 1) {
 			throw new IllegalArgumentException("Channel does not have id");
 		}
-		
+
 		mCategoryId = category.getId();
 		mChannelId = channel.getId();
 	}
