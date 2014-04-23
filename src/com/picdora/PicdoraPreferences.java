@@ -11,5 +11,9 @@ public interface PicdoraPreferences {
 
 	@DefaultBoolean(true)
 	boolean showNsfw();
+	
+	/** Whether this is the first time the user has run the app. */
+	@DefaultBoolean(true)
+	boolean firstLaunch();
 
 }

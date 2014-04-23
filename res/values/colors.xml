@@ -39,4 +39,8 @@
     <color name="glow_neutral">@color/white</color>
     <color name="glow_disliked">@color/red</color>
 
+    
+    <!-- Launch Activity -->
+    <color name="logo_color">@color/red</color>
+    <color name="launch_background">@color/action_bar_background</color>
 </resources>

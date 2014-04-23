@@ -18,8 +18,10 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/PicdoraActionBarTheme" >
-        <meta-data android:name="com.crashlytics.ApiKey" android:value="f8e89955ef243b240a3807307b94b382d9652601"/>
-        
+        <meta-data
+            android:name="com.crashlytics.ApiKey"
+            android:value="f8e89955ef243b240a3807307b94b382d9652601" />
+
         <activity
             android:name="com.picdora.channelSelection.ChannelSelectionActivity_"
             android:label="@string/title_activity_channel_selection" >
@@ -62,7 +64,8 @@
             android:label="@string/title_activity_likes" >
         </activity>
         <activity
-            android:name="com.picdora.launch.LaunchActivity"
+            android:name="com.picdora.launch.LaunchActivity_"
+            android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_launch" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -70,7 +73,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        
     </application>
 
 </manifest>
