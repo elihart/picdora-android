@@ -368,7 +368,6 @@ public class CollectionUtil {
 	 * @return
 	 */
 	public List<Image> loadCollectionImages(Collection collection) {
-		// TODO: joins?
 		String query = "SELECT * FROM Images WHERE id IN (SELECT imageId FROM "
 				+ CollectionItem.TABLE_NAME + " WHERE collectionId="
 				+ collection.getId() + ")";
@@ -384,8 +383,8 @@ public class CollectionUtil {
 	public void deleteCollectionImages(Collection collection, List<Image> images) {
 		SQLiteDatabase db = Sprinkles.getDatabase();
 		String query = "DELETE from " + CollectionItem.TABLE_NAME
-				+ " WHERE collectionId=" + collection.getId() + " AND imageId IN "
-				+ ImageUtils.getImageIds(images);
+				+ " WHERE collectionId=" + collection.getId()
+				+ " AND imageId IN " + ImageUtils.getImageIds(images);
 
 		db.execSQL(query);
 	}
@@ -405,10 +404,9 @@ public class CollectionUtil {
 		}
 
 		/*
-		 * TODO: Add uniqueness constraint based on imageid and collection id to
-		 * prevent duplicate images in a collection. Sprinkles should support
-		 * this soon so add it when it does. Right now we do a manual check for
-		 * each image which is slow.
+		 * TODO: The db should have a uniqueness constraint now, but I'm not
+		 * sure what kind of error is thrown when a duplicate is entered. Need
+		 * to test that and then can get rid of the duplicate checking!.
 		 */
 
 		Transaction t = new Transaction();

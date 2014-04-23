@@ -8,7 +8,6 @@ import se.emilsjolander.sprinkles.Sprinkles;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDoneException;
 import android.database.sqlite.SQLiteStatement;
@@ -115,33 +114,7 @@ public abstract class ImageUtils {
 		return getImgurLink(image.getImgurId(), size);
 	}
 
-	/**
-	 * Get a list of image ids as strings for use in telling the server which
-	 * ids to exclude
-	 * 
-	 * @param categoryIds
-	 * @return
-	 */
-	private static List<String> getImageIdsInCategories(List<String> categoryIds) {
-		List<String> ids = new ArrayList<String>();
-		SQLiteDatabase db = Sprinkles.getDatabase();
-
-		String idString = "(" + TextUtils.join(",", categoryIds) + ")";
-		String selection = "categoryId IN " + idString;
-
-		Cursor cursor = db.query("Images", new String[] { "id" }, selection,
-				null, null, null, null);
-
-		int index = cursor.getColumnIndex("id");
-		while (cursor.moveToNext()) {
-			int id = cursor.getInt(index);
-			ids.add(Integer.toString(id));
-		}
-
-		cursor.close();
-
-		return ids;
-	}
+	
 
 	public static long getLastId() {
 		SQLiteDatabase db = Sprinkles.getDatabase();
@@ -285,31 +258,6 @@ public abstract class ImageUtils {
 
 		sendIntent.setType("text/plain");
 		activity.startActivity(Intent.createChooser(sendIntent, "Share image"));
-	}
-
-	/**
-	 * Create a parenthesized, comma separated list of the imgur ids of the
-	 * given images for use in db queries.
-	 * 
-	 * @param images
-	 * @return Id list - "("we1asd", "oij23j")"
-	 */
-	public static String getImgurIds(List<Image> images) {
-		StringBuilder builder = new StringBuilder();
-		builder.append("(");
-
-		/* Add imgurid in quotes and end with a comma */
-		for (Image i : images) {
-			builder.append("\"");
-			builder.append(i.getImgurId());
-			builder.append("\",");
-		}
-
-		/* Replace last comma with closing parenthesis */
-		builder.deleteCharAt(builder.length() - 1);
-		builder.append(")");
-		String result = builder.toString();
-		return result;
 	}
 
 	/**

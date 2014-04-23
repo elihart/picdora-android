@@ -165,7 +165,7 @@ public class ChannelInfoFragment extends Fragment implements
 	@Background(serial = "update")
 	protected void saveChannel() {
 		long imageCount = ChannelUtil.getImageCount(mChannel.getGifSetting(),
-				mChannel.getCategories(), false);
+				mChannel.getCategories());
 		mChannel.save();
 
 		/*

@@ -71,16 +71,17 @@ public class ChannelUtil {
 
 	/**
 	 * Get the number of images in the local database that can be used in this
-	 * channel
+	 * channel.
 	 * 
 	 * @param channel
-	 * @param unseen
-	 *            Whether or not to just count images where view count is 0
 	 */
 	public static long getImageCount(GifSetting gifSetting,
-			List<Category> categories, boolean unseen) {
+			List<Category> categories) {
+		/* TODO: Need to test this since it's been changed. 
+		 * 
+		 */
 		SQLiteDatabase db = Sprinkles.getDatabase();
-		String query = "SELECT count(*) FROM Images WHERE categoryId IN "
+		String query = "SELECT count(distinct Images.id) FROM Images JOIN CategoryImages ON Images.id = CategoryImages.imageId WHERE categoryId IN "
 				+ CategoryUtils.getCategoryIdsString(categories);
 
 		// add the gif setting
@@ -93,10 +94,6 @@ public class ChannelUtil {
 		case ONLY:
 			query += " AND gif=1";
 			break;
-		}
-
-		if (unseen) {
-			query += " AND viewCount=0";
 		}
 
 		SQLiteStatement s = db.compileStatement(query);
@@ -185,8 +182,10 @@ public class ChannelUtil {
 		 * other hand they might not like seeing the blank image and having to
 		 * delete it manually. For now let's let them deal with it.
 		 */
+		
+		// TODO: Test!
 
-		String query = "SELECT * FROM Images WHERE imgurId IN (SELECT image FROM Views WHERE liked="
+		String query = "SELECT * FROM Images WHERE id IN (SELECT imageId FROM Views WHERE liked="
 				+ ChannelImage.LIKE_STATUS.LIKED.getId()
 				+ " AND channelId IN "
 				+ getChannelIds(channels) + ")";
@@ -232,7 +231,7 @@ public class ChannelUtil {
 		String query = "UPDATE Views SET liked="
 				+ ChannelImage.LIKE_STATUS.NEUTRAL.getId()
 				+ " WHERE channelId IN " + getChannelIds(channels)
-				+ " AND image IN " + ImageUtils.getImgurIds(images);
+				+ " AND imageId IN " + ImageUtils.getImageIds(images);
 
 		db.compileStatement(query).execute();
 	}

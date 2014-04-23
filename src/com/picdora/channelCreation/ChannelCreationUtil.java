@@ -65,7 +65,7 @@ public class ChannelCreationUtil {
 			 * the warning.
 			 */
 			long count = ChannelUtil.getImageCount(info.gifSetting,
-					info.categories, false);
+					info.categories);
 
 			if (count == 0) {
 				showNoImagesDialog();

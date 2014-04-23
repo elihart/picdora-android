@@ -78,7 +78,6 @@ public class LaunchActivity extends Activity {
 				.build();
 
 		ImageLoader.getInstance().init(config);
-
 	}
 
 	/**
