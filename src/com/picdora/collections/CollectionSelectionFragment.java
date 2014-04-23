@@ -12,6 +12,7 @@ import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.collections.CollectionUtil.OnCollectionCreatedListener;
+import com.picdora.models.Collection;
 import com.picdora.ui.grid.Selectable;
 import com.picdora.ui.grid.SelectionFragmentWithNew;
 

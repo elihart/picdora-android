@@ -18,11 +18,14 @@ import com.picdora.PicdoraApp;
 import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
 import com.picdora.channelSelection.ChannelSelectionActivity_;
-import com.picdora.collections.Collection;
-import com.picdora.collections.CollectionItem;
 import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.models.Category;
+import com.picdora.models.CategoryImage;
+import com.picdora.models.Channel;
+import com.picdora.models.ChannelCategory;
 import com.picdora.models.ChannelImage;
+import com.picdora.models.Collection;
+import com.picdora.models.CollectionItem;
 import com.picdora.models.Image;
 import com.picdora.sync.PicdoraSyncManager;
 import com.picdora.ui.FontHelper;
@@ -87,17 +90,19 @@ public class LaunchActivity extends Activity {
 
 		// create models
 		Migration addModelsMigration = new Migration();
+		
 		addModelsMigration.createTable(Image.class);
 		addModelsMigration.createTable(Category.class);
-		addModelsMigration.createTable(Collection.class);
+		addModelsMigration.createTable(CategoryImage.class);
+		
+		addModelsMigration.createTable(Channel.class);
 		addModelsMigration.createTable(ChannelImage.class);
+		addModelsMigration.createTable(ChannelCategory.class);
+		
+		addModelsMigration.createTable(Collection.class);
+		addModelsMigration.createTable(CollectionItem.class);
+		
 		sprinkles.addMigration(addModelsMigration);
-
-		/* Add collections */
-		Migration collections = new Migration();
-		collections.createTable(Collection.class);
-		collections.createTable(CollectionItem.class);
-		sprinkles.addMigration(collections);
 	}
 
 }

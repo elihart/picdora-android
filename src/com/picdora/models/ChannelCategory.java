@@ -1,7 +1,9 @@
 package com.picdora.models;
 
 import se.emilsjolander.sprinkles.Model;
+import se.emilsjolander.sprinkles.annotations.CascadeDelete;
 import se.emilsjolander.sprinkles.annotations.Column;
+import se.emilsjolander.sprinkles.annotations.ForeignKey;
 import se.emilsjolander.sprinkles.annotations.PrimaryKey;
 import se.emilsjolander.sprinkles.annotations.Table;
 
@@ -18,6 +20,8 @@ public class ChannelCategory extends Model {
 	private long mCategoryId;
 
 	@PrimaryKey
+	@ForeignKey("Channels(id)")
+	@CascadeDelete
 	@Column("channelId")
 	private long mChannelId;
 

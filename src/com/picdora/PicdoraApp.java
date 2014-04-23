@@ -5,7 +5,6 @@ import org.androidannotations.annotations.sharedpreferences.Pref;
 
 import android.app.Application;
 
-import com.koushikdutta.ion.Ion;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
 @EApplication
@@ -20,7 +19,7 @@ public class PicdoraApp extends Application {
 	public void onCreate() {
 		super.onCreate();
 
-		// resetApp();
+		//resetApp();
 		// clearCache();
 
 		/* In the sfw version we make sure the nsfw preference is set to false. */

@@ -31,6 +31,8 @@ import com.picdora.ImageUtils;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.models.ChannelImage;
+import com.picdora.models.Collection;
+import com.picdora.models.CollectionItem;
 import com.picdora.models.Image;
 import com.picdora.ui.FontHelper;
 import com.picdora.ui.FontHelper.FontStyle;
@@ -382,7 +384,7 @@ public class CollectionUtil {
 	public void deleteCollectionImages(Collection collection, List<Image> images) {
 		SQLiteDatabase db = Sprinkles.getDatabase();
 		String query = "DELETE from " + CollectionItem.TABLE_NAME
-				+ " WHERE collectionId=" + collection.mId + " AND imageId IN "
+				+ " WHERE collectionId=" + collection.getId() + " AND imageId IN "
 				+ ImageUtils.getImageIds(images);
 
 		db.execSQL(query);

@@ -12,6 +12,7 @@ import android.os.Bundle;
 import com.picdora.PicdoraActivity;
 import com.picdora.R;
 import com.picdora.Util;
+import com.picdora.models.Collection;
 import com.picdora.models.Image;
 import com.picdora.ui.gallery.GalleryFragment;
 import com.picdora.ui.grid.Selectable;

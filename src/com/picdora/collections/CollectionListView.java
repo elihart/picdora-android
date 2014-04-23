@@ -21,6 +21,7 @@ import android.widget.TextView;
 import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
 import com.picdora.collections.CollectionUtil.OnCollectionSelectedListener;
+import com.picdora.models.Collection;
 import com.picdora.ui.FontHelper;
 import com.picdora.ui.FontHelper.FontStyle;
 
