@@ -12,6 +12,6 @@ public interface Selectable {
 	/** Get the imgur id of the icon to represent this selectable. */
 	public String getIconId();
 
-	/** The selectable's name */
+	/** The selectable's name. Can be null if only an image represents the item. */
 	public String getName();
 }

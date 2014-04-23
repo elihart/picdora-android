@@ -10,7 +10,7 @@ public class ChannelPreview extends Channel {
 	// for normal channels
 	private static final int PREVIEW_ID = -2;
 
-	// TODO: ChannelImages won't save without this being saved, so the user will
+	// ChannelImages won't save since the channel isn't saved, so the user will
 	// keep seeing the same initial images repeated. Should be enough for a
 	// preview though
 
@@ -38,6 +38,6 @@ public class ChannelPreview extends Channel {
 	}
 
 	public static boolean isPreview(Channel channel) {
-		return channel.getId() == PREVIEW_ID;
+		return (channel instanceof ChannelPreview);
 	}
 }

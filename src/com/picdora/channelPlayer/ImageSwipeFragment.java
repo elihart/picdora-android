@@ -10,7 +10,6 @@ import org.androidannotations.annotations.ViewById;
 import org.androidannotations.annotations.res.ColorRes;
 
 import pl.droidsonroids.gif.GifDrawable;
-
 import uk.co.senab.photoview.PhotoView;
 import uk.co.senab.photoview.PhotoViewAttacher.OnMatrixChangedListener;
 import android.graphics.Rect;
@@ -24,7 +23,6 @@ import android.widget.TextView;
 
 import com.picdora.ImageUtils;
 import com.picdora.R;
-import com.picdora.Util;
 import com.picdora.channelPlayer.ChannelPlayer.OnGetChannelImageResultListener;
 import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.imageloader.PicdoraImageLoader.LoadError;
@@ -197,7 +195,7 @@ public class ImageSwipeFragment extends Fragment implements
 
 		if (mImage != null) {
 			PicdoraImageLoader.instance().unregisterCallbacks(
-					mImage.getImgurId(), this);
+					mImage.getImage().getImgurId(), this);
 		}
 
 		mPhotoView.setImageDrawable(null);
@@ -215,14 +213,8 @@ public class ImageSwipeFragment extends Fragment implements
 				mActivity.setCurrentFragment(this);
 			}
 
-			if (mImage != null) {
-				Util.log("Showing " + mImage.getImgurId());
-			}
 			// make sure we are loading this image as a priority
 			loadImage();
-			// if (mImage != null) {
-			// Util.log("Viewing " + mImage.getImgurId());
-			// }
 		}
 	}
 

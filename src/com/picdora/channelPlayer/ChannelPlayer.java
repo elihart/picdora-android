@@ -262,6 +262,7 @@ public class ChannelPlayer {
 					&& !imageQueue.contains(channelImage)) {
 				// don't save if we're previewing.
 				if (!ChannelPreview.isPreview(mChannel)) {
+					channelImage.markView();
 					channelImage.save();
 				}
 				images.add(channelImage);

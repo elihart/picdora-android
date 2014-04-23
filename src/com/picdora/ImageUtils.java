@@ -4,11 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import se.emilsjolander.sprinkles.Sprinkles;
-import se.emilsjolander.sprinkles.Transaction;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -163,50 +159,6 @@ public abstract class ImageUtils {
 		return result;
 	}
 
-	/**
-	 * Parse a json array of Images and save them to the database
-	 * 
-	 * @param json
-	 * @param images
-	 * @return Whether or not the images saved successfully
-	 */
-	public static boolean saveImagesToDb(JSONArray json) {
-		Transaction t = new Transaction();
-		boolean success = true;
-		try {
-			int numImages = json.length();
-			for (int i = numImages - 1; i >= 0; i--) {
-				Image image = new Image(json.getJSONObject((i)));
-				image.save(t);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			success = false;
-		} finally {
-			t.setSuccessful(success);
-			t.finish();
-		}
-
-		return success;
-	}
-
-	public interface OnResultListener {
-		public void onSuccess();
-
-		public void onFailure();
-	}
-
-	public interface OnServerResultListener {
-		public void onSuccess(JSONArray json);
-
-		public void onFailure();
-	}
-
-	public interface OnImageUpdateListener {
-		public void onSuccess(JSONObject json);
-
-		public void onFailure();
-	}
 
 	/**
 	 * Download the full size version of the imgur image with the given id and

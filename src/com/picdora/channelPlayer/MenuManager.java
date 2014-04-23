@@ -118,7 +118,7 @@ public class MenuManager {
 	 * Send a browser intent to lookup the current image in google.
 	 */
 	protected void searchClicked() {
-		ImageUtils.lookupImage(mActivity, mCurrentImage.getImgurId());
+		ImageUtils.lookupImage(mActivity, mCurrentImage.getImage().getImgurId());
 	}
 
 	/**
@@ -146,7 +146,7 @@ public class MenuManager {
 
 	protected void downloadClicked() {
 		mActivity.showNotification("Downloading image...");
-		ImageUtils.saveImgurImage(mActivity, mCurrentImage.getImgurId(),
+		ImageUtils.saveImgurImage(mActivity, mCurrentImage.getImage().getImgurId(),
 				new OnDownloadCompleteListener() {
 
 					@Override
@@ -180,7 +180,7 @@ public class MenuManager {
 	 * Lauch the share chooser
 	 */
 	protected void shareClicked() {
-		ImageUtils.shareImage(mActivity, mCurrentImage.getImgurId());
+		ImageUtils.shareImage(mActivity, mCurrentImage.getImage().getImgurId());
 	}
 
 	/**

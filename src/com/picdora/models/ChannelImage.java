@@ -1,45 +1,34 @@
 package com.picdora.models;
 
 import java.util.Date;
-import java.util.Locale;
 
 import se.emilsjolander.sprinkles.Model;
-import se.emilsjolander.sprinkles.annotations.AutoIncrementPrimaryKey;
 import se.emilsjolander.sprinkles.annotations.CascadeDelete;
 import se.emilsjolander.sprinkles.annotations.Column;
 import se.emilsjolander.sprinkles.annotations.ForeignKey;
-import se.emilsjolander.sprinkles.annotations.NotNull;
+import se.emilsjolander.sprinkles.annotations.PrimaryKey;
 import se.emilsjolander.sprinkles.annotations.Table;
 
 /**
- * Holds the data for each image that is shown in a channel. Since multiple
- * images can point to the same imgur picture this tracks the imgur id instead
- * of a specific image id. Each imgur id should have only a single entry for
- * each Channel, and repeat views should increment the view count and change the
- * last viewed time. We also track whether or not the image was liked or not.
+ * Holds the data for each image that is shown in a channel. Each image should
+ * have only a single entry for each Channel, and repeat views should increment
+ * the view count and change the last viewed time. We also track whether or not
+ * the image was liked or not.
  */
 @Table("Views")
 public class ChannelImage extends Model {
 	/********** DB Fields ***********************/
-	@AutoIncrementPrimaryKey
-	@Column("id")
-	private long mId;
 
+	@PrimaryKey
 	@ForeignKey("Channels(id)")
 	@CascadeDelete
-	@NotNull
 	@Column("channelId")
 	private long mChannelId;
 
-	@Column("image")
-	@NotNull
-	private String mImgurId;
+	@PrimaryKey
+	@Column("imageId")
+	private long mImageId;
 	private Image mImage;
-	/*
-	 * TODO: We should move toward using the image id instead. For that we need
-	 * to have no duplicates, and images should be able to have multiple
-	 * categories
-	 */
 
 	@Column("count")
 	private int mViewCount;
@@ -48,7 +37,6 @@ public class ChannelImage extends Model {
 	private long mLastSeen;
 
 	@Column("liked")
-	@NotNull
 	private int mLikeStatus;
 
 	/***************************************************
@@ -76,7 +64,11 @@ public class ChannelImage extends Model {
 		}
 	}
 
+	/**
+	 * Empty constructor for sprinkles. Don't use!
+	 */
 	public ChannelImage() {
+		/* Empty constructor for sprinkles. */
 	}
 
 	/**
@@ -87,17 +79,31 @@ public class ChannelImage extends Model {
 	 * @param image
 	 */
 	public ChannelImage(Channel channel, Image image) {
+		if (channel == null) {
+			throw new IllegalArgumentException("Channel can't be null");
+		}
+		if (channel.getId() < 1) {
+			throw new IllegalArgumentException("Channel doesn't have an id");
+		}
+		if (image == null) {
+			throw new IllegalArgumentException("Image can't be null");
+		}
+		if (image.getId() < 1) {
+			throw new IllegalArgumentException("Image doesn't have an id.");
+		}
+
 		mChannelId = channel.getId();
-		mImgurId = image.getImgurId();
+		mImageId = image.getId();
 		mImage = image;
 
-		mViewCount = 1;
-		mLastSeen = new Date().getTime();
-		mLikeStatus = LIKE_STATUS.NEUTRAL.id;
+		/* Init to not yet seen and neutral like status. */
+		mViewCount = 0;
+		mLastSeen = 0;
+		mLikeStatus = LIKE_STATUS.NEUTRAL.getId();
 	}
 
-	public String getImgurId() {
-		return mImgurId;
+	public long getImageId() {
+		return mImageId;
 	}
 
 	public int getViewCount() {
@@ -137,27 +143,41 @@ public class ChannelImage extends Model {
 		// TODO: Get image from db if necessary
 		return mImage;
 	}
-	
-	public int getChannelId(){
+
+	public int getChannelId() {
 		return (int) mChannelId;
 	}
-	
+
+
 	@Override
 	public int hashCode() {
-		return mImgurId.toLowerCase(Locale.US).hashCode();
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (int) (mChannelId ^ (mChannelId >>> 32));
+		result = prime * result + (int) (mImageId ^ (mImageId >>> 32));
+		return result;
 	}
+
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj == null)
-			return false;
-		if (obj == this)
+		if (this == obj) {
 			return true;
-		if (!(obj instanceof ChannelImage))
+		}
+		if (obj == null) {
 			return false;
-
-		ChannelImage img = (ChannelImage) obj;
-		return img.mImgurId.equalsIgnoreCase(mImgurId) && img.mChannelId == mChannelId;
+		}
+		if (!(obj instanceof ChannelImage)) {
+			return false;
+		}
+		ChannelImage other = (ChannelImage) obj;
+		if (mChannelId != other.mChannelId) {
+			return false;
+		}
+		if (mImageId != other.mImageId) {
+			return false;
+		}
+		return true;
 	}
 
 }
