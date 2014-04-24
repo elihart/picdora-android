@@ -5,6 +5,8 @@ import java.io.InputStream;
 
 import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EBean;
+import org.androidannotations.annotations.UiThread;
+import org.androidannotations.annotations.UiThread.Propagation;
 import org.androidannotations.annotations.sharedpreferences.Pref;
 import org.apache.commons.io.IOUtils;
 
@@ -14,18 +16,13 @@ import com.picdora.PicdoraPreferences_;
 import com.picdora.api.PicdoraApiService;
 
 @EBean
-public abstract class Syncer {
+public abstract class Syncer implements SyncTask {
 	@Pref
 	protected PicdoraPreferences_ mPrefs;
 	@Bean
 	protected PicdoraApiService mApiService;
 
-	/**
-	 * Sync the local db with the server if it is out of date. Network and DB
-	 * access is done synchronously, so this must done be called on the ui
-	 * thread
-	 */
-	public abstract void sync();
+	private OnSyncTaskCompleteListener mOnCompleteListener;
 
 	/**
 	 * Turn a Retrofit response body into a string
@@ -39,15 +36,28 @@ public abstract class Syncer {
 		String result = IOUtils.toString(is);
 		is.close();
 		return result;
-//		BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-//		StringBuilder total = new StringBuilder(is.available());
-//		String line;
-//		while ((line = reader.readLine()) != null) {
-//			total.append(line);
-//		}
-//		is.close();
-//
-//		return reader.toString();
+	}
+
+	@Override
+	public void run(OnSyncTaskCompleteListener listener) {
+		mOnCompleteListener = listener;
+		sync();
+	}
+
+	/**
+	 * Implement this to run whatever tasks you need to sync yourself.
+	 * 
+	 */
+	protected abstract void sync();
+
+	/**
+	 * Call this when we're done syncing to alert the service that the task is
+	 * done. This will be run on the ui thread.
+	 * 
+	 */
+	@UiThread(propagation = Propagation.REUSE)
+	protected void doneSyncing() {
+		mOnCompleteListener.onSyncTaskComplete();
 	}
 
 	// TODO: Use a unified gson approach instead of parsing json ourselves

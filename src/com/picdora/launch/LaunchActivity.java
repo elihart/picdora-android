@@ -1,6 +1,5 @@
 package com.picdora.launch;
 
-import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.sharedpreferences.Pref;
 
@@ -27,14 +26,12 @@ import com.picdora.models.ChannelImage;
 import com.picdora.models.Collection;
 import com.picdora.models.CollectionItem;
 import com.picdora.models.Image;
-import com.picdora.sync.PicdoraSyncManager;
+import com.picdora.sync.PicdoraSyncService;
 import com.picdora.ui.FontHelper;
 import com.picdora.ui.UiUtil;
 
 @EActivity
 public class LaunchActivity extends Activity {
-	@Bean
-	protected PicdoraSyncManager mSyncManager;
 	@Pref
 	protected PicdoraPreferences_ mPrefs;
 
@@ -58,7 +55,8 @@ public class LaunchActivity extends Activity {
 			// TODO: Insert base data into db
 		}
 
-		mSyncManager.sync();
+		/* Start the syncing service. */
+		startService(new Intent(this, PicdoraSyncService.class));
 		
 		/* Move on to the main activity. */
 		startActivity(new Intent(this, ChannelSelectionActivity_.class));
