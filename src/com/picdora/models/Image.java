@@ -52,6 +52,9 @@ public class Image extends Model implements Selectable {
 
 	@Column("lastUpdated")
 	private long mLastUpdated;
+	
+	@Column("createdAt")
+	private long mCreatedAt;
 
 	/****************************************************/
 

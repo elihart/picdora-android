@@ -21,6 +21,8 @@
         <meta-data
             android:name="com.crashlytics.ApiKey"
             android:value="f8e89955ef243b240a3807307b94b382d9652601" />
+        
+        <service android:name="com.picdora.sync.PicdoraSyncService_" />
 
         <activity
             android:name="com.picdora.channelSelection.ChannelSelectionActivity_"

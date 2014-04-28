@@ -7,6 +7,7 @@ import com.picdora.PicdoraApp;
 import retrofit.RestAdapter;
 import retrofit.client.Response;
 import retrofit.http.GET;
+import retrofit.http.POST;
 import retrofit.http.Query;
 
 @EBean
@@ -33,21 +34,47 @@ public class PicdoraApiService implements PicdoraApi {
 	}
 
 	@Override
-	@GET("/images/new")
-	public Response newImages(@Query("id") int afterId,
-			@Query("time") long afterTime, @Query("limit") int batchSize) {
+	@GET("/categories")
+	public Response categories() {
 		try {
-			return client.newImages(afterId, afterTime, batchSize);
+			return client.categories();
 		} catch (Exception e) {
 			return null;
 		}
 	}
 
 	@Override
-	@GET("/categories")
-	public Response categories() {
+	@POST("/user/login")
+	public Response login(@Query("key") String key) {
 		try {
-			return client.categories();
+			return client.login(key);
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	@Override
+	@GET("/images/new")
+	public Response newImages(@Query("category_id") long categoryId,
+			@Query("score") int score,
+			@Query("created_after") long lastCreatedAt,
+			@Query("count") int count) {
+		try {
+			return client.newImages(categoryId, score, lastCreatedAt, count);
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	@Override
+	@GET("/images/update")
+	public Response updateImages(@Query("after_id") int minimumId,
+			@Query("last_updated") long lastUpdated,
+			@Query("created_before") long createdBefore,
+			@Query("limit") int limit) {
+		try {
+			return client.updateImages(minimumId, lastUpdated, createdBefore,
+					limit);
 		} catch (Exception e) {
 			return null;
 		}

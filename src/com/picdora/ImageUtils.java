@@ -327,4 +327,14 @@ public abstract class ImageUtils {
 
 		return ("(" + TextUtils.join(",", ids) + ")");
 	}
+
+	public static int getLastUpdated() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public static int getNewestImageDate() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 }

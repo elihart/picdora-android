@@ -3,8 +3,6 @@ package com.picdora.sync;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import org.androidannotations.annotations.Background;
-import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EService;
 import org.androidannotations.annotations.sharedpreferences.Pref;
 
@@ -23,13 +21,6 @@ public class PicdoraSyncService extends Service implements
 		OnSyncTaskCompleteListener {
 	/** Whether the service is currently doing a sync. */
 	private static boolean mSyncing = false;
-
-	@Bean
-	protected ImageSyncer mImageSyncer;
-	@Bean
-	protected CategorySyncer mCategorySyncer;
-	@Bean
-	protected ChannelSyncer mChannelSyncer;
 
 	/** The sync jobs that need to be performed. */
 	private Queue<SyncTask> mSyncTasks;
@@ -51,6 +42,10 @@ public class PicdoraSyncService extends Service implements
 			startSync();
 		}
 
+		/*
+		 * We don't need to be restarted if we're destroyed. We'll just wait
+		 * till the next sync.
+		 */
 		return Service.START_NOT_STICKY;
 	}
 
@@ -67,14 +62,17 @@ public class PicdoraSyncService extends Service implements
 	 */
 	private void startSync() {
 		mSyncTasks = new LinkedList<SyncTask>();
+
+		/* Login before starting the main syncs. */
+		mSyncTasks.add(LoginTask_.getInstance_(this));
 		/*
 		 * Sync the categories first, then the images and channels. Categories
 		 * need to be before images because we base what images we need based on
 		 * the state of the categories.
 		 */
-		mSyncTasks.add(mCategorySyncer);
-		mSyncTasks.add(mImageSyncer);
-		mSyncTasks.add(mChannelSyncer);
+		mSyncTasks.add(CategorySyncer_.getInstance_(this));
+		mSyncTasks.add(ImageSyncer_.getInstance_(this));
+		mSyncTasks.add(ChannelSyncer_.getInstance_(this));
 
 		doNextSyncTask();
 	}

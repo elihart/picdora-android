@@ -20,6 +20,7 @@ public abstract class CategoryUtils {
 
 	/**
 	 * Sort categories alphabetically by name
+	 * 
 	 * @param categories
 	 */
 	public static void sortByName(List<Category> categories) {
@@ -34,7 +35,9 @@ public abstract class CategoryUtils {
 
 	/**
 	 * Get all categories synchronously from the database
-	 * @param includeNsfw True if nsfw categories should be included
+	 * 
+	 * @param includeNsfw
+	 *            True if nsfw categories should be included
 	 * @return
 	 */
 	public static List<Category> getAll(boolean includeNsfw) {
@@ -45,17 +48,19 @@ public abstract class CategoryUtils {
 			query += " WHERE nsfw=0";
 		}
 
-		CursorList<Category> list = Query.many(Category.class, query, null).get();
+		CursorList<Category> list = Query.many(Category.class, query, null)
+				.get();
 		categories.addAll(list.asList());
 		list.close();
 
 		return categories;
 	}
-	
+
 	/**
 	 * get a comma separated list of category ids for use in a sql query
 	 * 
-	 * @param categories The categories whose id's we want.
+	 * @param categories
+	 *            The categories whose id's we want.
 	 * 
 	 * @return
 	 */
@@ -66,6 +71,44 @@ public abstract class CategoryUtils {
 		}
 
 		return ("(" + TextUtils.join(",", ids) + ")");
+	}
+
+	/**
+	 * Get the number of usable images in the given categories. This excludes
+	 * deleted and reported images.
+	 * 
+	 * @param category
+	 * @param onlyCountUnseen
+	 *            True if the count should only include images that haven't been
+	 *            seen yet and not the total amount of images.
+	 * @return
+	 */
+	public static int getImageCount(Category category, boolean onlyCountUnseen) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	/**
+	 * Get the lowest score out of all the images in this category.
+	 * 
+	 * @param category
+	 * @return
+	 */
+	public static int getLowestImageScore(Category category) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	/**
+	 * Get the date in unix time of the most recently created image in the given
+	 * category.
+	 * 
+	 * @param category
+	 * @return
+	 */
+	public static long getNewestImageDate(Category category) {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 }

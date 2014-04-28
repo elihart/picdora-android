@@ -29,7 +29,11 @@ public class Category extends Model implements Selectable {
 	@Column("icon")
 	@NotNull
 	private String mPreviewImage;
-	
+
+	/**
+	 * The last time the category was updated on the server, in unix time.
+	 * 
+	 */
 	@Column("updated")
 	private long mLastUpdated;
 
@@ -44,7 +48,7 @@ public class Category extends Model implements Selectable {
 	public Category() {
 
 	}
-	
+
 	@Override
 	protected void beforeSave() {
 		mLastUpdated = Util.getUnixTime();
@@ -72,6 +76,12 @@ public class Category extends Model implements Selectable {
 
 		try {
 			mPreviewImage = jsonObject.getString("icon");
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		try {
+			mLastUpdated = jsonObject.getLong("updated_at");
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
@@ -108,7 +118,8 @@ public class Category extends Model implements Selectable {
 		return (int) mId;
 	}
 
-	/** Get the imgur id of the icon to use for this category.
+	/**
+	 * Get the imgur id of the icon to use for this category.
 	 * 
 	 * @return
 	 */

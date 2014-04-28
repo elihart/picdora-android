@@ -218,10 +218,14 @@ public class ChannelPlayer {
 	 * @return resultCount The number of images retrieved from the db
 	 */
 	private int loadImageBatch(int count, Collection<ChannelImage> images) {
+		// TODO: Test this with the new db schema changes
+		
 		// build the query. Start by only selecting images from categories that
 		// this channel includes
-		String query = "SELECT * FROM Images WHERE categoryId IN "
-				+ CategoryUtils.getCategoryIdsString(mChannel.getCategories());
+		String imageIdsFromCategories = "(SELECT distinct imageId FROM CategoryImages WHERE categoryId IN "
+				+ CategoryUtils.getCategoryIdsString(mChannel.getCategories()) + ")";
+		
+		String query = "SELECT * FROM Images WHERE id IN " + imageIdsFromCategories;
 
 		// add the gif setting
 		switch (mChannel.getGifSetting()) {
@@ -240,7 +244,7 @@ public class ChannelPlayer {
 		}
 
 		/* TODO: We need to reuse images at some point... */
-		query += " AND imgurId NOT IN (SELECT image FROM Views WHERE channelId="
+		query += " AND id NOT IN (SELECT imageId FROM Views WHERE channelId="
 				+ mChannel.getId() + ")";
 
 		// set ordering and add limit

@@ -3,14 +3,17 @@ package com.picdora.sync;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EBean;
+import org.androidannotations.annotations.RootContext;
 import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.UiThread.Propagation;
 import org.androidannotations.annotations.sharedpreferences.Pref;
 import org.apache.commons.io.IOUtils;
 
 import retrofit.client.Response;
+import android.content.Context;
 
 import com.picdora.PicdoraPreferences_;
 import com.picdora.api.PicdoraApiService;
@@ -21,6 +24,8 @@ public abstract class Syncer implements SyncTask {
 	protected PicdoraPreferences_ mPrefs;
 	@Bean
 	protected PicdoraApiService mApiService;
+	@RootContext
+	protected Context mContext;
 
 	private OnSyncTaskCompleteListener mOnCompleteListener;
 
@@ -45,9 +50,11 @@ public abstract class Syncer implements SyncTask {
 	}
 
 	/**
-	 * Implement this to run whatever tasks you need to sync yourself.
+	 * Implement this to run whatever tasks you need to do your sync. It will
+	 * run in the background.
 	 * 
 	 */
+	@Background
 	protected abstract void sync();
 
 	/**

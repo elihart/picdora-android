@@ -1,7 +1,9 @@
 package com.picdora.models;
 
 import se.emilsjolander.sprinkles.Model;
+import se.emilsjolander.sprinkles.annotations.CascadeDelete;
 import se.emilsjolander.sprinkles.annotations.Column;
+import se.emilsjolander.sprinkles.annotations.ForeignKey;
 import se.emilsjolander.sprinkles.annotations.PrimaryKey;
 import se.emilsjolander.sprinkles.annotations.Table;
 
@@ -12,10 +14,14 @@ import se.emilsjolander.sprinkles.annotations.Table;
 @Table("CategoryImages")
 public class CategoryImage extends Model {
 	@PrimaryKey
+	@ForeignKey("Categories(id)")
+	@CascadeDelete
 	@Column("categoryId")
 	private long mCategoryId;
 
 	@PrimaryKey
+	@ForeignKey("Images(id)")
+	@CascadeDelete
 	@Column("imageId")
 	private long mImageId;
 

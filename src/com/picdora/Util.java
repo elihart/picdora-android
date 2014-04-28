@@ -10,6 +10,7 @@ import se.emilsjolander.sprinkles.annotations.Table;
 import android.content.Context;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.google.gson.Gson;
 
 public class Util {
@@ -144,5 +145,17 @@ public class Util {
 	 */
 	public static long getUnixTime() {
 		return System.currentTimeMillis() / 1000L;
+	}
+
+	/**
+	 * Log an exception with crashlytics if it is enabled.
+	 * 
+	 * @param e
+	 */
+	public static void logException(Throwable e) {
+		/* If we're not in debug mode then crashlytics is enabled. */
+		if(!PicdoraApp.DEBUG){
+			Crashlytics.logException(e);
+		}
 	}
 }

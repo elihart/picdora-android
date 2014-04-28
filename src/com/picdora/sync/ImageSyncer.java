@@ -1,7 +1,8 @@
 package com.picdora.sync;
 
 import java.io.IOException;
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.androidannotations.annotations.EBean;
 import org.json.JSONArray;
@@ -13,7 +14,10 @@ import se.emilsjolander.sprinkles.Sprinkles;
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
 
+import com.picdora.CategoryUtils;
+import com.picdora.ImageUtils;
 import com.picdora.Util;
+import com.picdora.models.Category;
 
 /**
  * Keeps our local image db up to date with the server
@@ -21,39 +25,147 @@ import com.picdora.Util;
  */
 @EBean
 public class ImageSyncer extends Syncer {
-	// TODO: Send updates to the server about changes to the images, such as
-	// gif/deleted/reported changes
 
-	// The last time we updated images. Give this to the server so it knows what
-	// images we need
-	private long mLastUpdated;
-	// Image updates come in batches. We tell the server what image Id to start
-	// with and it gives us images including and after that id. If there
-	// are more images than the batch size the server gives us the id of the
-	// next
-	// image so we know where to start on the next batch.
-	private int mIdIndex;
-
-	// The number of images to get from the server in each batch. Null if we
-	// want to go with the server default
+	/**
+	 * The number of images to get from the server in each batch. Null if we
+	 * want to go with the server default.
+	 * 
+	 */
 	private static final Integer BATCH_SIZE = 1000;
-	// The number of consecutive failures we need to hit before we give up on
-	// updating.
-	private static final int FAILURE_LIMIT = 3;
-	// Keep track of consecutive failures so we know when to give up. Reset to 0
-	// on a success
-	private int mNumFailures;
-	// keep track of when we start the update so we can save the last updated
-	// time. If we use the end time there is a race condition of missing images
-	// that are updated after we pass their id
-	private long mStartTime;
+	/**
+	 * The number of unseen images a category should have before we try to get
+	 * more for it.
+	 */
+	private static final int LOW_IMAGE_THRESHOLD = 200;
+	/** The number of fresh images to get for a category that is low on images. */
+	private static final int NUM_IMAGES_FOR_LOW_CATEGORY = 600;
+
+	/** The maximum number of times to retry a request until we give up. */
+	private static final int MAX_RETRIES = 3;
+
+	/**
+	 * Our position in the update process. Our next batch should start with this
+	 * id.
+	 */
+	private int mUpdateBatchId;
+	/** The last time our images were updated. */
+	private int mLastUpdated;
+	/** The creation date of our newest image. */
+	private int mLastCreated;
 
 	@Override
 	public void sync() {
-		getNewImages();
+		/* Check for updates for the images in our local database. */
+		long updateStartTime = System.currentTimeMillis();
+		boolean updateResult = updateImages();
 
-		// TODO: Update existing images when things like gif/deleted/reported
-		// status changes
+		/*
+		 * On update success record our update time and then check for new
+		 * images.
+		 */
+		if (updateResult) {
+			setLastUpdated(updateStartTime);
+			getNewImages();
+		}
+	}
+
+	/**
+	 * Update the images in the database.
+	 * 
+	 * @return True on success, false on failure.
+	 */
+	private boolean updateImages() {
+		/* Start the update at the first id. */
+		mUpdateBatchId = 0;
+		/* Get update and creation dates from db. */
+		mLastUpdated = getLastUpdated();
+		mLastCreated = ImageUtils.getNewestImageDate();
+
+		/*
+		 * Retrieve batches until either we get all the images or we hit too
+		 * many consecutive failures.
+		 */
+		int attempts = 0;
+		while (attempts < MAX_RETRIES) {
+			/*
+			 * Get the next batch of images. This returns images only based on
+			 * the updated and creation dates, so it may return images that we
+			 * don't have in the database. We will ignore those.
+			 */
+			Response response = mApiService.updateImages(mUpdateBatchId,
+					mLastUpdated, mLastCreated, BATCH_SIZE);
+
+			/*
+			 * Check for a successful response and keep track of consecutive
+			 * failures. Reset the count on success.
+			 */
+			if (response == null || response.getBody() == null) {
+				attempts++;
+				/* Try again... */
+				continue;
+			} else {
+				attempts = 0;
+			}
+
+			try {
+				/* Process the response json. */
+				String body = responseToString(response);
+				JSONArray json = new JSONArray(body);
+				/*
+				 * Update the images in the db, ignoring images that we don't
+				 * have.
+				 */
+				putImagesInDb(json, true);
+
+				/*
+				 * If the number of images returned is as big as our batch size
+				 * then there could be more on the server that we missed. Get
+				 * the id of the last image to use in the next batch request.
+				 */
+				int numImages = json.length();
+				if (numImages >= BATCH_SIZE) {
+					JSONObject lastImage = json.getJSONObject(numImages - 1);
+					mUpdateBatchId = lastImage.getInt("id");
+				}
+				/* All done! */
+				else {
+					return true;
+				}
+			}
+			/* Log exceptions and returnfalse. */
+			catch (IOException e) {
+				Util.logException(e);
+				return false;
+			} catch (JSONException e) {
+				Util.logException(e);
+				return false;
+			}
+		}
+
+		/* Gave up after too many consecutive connection errors. */
+		return false;
+
+	}
+
+	/**
+	 * Get the last time our images were updated successfully.
+	 * 
+	 * @return
+	 */
+	private int getLastUpdated() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	/**
+	 * Record the given time as the most recent time that we have performed an
+	 * image update.
+	 * 
+	 * @param updateStartTime
+	 */
+	private void setLastUpdated(long updateStartTime) {
+		// TODO
+
 	}
 
 	/**
@@ -62,96 +174,76 @@ public class ImageSyncer extends Syncer {
 	 * being loaded at once. If the server has more images than we want in our
 	 * batch size it will give us the id of the next image to use in our next
 	 * batch
-	 */
-	public void getNewImages() {
-		mStartTime = new Date().getTime();
-		// get all images on the server that have changed since the last time we
-		// updated. Start with id 0 and increment in batches till we have them
-		// all
-		mLastUpdated = mPrefs.lastUpdated().get();
-		Util.log("Last updated " + new Date(mLastUpdated));
-		// need to convert from millis to seconds for Unix time
-		mLastUpdated /= 1000;
-		// the id to start each batch with. Start at 0 and will be incremented
-		// on each successful batch. When the server doesn't have anymore images
-		// it won't give us a next id and this will be set to -1 to indicate we
-		// are finished
-		mIdIndex = 0;
-
-		// We retry on error, but if we run into too many consecutive errors we
-		// give up
-		mNumFailures = 0;
-
-		
-		while (mIdIndex != -1 && mNumFailures < FAILURE_LIMIT) {
-			getNewImageBatch();
-		}
-
-		if (mIdIndex == -1) {
-			// success!
-			mPrefs.lastUpdated().put(mStartTime);
-		} else {
-			// failure
-		}
-	}
-
-	private void getNewImageBatch() {
-		Response response = mApiService.newImages(mIdIndex,
-				mLastUpdated, BATCH_SIZE);
-		if (response == null || response.getBody() == null) {
-			handleGetImageFailure();
-			return;
-		}
-
-		try {
-			String body = responseToString(response);
-			JSONObject json = new JSONObject(body);
-			// the returned json object contains two members, a json array
-			// "images" that contains the image data, and an int giving us the
-			// id to start the next batch with
-			addNewImagesToDb(json.getJSONArray("images"));
-			mIdIndex = getNextId(json);
-			// reset the failure count on successful batch. We only count consecutive failures
-			mNumFailures = 0;
-		} catch (IOException e) {
-			handleGetImageFailure();
-		} catch (JSONException e) {
-			handleGetImageFailure();
-		}
-	}
-
-	private void handleGetImageFailure() {
-		mNumFailures++;
-	}
-
-	/**
-	 * Get the "nextId" field from the json object returned from the server
 	 * 
-	 * @param json
-	 * @return -1 if no id was included. This indicates that there are no
-	 *         further images to get
+	 * @return True on success, false on failure.
 	 */
-	private int getNextId(JSONObject json) {
-		// check for the next id
-		try {
-			return json.getInt("nextId");
-		} catch (JSONException e) {
-			return -1;
+	public boolean getNewImages() {
+		/* Get all categories and check which ones are low on images. */
+		List<Category> allCategories = CategoryUtils.getAll(true);
+		/*
+		 * List of categories whose unseen image count is below the threshold
+		 * and need more images.
+		 */
+		List<Category> lowCategories = new ArrayList<Category>();
+		/* Get image counts and identify the low categories. */
+		for (Category c : allCategories) {
+			int numUnseenImages = CategoryUtils.getImageCount(c, true);
+			if (numUnseenImages < LOW_IMAGE_THRESHOLD) {
+				lowCategories.add(c);
+			}
 		}
+
+		for (Category category : lowCategories) {
+			
+			int score = CategoryUtils.getLowestImageScore(category);
+			long lastCreatedAt = CategoryUtils.getNewestImageDate(category);
+			
+			int attempts = 0;
+			while (attempts < MAX_RETRIES) {
+
+				Response response = mApiService.newImages(category.getId(),
+						score, lastCreatedAt, NUM_IMAGES_FOR_LOW_CATEGORY);
+
+				/*
+				 * Check for a successful response and keep track of consecutive
+				 * failures. Reset the count on success.
+				 */
+				if (response == null || response.getBody() == null) {
+					attempts++;
+					/* Try again... */
+					continue;
+				} else {
+					attempts = 0;
+				}
+
+				try {
+					String body = responseToString(response);
+					JSONArray json = new JSONArray(body);
+					putImagesInDb(json, false);
+					break;
+				} catch (IOException e) {
+					return false;
+				} catch (JSONException e) {
+					return false;
+				}
+			}
+		}
+
+		return true;
 	}
 
 	/**
-	 * Parse the json array into image data and save the images to the database
+	 * Parse the json array into image data and save the images to the database,
+	 * overwriting any existing tuples.
 	 * 
 	 * @param array
+	 * @param update
+	 *            True if the images should update existing images and false to
+	 *            insert/overwrite into the database. If set to update then an
+	 *            image won't be created if the id doesn't already exist.
+	 * 
 	 */
-	protected void addNewImagesToDb(JSONArray array) {
-		//Util.log("Updating " + array.length() + " images in the db");
-		//Date start = new Date();
-		if (array == null || array.length() == 0) {
-			return;
-		}
-
+	protected void putImagesInDb(JSONArray array, boolean update) {
 		SQLiteDatabase db = Sprinkles.getDatabase();
 		db.beginTransaction();
 
@@ -160,29 +252,49 @@ public class ImageSyncer extends Syncer {
 			for (int i = numImages - 1; i >= 0; i--) {
 				JSONObject imageJson = array.getJSONObject(i);
 
+				long id = imageJson.getLong("id");
 				ContentValues values = new ContentValues();
-				values.put("id", imageJson.getLong("id"));
+				values.put("id", id);
+				values.put("lastUpdated", imageJson.getLong("updated_at"));
+				values.put("createdAt", imageJson.getLong("created_at"));
 				values.put("imgurId", imageJson.getString("imgurId"));
 				values.put("redditScore", imageJson.getLong("reddit_score"));
 				values.put("nsfw", imageJson.getBoolean("nsfw"));
 				values.put("gif", imageJson.getBoolean("gif"));
-				values.put("categoryId", imageJson.getLong("category_id"));
-				
-				// TODO: Get reported and deleted values from server
+				values.put("deleted", imageJson.getBoolean("deleted"));
+				values.put("reported", imageJson.getBoolean("reported"));
 
-				db.insertWithOnConflict("Images", null, values,
-						SQLiteDatabase.CONFLICT_REPLACE);
+				/* Insert or update depending on the param. */
+				if (update) {
+					db.update("Images", values, "id=" + id, null);
+				} else {
+					db.insertWithOnConflict("Images", null, values,
+							SQLiteDatabase.CONFLICT_REPLACE);
+				}
+
+				/*
+				 * Set the categories for this image. First delete any
+				 * categories it may have had before and then recreate them all.
+				 */
+				db.delete("CategoryImages", "imageId=" + id, null);
+
+				JSONArray categories = imageJson.getJSONArray("categories");
+				int numCategories = categories.length();
+				for (int j = 0; j < numCategories; j++) {
+					ContentValues categoryValues = new ContentValues();
+					categoryValues.put("categoryId", categories.getString(j));
+					categoryValues.put("imageId", id);
+					db.insertWithOnConflict("CategoryImages", null,
+							categoryValues, SQLiteDatabase.CONFLICT_REPLACE);
+				}
 			}
-			//Util.log("Batch successful!");
+			// Util.log("Batch successful!");
 			db.setTransactionSuccessful();
 		} catch (JSONException e) {
-			e.printStackTrace();
+			Util.logException(e);
 		} finally {
 			db.endTransaction();
 		}
-
-		//Date end = new Date();
-		//Util.log("DB update took " + (end.getTime() - start.getTime()));
 	}
 
 }
