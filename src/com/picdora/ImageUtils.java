@@ -114,22 +114,6 @@ public abstract class ImageUtils {
 		return getImgurLink(image.getImgurId(), size);
 	}
 
-	public static long getLastId() {
-		SQLiteDatabase db = Sprinkles.getDatabase();
-		final String query = "SELECT MAX(id) FROM Images";
-
-		SQLiteStatement s = db.compileStatement(query);
-
-		long result = 0;
-		try {
-			result = s.simpleQueryForLong();
-		} catch (SQLiteDoneException ex) {
-			// no result
-		}
-
-		return result;
-	}
-
 	/**
 	 * Download the full size version of the imgur image with the given id and
 	 * save it to the user's public images
@@ -327,43 +311,25 @@ public abstract class ImageUtils {
 
 	/**
 	 * Get the date of the most recent update in all the images, in unix time.
+	 * Returns 0 if there are no images.
 	 * 
 	 * @return
 	 */
 	public static long getLastUpdated() {
-		SQLiteDatabase db = Sprinkles.getDatabase();
 		final String query = "SELECT MAX(lastUpdated) FROM Images";
 
-		SQLiteStatement s = db.compileStatement(query);
-
-		long result = 0;
-		try {
-			result = s.simpleQueryForLong();
-		} catch (SQLiteDoneException ex) {
-			// no result
-		}
-
-		return result;
+		return DbUtils.simpleQueryForLong(query, 0);
 	}
 
 	/**
-	 * Get the date in unix time of the creation of our newest image.
+	 * Get the date in unix time of the creation of our newest image. Returns 0
+	 * if there are no images.
 	 * 
 	 * @return
 	 */
 	public static long getNewestImageDate() {
-		SQLiteDatabase db = Sprinkles.getDatabase();
 		final String query = "SELECT MAX(createdAt) FROM Images";
 
-		SQLiteStatement s = db.compileStatement(query);
-
-		long result = 0;
-		try {
-			result = s.simpleQueryForLong();
-		} catch (SQLiteDoneException ex) {
-			// no result
-		}
-
-		return result;
+		return DbUtils.simpleQueryForLong(query, 0);
 	}
 }

@@ -78,80 +78,54 @@ public abstract class CategoryUtils {
 	}
 
 	/**
-	 * Get the number of usable images in the given categories. This excludes
-	 * deleted and reported images.
+	 * Get the number of unique usable images in the given category. This excludes
+	 * deleted and reported images. Images that have already been seen can be
+	 * excluded as well.
 	 * 
 	 * @param category
-	 * @param onlyCountUnseen
-	 *            True if the count should only include images that haven't been
-	 *            seen yet and not the total amount of images.
+	 * @param excludeSeen
+	 *            Whether images that have already been seen should be excluded
+	 *            from the count.
 	 * @return
 	 */
-	public static int getImageCount(Category category, boolean onlyCountUnseen) {
-		SQLiteDatabase db = Sprinkles.getDatabase();
-		final String query = "SELECT COUNT(*) FROM Images JOIN ImageCategories ON id=imageId WHERE categoryId="
+	public static int getImageCount(Category category, boolean excludeSeen) {
+		String query = "SELECT COUNT(distinct Images.id) FROM Images JOIN ImageCategories ON Images.id = ImageCategories.imageId WHERE deleted=0 AND reported=0 AND categoryId="
 				+ category.getId();
 		
-		// TODO: Add join on imge views and exlude seen.
-
-		SQLiteStatement s = db.compileStatement(query);
-
-		long result = 0;
-		try {
-			result = s.simpleQueryForLong();
-		} catch (SQLiteDoneException ex) {
-			// no result
+		if(excludeSeen){
+			query += " AND Images.id NOT IN (SELECT distinct imageId FROM Views)";
 		}
 
-		return (int) result;
+		/* Return 0 if no images match the query. */
+		return (int) DbUtils.simpleQueryForLong(query, 0);
 	}
 
 	/**
 	 * Get the lowest score out of all the images in this category. If there are
-	 * no images in this category then MAX_INT is returned.
+	 * no images in this category then -1 is returned.
 	 * 
 	 * @param category
 	 * @return
 	 */
 	public static int getLowestImageScore(Category category) {
-		SQLiteDatabase db = Sprinkles.getDatabase();
-		final String query = "SELECT MIN(redditScore) FROM Images JOIN ImageCategories ON id=imageId WHERE categoryId="
+		final String query = "SELECT MIN(redditScore) FROM Images JOIN ImageCategories ON Images.id = ImageCategories.imageId WHERE categoryId="
 				+ category.getId();
 
-		SQLiteStatement s = db.compileStatement(query);
-
-		long result = 0;
-		try {
-			result = s.simpleQueryForLong();
-		} catch (SQLiteDoneException ex) {
-			// no result
-		}
-
-		return (int) result;
+		return (int) DbUtils.simpleQueryForLong(query, -1);
 	}
 
 	/**
 	 * Get the date in unix time of the most recently created image in the given
-	 * category.
+	 * category, or 0 if no images match.
 	 * 
 	 * @param category
 	 * @return
 	 */
 	public static long getNewestImageDate(Category category) {
-		SQLiteDatabase db = Sprinkles.getDatabase();
-		final String query = "SELECT MAX(createdAt) FROM Images JOIN ImageCategories ON id=imageId WHERE categoryId="
+		final String query = "SELECT MAX(createdAt) FROM Images JOIN ImageCategories ON Images.id = ImageCategories.imageId WHERE categoryId="
 				+ category.getId();
-
-		SQLiteStatement s = db.compileStatement(query);
-
-		long result = 0;
-		try {
-			result = s.simpleQueryForLong();
-		} catch (SQLiteDoneException ex) {
-			// no result
-		}
-
-		return result;
+		
+		return DbUtils.simpleQueryForLong(query, 0);
 	}
 
 }

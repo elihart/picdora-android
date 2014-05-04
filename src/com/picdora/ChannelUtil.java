@@ -108,17 +108,16 @@ public class ChannelUtil {
 	 * @return
 	 */
 	public static boolean isNameTaken(String name) {
-		SQLiteDatabase db = Sprinkles.getDatabase();
 		String query = "SELECT count(*) FROM Channels WHERE name = '" + name
 				+ "'  COLLATE NOCASE";
-
-		SQLiteStatement s = db.compileStatement(query);
-
-		try {
-			return s.simpleQueryForLong() > 0;
-		} catch (SQLiteDoneException e) {
+		
+		long result = DbUtils.simpleQueryForLong(query, 0);
+		if(result == 0){
 			return false;
+		} else {
+			return true;
 		}
+
 	}
 
 	public static List<Channel> getAllChannels(boolean includeNsfw) {
@@ -160,13 +159,10 @@ public class ChannelUtil {
 	}
 
 	public static int getNumImagesViewed(Channel channel) {
-		SQLiteDatabase db = Sprinkles.getDatabase();
 		String query = "SELECT count(*) FROM Views WHERE channelId="
 				+ channel.getId();
 
-		SQLiteStatement s = db.compileStatement(query);
-
-		return (int) s.simpleQueryForLong();
+		return (int) DbUtils.simpleQueryForLong(query, 0);
 	}
 
 	/**
