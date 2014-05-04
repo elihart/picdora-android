@@ -50,9 +50,11 @@ public class Image extends Model implements Selectable {
 	@Column("gif")
 	private boolean mGif;
 
+	/** The date the image was last updated on the server in unix time. */
 	@Column("lastUpdated")
 	private long mLastUpdated;
-	
+
+	/** The date the image was created on the server in unix time. */
 	@Column("createdAt")
 	private long mCreatedAt;
 
@@ -117,7 +119,7 @@ public class Image extends Model implements Selectable {
 	 */
 	public String getUrl(ImgurSize size) {
 		return ImageUtils.getImgurLink(this, size);
-	}	
+	}
 
 	@Override
 	public int hashCode() {
@@ -144,7 +146,7 @@ public class Image extends Model implements Selectable {
 		}
 		return true;
 	}
-	
+
 	/*
 	 * Implement these methods for the Selectable interface so Images can be
 	 * used in a selection grid

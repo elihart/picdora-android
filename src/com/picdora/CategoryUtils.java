@@ -7,6 +7,10 @@ import java.util.List;
 
 import se.emilsjolander.sprinkles.CursorList;
 import se.emilsjolander.sprinkles.Query;
+import se.emilsjolander.sprinkles.Sprinkles;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteDoneException;
+import android.database.sqlite.SQLiteStatement;
 import android.text.TextUtils;
 
 import com.picdora.models.Category;
@@ -84,19 +88,46 @@ public abstract class CategoryUtils {
 	 * @return
 	 */
 	public static int getImageCount(Category category, boolean onlyCountUnseen) {
-		// TODO Auto-generated method stub
-		return 0;
+		SQLiteDatabase db = Sprinkles.getDatabase();
+		final String query = "SELECT COUNT(*) FROM Images JOIN ImageCategories ON id=imageId WHERE categoryId="
+				+ category.getId();
+		
+		// TODO: Add join on imge views and exlude seen.
+
+		SQLiteStatement s = db.compileStatement(query);
+
+		long result = 0;
+		try {
+			result = s.simpleQueryForLong();
+		} catch (SQLiteDoneException ex) {
+			// no result
+		}
+
+		return (int) result;
 	}
 
 	/**
-	 * Get the lowest score out of all the images in this category.
+	 * Get the lowest score out of all the images in this category. If there are
+	 * no images in this category then MAX_INT is returned.
 	 * 
 	 * @param category
 	 * @return
 	 */
 	public static int getLowestImageScore(Category category) {
-		// TODO Auto-generated method stub
-		return 0;
+		SQLiteDatabase db = Sprinkles.getDatabase();
+		final String query = "SELECT MIN(redditScore) FROM Images JOIN ImageCategories ON id=imageId WHERE categoryId="
+				+ category.getId();
+
+		SQLiteStatement s = db.compileStatement(query);
+
+		long result = 0;
+		try {
+			result = s.simpleQueryForLong();
+		} catch (SQLiteDoneException ex) {
+			// no result
+		}
+
+		return (int) result;
 	}
 
 	/**
@@ -107,8 +138,20 @@ public abstract class CategoryUtils {
 	 * @return
 	 */
 	public static long getNewestImageDate(Category category) {
-		// TODO Auto-generated method stub
-		return 0;
+		SQLiteDatabase db = Sprinkles.getDatabase();
+		final String query = "SELECT MAX(createdAt) FROM Images JOIN ImageCategories ON id=imageId WHERE categoryId="
+				+ category.getId();
+
+		SQLiteStatement s = db.compileStatement(query);
+
+		long result = 0;
+		try {
+			result = s.simpleQueryForLong();
+		} catch (SQLiteDoneException ex) {
+			// no result
+		}
+
+		return result;
 	}
 
 }

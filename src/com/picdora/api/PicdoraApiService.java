@@ -2,13 +2,13 @@ package com.picdora.api;
 
 import org.androidannotations.annotations.EBean;
 
-import com.picdora.PicdoraApp;
-
 import retrofit.RestAdapter;
 import retrofit.client.Response;
 import retrofit.http.GET;
 import retrofit.http.POST;
 import retrofit.http.Query;
+
+import com.picdora.PicdoraApp;
 
 @EBean
 public class PicdoraApiService implements PicdoraApi {

@@ -114,8 +114,6 @@ public abstract class ImageUtils {
 		return getImgurLink(image.getImgurId(), size);
 	}
 
-	
-
 	public static long getLastId() {
 		SQLiteDatabase db = Sprinkles.getDatabase();
 		final String query = "SELECT MAX(id) FROM Images";
@@ -131,7 +129,6 @@ public abstract class ImageUtils {
 
 		return result;
 	}
-
 
 	/**
 	 * Download the full size version of the imgur image with the given id and
@@ -291,8 +288,7 @@ public abstract class ImageUtils {
 		 * If this isn't an image from the db or the gif value already matches
 		 * then don't save it. The id will be 0 if it isn't from db.
 		 */
-		if (image.getId() == 0
-				|| Boolean.valueOf(gif).equals(image.isGif())) {
+		if (image.getId() == 0 || Boolean.valueOf(gif).equals(image.isGif())) {
 			return;
 		}
 
@@ -314,7 +310,8 @@ public abstract class ImageUtils {
 
 	}
 
-	/** Get a comma separated list of Image ids for use in db queries.
+	/**
+	 * Get a comma separated list of Image ids for use in db queries.
 	 * 
 	 * @param images
 	 * @return
@@ -328,13 +325,45 @@ public abstract class ImageUtils {
 		return ("(" + TextUtils.join(",", ids) + ")");
 	}
 
-	public static int getLastUpdated() {
-		// TODO Auto-generated method stub
-		return 0;
+	/**
+	 * Get the date of the most recent update in all the images, in unix time.
+	 * 
+	 * @return
+	 */
+	public static long getLastUpdated() {
+		SQLiteDatabase db = Sprinkles.getDatabase();
+		final String query = "SELECT MAX(lastUpdated) FROM Images";
+
+		SQLiteStatement s = db.compileStatement(query);
+
+		long result = 0;
+		try {
+			result = s.simpleQueryForLong();
+		} catch (SQLiteDoneException ex) {
+			// no result
+		}
+
+		return result;
 	}
 
-	public static int getNewestImageDate() {
-		// TODO Auto-generated method stub
-		return 0;
+	/**
+	 * Get the date in unix time of the creation of our newest image.
+	 * 
+	 * @return
+	 */
+	public static long getNewestImageDate() {
+		SQLiteDatabase db = Sprinkles.getDatabase();
+		final String query = "SELECT MAX(createdAt) FROM Images";
+
+		SQLiteStatement s = db.compileStatement(query);
+
+		long result = 0;
+		try {
+			result = s.simpleQueryForLong();
+		} catch (SQLiteDoneException ex) {
+			// no result
+		}
+
+		return result;
 	}
 }

@@ -11,8 +11,8 @@ import se.emilsjolander.sprinkles.annotations.Table;
  * A many to many relationship of images tagged with categories. Each
  * combination is unique, so a image can only list a specific category once.
  */
-@Table("CategoryImages")
-public class CategoryImage extends Model {
+@Table("ImageCategories")
+public class ImageCategory extends Model {
 	@PrimaryKey
 	@ForeignKey("Categories(id)")
 	@CascadeDelete
@@ -25,7 +25,7 @@ public class CategoryImage extends Model {
 	@Column("imageId")
 	private long mImageId;
 
-	public CategoryImage() {
+	public ImageCategory() {
 		// empty constructor for sprinkles
 	}
 
@@ -35,7 +35,7 @@ public class CategoryImage extends Model {
 	 * @param category
 	 * @param image
 	 */
-	public CategoryImage(Category category, Image image) {
+	public ImageCategory(Category category, Image image) {
 		if (category.getId() < 1) {
 			throw new IllegalArgumentException("Category does not have id");
 		}

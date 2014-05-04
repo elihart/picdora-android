@@ -19,7 +19,7 @@ import com.picdora.R;
 import com.picdora.channelSelection.ChannelSelectionActivity_;
 import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.models.Category;
-import com.picdora.models.CategoryImage;
+import com.picdora.models.ImageCategory;
 import com.picdora.models.Channel;
 import com.picdora.models.ChannelCategory;
 import com.picdora.models.ChannelImage;
@@ -90,7 +90,7 @@ public class LaunchActivity extends Activity {
 		
 		addModelsMigration.createTable(Image.class);
 		addModelsMigration.createTable(Category.class);
-		addModelsMigration.createTable(CategoryImage.class);
+		addModelsMigration.createTable(ImageCategory.class);
 		
 		addModelsMigration.createTable(Channel.class);
 		addModelsMigration.createTable(ChannelImage.class);

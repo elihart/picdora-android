@@ -49,21 +49,21 @@ public class ImageSyncer extends Syncer {
 	 */
 	private int mUpdateBatchId;
 	/** The last time our images were updated. */
-	private int mLastUpdated;
+	private long mLastUpdated;
 	/** The creation date of our newest image. */
-	private int mLastCreated;
+	private long mLastCreated;
 
 	@Override
 	public void sync() {
 		/* Check for updates for the images in our local database. */
-		long updateStartTime = System.currentTimeMillis();
-		boolean updateResult = updateImages();
+		long updateStartTime = Util.getUnixTime();
+		boolean updateSuccess = updateImages();
 
 		/*
 		 * On update success record our update time and then check for new
 		 * images.
 		 */
-		if (updateResult) {
+		if (updateSuccess) {
 			setLastUpdated(updateStartTime);
 			getNewImages();
 		}
@@ -142,30 +142,40 @@ public class ImageSyncer extends Syncer {
 			}
 		}
 
-		/* Gave up after too many consecutive connection errors. */
+		/* Give up after too many consecutive connection errors. */
 		return false;
 
 	}
 
 	/**
-	 * Get the last time our images were updated successfully.
+	 * Get the last time our images were updated successfully in unix time.
 	 * 
 	 * @return
 	 */
-	private int getLastUpdated() {
-		// TODO Auto-generated method stub
-		return 0;
+	private long getLastUpdated() {
+		long lastUpdated = mPrefs.lastImageUpdate().get();
+
+		/*
+		 * If the update time is 0 then we have never recorded an update. In
+		 * this case we should base our update time on the most recent updated
+		 * field in the Images table as that will have been the most recent
+		 * update for the seed images.
+		 */
+		if (lastUpdated > 0) {
+			return lastUpdated;
+		} else {
+			return ImageUtils.getLastUpdated();
+		}
 	}
 
 	/**
 	 * Record the given time as the most recent time that we have performed an
-	 * image update.
+	 * image update in unix time.
 	 * 
 	 * @param updateStartTime
 	 */
 	private void setLastUpdated(long updateStartTime) {
-		// TODO
-
+		mPrefs.lastImageUpdate().put(updateStartTime);
 	}
 
 	/**
@@ -193,11 +203,16 @@ public class ImageSyncer extends Syncer {
 			}
 		}
 
+		/*
+		 * Try to get more images for each of the categories. We can get images
+		 * we don't already have by passing our lowest image score and the
+		 * creation date of our newest image.
+		 */
 		for (Category category : lowCategories) {
-			
+
 			int score = CategoryUtils.getLowestImageScore(category);
 			long lastCreatedAt = CategoryUtils.getNewestImageDate(category);
-			
+
 			int attempts = 0;
 			while (attempts < MAX_RETRIES) {
 
@@ -268,8 +283,15 @@ public class ImageSyncer extends Syncer {
 				if (update) {
 					db.update("Images", values, "id=" + id, null);
 				} else {
+					/*
+					 * If the image already exists we don't want to replace it,
+					 * as that will delete it, causing cascading deletes of
+					 * dependent likes/collections. Instead we'll ignore it and
+					 * and continue on. This case shouldn't happen if our image
+					 * retrieval logic is sound and bug-free however.
+					 */
 					db.insertWithOnConflict("Images", null, values,
-							SQLiteDatabase.CONFLICT_REPLACE);
+							SQLiteDatabase.CONFLICT_IGNORE);
 				}
 
 				/*
@@ -284,6 +306,10 @@ public class ImageSyncer extends Syncer {
 					ContentValues categoryValues = new ContentValues();
 					categoryValues.put("categoryId", categories.getString(j));
 					categoryValues.put("imageId", id);
+					/*
+					 * No existing row should match since we just deleted them,
+					 * but we'll do a replace on conflict just in case.
+					 */
 					db.insertWithOnConflict("CategoryImages", null,
 							categoryValues, SQLiteDatabase.CONFLICT_REPLACE);
 				}

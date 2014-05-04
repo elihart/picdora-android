@@ -53,8 +53,8 @@ public interface PicdoraApi {
 	 * images will be returned in order of ascending id so we can get subsequent
 	 * batches by using the next id.
 	 * 
-	 * @param minimumId
-	 *            The minimum id of the images to be returned, inclusive
+	 * @param id
+	 *            Only return images with an id greater than this one. Does not include this id.
 	 * @param lastUpdated
 	 *            The date of the last time we updated successfully in unix time
 	 * @param createdBefore
@@ -68,7 +68,7 @@ public interface PicdoraApi {
 	 * 
 	 */
 	@GET("/images/update")
-	public Response updateImages(@Query("after_id") int minimumId,
+	public Response updateImages(@Query("after_id") int id,
 			@Query("last_updated") long lastUpdated,
 			@Query("created_before") long createdBefore,
 			@Query("limit") int limit);

@@ -222,7 +222,7 @@ public class ChannelPlayer {
 		
 		// build the query. Start by only selecting images from categories that
 		// this channel includes
-		String imageIdsFromCategories = "(SELECT distinct imageId FROM CategoryImages WHERE categoryId IN "
+		String imageIdsFromCategories = "(SELECT distinct imageId FROM ImageCategories WHERE categoryId IN "
 				+ CategoryUtils.getCategoryIdsString(mChannel.getCategories()) + ")";
 		
 		String query = "SELECT * FROM Images WHERE id IN " + imageIdsFromCategories;
