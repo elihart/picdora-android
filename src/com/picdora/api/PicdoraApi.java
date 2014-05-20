@@ -26,11 +26,11 @@ public interface PicdoraApi {
 	 *            created after ours or, if necessary, images with a lower score
 	 *            than this. This should prevent getting duplicates.
 	 * 
-	 * @param lastCreatedAt
+	 * @param createdAfter
 	 *            The date of our most recently created image in unix time. We
 	 *            already have all images created before this date that have at
 	 *            least the score provided.
-	 * @param count
+	 * @param limit
 	 *            The number of images requested.
 	 * @return JSON data with the number of images requested. If we receive less
 	 *         than this it is because there are not enough unique images to
@@ -39,7 +39,7 @@ public interface PicdoraApi {
 	@GET("/images/new")
 	public Response newImages(@Query("category_id") long categoryId,
 			@Query("score") int score,
-			@Query("created_after") long lastCreatedAt,
+			@Query("created_after") long createdAfter,
 			@Query("count") int count);
 
 	/**
@@ -68,9 +68,9 @@ public interface PicdoraApi {
 	 * 
 	 */
 	@GET("/images/update")
-	public Response updateImages(@Query("after_id") int id,
+	public Response updateImages(@Query("id") int id,
 			@Query("last_updated") long lastUpdated,
-			@Query("created_before") long createdBefore,
+			@Query("last_created") long createdBefore,
 			@Query("limit") int limit);
 
 	@GET("/categories")
