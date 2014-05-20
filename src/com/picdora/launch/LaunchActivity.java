@@ -27,6 +27,7 @@ import com.picdora.models.Collection;
 import com.picdora.models.CollectionItem;
 import com.picdora.models.Image;
 import com.picdora.sync.PicdoraSyncService;
+import com.picdora.sync.PicdoraSyncService_;
 import com.picdora.ui.FontHelper;
 import com.picdora.ui.UiUtil;
 
@@ -56,7 +57,8 @@ public class LaunchActivity extends Activity {
 		}
 
 		/* Start the syncing service. */
-		startService(new Intent(this, PicdoraSyncService.class));
+		//startService(new Intent(this, PicdoraSyncService.class));
+		PicdoraSyncService_.intent(this).start();
 
 		/* Move on to the main activity. */
 		startActivity(new Intent(this, ChannelSelectionActivity_.class));
@@ -103,6 +105,7 @@ public class LaunchActivity extends Activity {
 		Migration views = new Migration();
 
 		views.addRawStatement("CREATE VIEW IF NOT EXISTS ImagesWithCategories AS SELECT * FROM Images JOIN ImageCategories ON Images.id = ImageCategories.imageId");
+		sprinkles.addMigration(views);
 	}
 
 }

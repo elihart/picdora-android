@@ -56,13 +56,15 @@ public class ImageSyncer extends Syncer {
 
 	@Override
 	public void sync() {
+		Util.startTimer();
 		/*
 		 * If we don't yet have any images in the database we can seed it by
 		 * retrieving images for every category from the server.
 		 */
 		if (PicdoraApp.SEED_IMAGE_DATABASE) {
 			List<Category> allCategories = CategoryUtils.getAll(true);
-			getNewImages(allCategories);
+			boolean success = getNewImages(allCategories);
+			Util.lap("Seeded images: " + success);
 			/*
 			 * We don't need to do updates since these are all new images. We're
 			 * done.
@@ -73,6 +75,8 @@ public class ImageSyncer extends Syncer {
 		/* Check for updates for the images in our local database. */
 		long updateStartTime = Util.getUnixTime();
 		boolean updateSuccess = updateImages();
+		
+		Util.lap("Updated Images: " + updateSuccess);
 
 		/*
 		 * On update success record our update time and then check for new
@@ -104,7 +108,9 @@ public class ImageSyncer extends Syncer {
 			}
 		}
 
-		getNewImages(lowCategories);
+		boolean newImageSuccess = getNewImages(lowCategories);
+		
+		Util.lap("Got new Images: " + newImageSuccess);
 	}
 
 	/**
@@ -232,6 +238,7 @@ public class ImageSyncer extends Syncer {
 		 * creation date of our newest image.
 		 */
 		for (Category category : categories) {
+			Util.startTimer();
 
 			int score = CategoryUtils.getLowestImageScore(category);
 			long lastCreatedAt = CategoryUtils.getNewestImageDate(category);
@@ -258,10 +265,13 @@ public class ImageSyncer extends Syncer {
 					String body = responseToString(response);
 					JSONArray json = new JSONArray(body);
 					putImagesInDb(json, false);
+					Util.lap(category.getName() + " done");
 					break;
 				} catch (IOException e) {
+					Util.logException(e);
 					return false;
 				} catch (JSONException e) {
+					Util.logException(e);
 					return false;
 				}
 			}
@@ -330,7 +340,7 @@ public class ImageSyncer extends Syncer {
 				 * Set the categories for this image. First delete any
 				 * categories it may have had before and then recreate them all.
 				 */
-				db.delete("CategoryImages", "imageId=" + id, null);
+				db.delete("ImageCategories", "imageId=" + id, null);
 
 				JSONArray categories = imageJson.getJSONArray("categories");
 				int numCategories = categories.length();
@@ -342,7 +352,7 @@ public class ImageSyncer extends Syncer {
 					 * No existing row should match since we just deleted them,
 					 * but we'll do a replace on conflict just in case.
 					 */
-					db.insertWithOnConflict("CategoryImages", null,
+					db.insertWithOnConflict("ImageCategories", null,
 							categoryValues, SQLiteDatabase.CONFLICT_REPLACE);
 				}
 			}

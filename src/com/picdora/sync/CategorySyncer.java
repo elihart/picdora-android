@@ -24,6 +24,7 @@ public class CategorySyncer extends Syncer {
 
 	@Override
 	public void sync() {
+		Util.startTimer();
 		/*
 		 * Get the categories from the server and update them locally.
 		 */
@@ -44,10 +45,14 @@ public class CategorySyncer extends Syncer {
 				onFailure();
 			}
 		} catch (IOException e) {
+			Util.logException(e);
 			onFailure();
 		} catch (JSONException e) {
+			Util.logException(e);
 			onFailure();
 		}
+		
+		Util.lap("Updated Categories");
 	}
 
 	private void onFailure() {
@@ -88,8 +93,7 @@ public class CategorySyncer extends Syncer {
 			}
 			t.setSuccessful(true);
 		} catch (Exception e) {
-			Util.log("Exception thrown while saving categories");
-			e.printStackTrace();
+			Util.logException(e);
 			t.setSuccessful(false);
 		} finally {
 			t.finish();

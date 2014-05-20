@@ -71,7 +71,9 @@ public class Util {
 	 *            The message to log
 	 */
 	public static void log(String msg) {
-		System.out.println(msg);
+		if (PicdoraApp.DEBUG) {
+			System.out.println(msg);
+		}
 	}
 
 	/**
@@ -128,11 +130,29 @@ public class Util {
 
 	private static long startTime;
 
+	/**
+	 * Mark a start time for a timer for use in clocking method run time.
+	 * 
+	 */
 	public static void startTimer() {
+		if (!PicdoraApp.DEBUG) {
+			return;
+		}
+		
 		startTime = System.currentTimeMillis();
 	}
 
+	/**
+	 * Print the time since the last lap/start of the timer.
+	 * 
+	 * @param msg
+	 *            A message to include with the time.
+	 */
 	public static void lap(String msg) {
+		if (!PicdoraApp.DEBUG) {
+			return;
+		}
+
 		long curr = System.currentTimeMillis();
 		log(msg + " : " + (curr - startTime));
 		startTime = curr;
