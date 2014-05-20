@@ -16,6 +16,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import com.picdora.CategoryUtils;
 import com.picdora.ImageUtils;
+import com.picdora.PicdoraApp;
 import com.picdora.Util;
 import com.picdora.models.Category;
 
@@ -55,18 +56,55 @@ public class ImageSyncer extends Syncer {
 
 	@Override
 	public void sync() {
+		/*
+		 * If we don't yet have any images in the database we can seed it by
+		 * retrieving images for every category from the server.
+		 */
+		if (PicdoraApp.SEED_IMAGE_DATABASE) {
+			List<Category> allCategories = CategoryUtils.getAll(true);
+			getNewImages(allCategories);
+			/*
+			 * We don't need to do updates since these are all new images. We're
+			 * done.
+			 */
+			return;
+		}
+
 		/* Check for updates for the images in our local database. */
 		long updateStartTime = Util.getUnixTime();
 		boolean updateSuccess = updateImages();
 
 		/*
 		 * On update success record our update time and then check for new
-		 * images.
+		 * images. If update failed then don't go any further.
 		 */
-		if (updateSuccess) {
-			setLastUpdated(updateStartTime);
-			getNewImages();
+		if (!updateSuccess) {
+			return;
 		}
+
+		setLastUpdated(updateStartTime);
+
+		/*
+		 * Next we want to check if any of our categories are low on images and
+		 * get more if necessary. To be more efficient we'll only check
+		 * categories that are currently being used by a channel.
+		 */
+		List<Category> categoriesInUse = CategoryUtils.getCategoriesInUse();
+
+		/*
+		 * Check the unseen image count for each category. If the count is low
+		 * we'll try to get more pictures for it.
+		 */
+		List<Category> lowCategories = new ArrayList<Category>();
+		/* Get image counts and identify the low categories. */
+		for (Category c : categoriesInUse) {
+			int numUnseenImages = CategoryUtils.getImageCount(c, true);
+			if (numUnseenImages < LOW_IMAGE_THRESHOLD) {
+				lowCategories.add(c);
+			}
+		}
+
+		getNewImages(lowCategories);
 	}
 
 	/**
@@ -132,7 +170,7 @@ public class ImageSyncer extends Syncer {
 					return true;
 				}
 			}
-			/* Log exceptions and returnfalse. */
+			/* Log exceptions and return false. */
 			catch (IOException e) {
 				Util.logException(e);
 				return false;
@@ -180,35 +218,20 @@ public class ImageSyncer extends Syncer {
 
 	/**
 	 * Retrieve new images from the database that were created since we last
-	 * synced. Images are retrieved in batches to prevent too much data from
-	 * being loaded at once. If the server has more images than we want in our
-	 * batch size it will give us the id of the next image to use in our next
-	 * batch
+	 * synced. If the server has more images than we want in our batch size it
+	 * will give us the id of the next image to use in our next batch
 	 * 
+	 * @param categories
+	 *            The categories to get pictures for
 	 * @return True on success, false on failure.
 	 */
-	public boolean getNewImages() {
-		/* Get all categories and check which ones are low on images. */
-		List<Category> allCategories = CategoryUtils.getAll(true);
-		/*
-		 * List of categories whose unseen image count is below the threshold
-		 * and need more images.
-		 */
-		List<Category> lowCategories = new ArrayList<Category>();
-		/* Get image counts and identify the low categories. */
-		for (Category c : allCategories) {
-			int numUnseenImages = CategoryUtils.getImageCount(c, true);
-			if (numUnseenImages < LOW_IMAGE_THRESHOLD) {
-				lowCategories.add(c);
-			}
-		}
-
+	public boolean getNewImages(List<Category> categories) {
 		/*
 		 * Try to get more images for each of the categories. We can get images
 		 * we don't already have by passing our lowest image score and the
 		 * creation date of our newest image.
 		 */
-		for (Category category : lowCategories) {
+		for (Category category : categories) {
 
 			int score = CategoryUtils.getLowestImageScore(category);
 			long lastCreatedAt = CategoryUtils.getNewestImageDate(category);
@@ -281,7 +304,16 @@ public class ImageSyncer extends Syncer {
 
 				/* Insert or update depending on the param. */
 				if (update) {
-					db.update("Images", values, "id=" + id, null);
+					int numRowsAffected = db.update("Images", values, "id="
+							+ id, null);
+					/*
+					 * If no rows were affected then the image isn't in our
+					 * database and can't be updated. Skip the categories step
+					 * and move to the next image.
+					 */
+					if (numRowsAffected == 0) {
+						continue;
+					}
 				} else {
 					/*
 					 * If the image already exists we don't want to replace it,

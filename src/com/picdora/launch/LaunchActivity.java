@@ -36,10 +36,10 @@ public class LaunchActivity extends Activity {
 	protected PicdoraPreferences_ mPrefs;
 
 	@Override
-	public void onCreate(Bundle savedInstanceState){
+	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
-		FontHelper.init(getApplicationContext());		
+
+		FontHelper.init(getApplicationContext());
 		UiUtil.init(getApplicationContext());
 		PicdoraImageLoader.init(this);
 		initUniversalImageLoader();
@@ -57,12 +57,11 @@ public class LaunchActivity extends Activity {
 
 		/* Start the syncing service. */
 		startService(new Intent(this, PicdoraSyncService.class));
-		
+
 		/* Move on to the main activity. */
 		startActivity(new Intent(this, ChannelSelectionActivity_.class));
 		finish();
 	}
-
 
 	private void initUniversalImageLoader() {
 		DisplayImageOptions options = new DisplayImageOptions.Builder()
@@ -87,19 +86,23 @@ public class LaunchActivity extends Activity {
 
 		// create models
 		Migration addModelsMigration = new Migration();
-		
+
 		addModelsMigration.createTable(Image.class);
 		addModelsMigration.createTable(Category.class);
 		addModelsMigration.createTable(ImageCategory.class);
-		
+
 		addModelsMigration.createTable(Channel.class);
 		addModelsMigration.createTable(ChannelImage.class);
 		addModelsMigration.createTable(ChannelCategory.class);
-		
+
 		addModelsMigration.createTable(Collection.class);
 		addModelsMigration.createTable(CollectionItem.class);
-		
+
 		sprinkles.addMigration(addModelsMigration);
+
+		Migration views = new Migration();
+
+		views.addRawStatement("CREATE VIEW IF NOT EXISTS ImagesWithCategories AS SELECT * FROM Images JOIN ImageCategories ON Images.id = ImageCategories.imageId");
 	}
 
 }

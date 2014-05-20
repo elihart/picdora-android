@@ -14,6 +14,8 @@ public class PicdoraApp extends Application {
 
 	public static final boolean DEBUG = true;
 	public static final boolean SFW_VERSION = false;
+	/** Whether new images should be retrieved for all categories. */
+	public static final boolean SEED_IMAGE_DATABASE = false;
 
 	@Override
 	public void onCreate() {

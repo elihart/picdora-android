@@ -3,6 +3,7 @@ package com.picdora.sync;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.androidannotations.annotations.App;
 import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EBean;
@@ -15,6 +16,7 @@ import org.apache.commons.io.IOUtils;
 import retrofit.client.Response;
 import android.content.Context;
 
+import com.picdora.PicdoraApp;
 import com.picdora.PicdoraPreferences_;
 import com.picdora.api.PicdoraApiService;
 
@@ -26,6 +28,8 @@ public abstract class Syncer implements SyncTask {
 	protected PicdoraApiService mApiService;
 	@RootContext
 	protected Context mContext;
+	@App
+	protected PicdoraApp mApp;
 
 	private OnSyncTaskCompleteListener mOnCompleteListener;
 

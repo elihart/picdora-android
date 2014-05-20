@@ -89,11 +89,11 @@ public abstract class CategoryUtils {
 	 * @return
 	 */
 	public static int getImageCount(Category category, boolean excludeSeen) {
-		String query = "SELECT COUNT(distinct Images.id) FROM Images JOIN ImageCategories ON Images.id = ImageCategories.imageId WHERE deleted=0 AND reported=0 AND categoryId="
+		String query = "SELECT COUNT(distinct Images.id) FROM ImagesWithCategories WHERE deleted=0 AND reported=0 AND categoryId="
 				+ category.getId();
 		
 		if(excludeSeen){
-			query += " AND Images.id NOT IN (SELECT distinct imageId FROM Views)";
+			query += " AND id NOT IN (SELECT distinct imageId FROM Views)";
 		}
 
 		/* Return 0 if no images match the query. */
@@ -108,7 +108,7 @@ public abstract class CategoryUtils {
 	 * @return
 	 */
 	public static int getLowestImageScore(Category category) {
-		final String query = "SELECT MIN(redditScore) FROM Images JOIN ImageCategories ON Images.id = ImageCategories.imageId WHERE categoryId="
+		final String query = "SELECT MIN(redditScore) FROM ImagesWithCategories WHERE categoryId="
 				+ category.getId();
 
 		return (int) DbUtils.simpleQueryForLong(query, -1);
@@ -122,10 +122,27 @@ public abstract class CategoryUtils {
 	 * @return
 	 */
 	public static long getNewestImageDate(Category category) {
-		final String query = "SELECT MAX(createdAt) FROM Images JOIN ImageCategories ON Images.id = ImageCategories.imageId WHERE categoryId="
+		final String query = "SELECT MAX(createdAt) FROM ImagesWithCategories WHERE categoryId="
 				+ category.getId();
 		
 		return DbUtils.simpleQueryForLong(query, 0);
+	}
+
+	/** Get all the categories that are used in existing channels.
+	 * 
+	 * @return
+	 */
+	public static List<Category> getCategoriesInUse() {
+		List<Category> categories = new ArrayList<Category>();
+		String query = "SELECT * FROM Categories WHERE id IN (SELECT UNIQUE categoryId FROM ChannelCategories)";
+
+
+		CursorList<Category> list = Query.many(Category.class, query, null)
+				.get();
+		categories.addAll(list.asList());
+		list.close();
+
+		return categories;
 	}
 
 }
