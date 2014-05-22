@@ -82,9 +82,13 @@ public class ChannelImage extends Model {
 		if (channel == null) {
 			throw new IllegalArgumentException("Channel can't be null");
 		}
-		if (channel.getId() < 1) {
-			throw new IllegalArgumentException("Channel doesn't have an id");
-		}
+		/*
+		 * A preview channel won't have an id... if we revamp how we handle
+		 * previews we should add this check back in.
+		 */
+		// if (channel.getId() < 1) {
+		// throw new IllegalArgumentException("Channel doesn't have an id");
+		// }
 		if (image == null) {
 			throw new IllegalArgumentException("Image can't be null");
 		}
@@ -148,7 +152,6 @@ public class ChannelImage extends Model {
 		return (int) mChannelId;
 	}
 
-
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -157,7 +160,6 @@ public class ChannelImage extends Model {
 		result = prime * result + (int) (mImageId ^ (mImageId >>> 32));
 		return result;
 	}
-
 
 	@Override
 	public boolean equals(Object obj) {

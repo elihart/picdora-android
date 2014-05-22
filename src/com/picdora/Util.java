@@ -128,36 +128,6 @@ public class Util {
 		return buffer.toString();
 	}
 
-	private static long startTime;
-
-	/**
-	 * Mark a start time for a timer for use in clocking method run time.
-	 * 
-	 */
-	public static void startTimer() {
-		if (!PicdoraApp.DEBUG) {
-			return;
-		}
-		
-		startTime = System.currentTimeMillis();
-	}
-
-	/**
-	 * Print the time since the last lap/start of the timer.
-	 * 
-	 * @param msg
-	 *            A message to include with the time.
-	 */
-	public static void lap(String msg) {
-		if (!PicdoraApp.DEBUG) {
-			return;
-		}
-
-		long curr = System.currentTimeMillis();
-		log(msg + " : " + (curr - startTime));
-		startTime = curr;
-	}
-
 	/**
 	 * Get the current unix time: the number of seconds since 1970.
 	 * 

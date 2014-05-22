@@ -134,7 +134,7 @@ public abstract class CategoryUtils {
 	 */
 	public static List<Category> getCategoriesInUse() {
 		List<Category> categories = new ArrayList<Category>();
-		String query = "SELECT * FROM Categories WHERE id IN (SELECT UNIQUE categoryId FROM ChannelCategories)";
+		String query = "SELECT * FROM Categories WHERE id IN (SELECT categoryId FROM ChannelCategories)";
 
 
 		CursorList<Category> list = Query.many(Category.class, query, null)

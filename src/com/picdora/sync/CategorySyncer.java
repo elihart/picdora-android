@@ -24,7 +24,6 @@ public class CategorySyncer extends Syncer {
 
 	@Override
 	public void sync() {
-		Util.startTimer();
 		/*
 		 * Get the categories from the server and update them locally.
 		 */
@@ -51,8 +50,6 @@ public class CategorySyncer extends Syncer {
 			Util.logException(e);
 			onFailure();
 		}
-		
-		Util.lap("Updated Categories");
 	}
 
 	private void onFailure() {

@@ -17,6 +17,7 @@ import android.database.sqlite.SQLiteDatabase;
 import com.picdora.CategoryUtils;
 import com.picdora.ImageUtils;
 import com.picdora.PicdoraApp;
+import com.picdora.Timer;
 import com.picdora.Util;
 import com.picdora.models.Category;
 
@@ -39,7 +40,7 @@ public class ImageSyncer extends Syncer {
 	 */
 	private static final int LOW_IMAGE_THRESHOLD = 200;
 	/** The number of fresh images to get for a category that is low on images. */
-	private static final int NUM_IMAGES_FOR_LOW_CATEGORY = 600;
+	private static final int NUM_IMAGES_FOR_LOW_CATEGORY = 100;
 
 	/** The maximum number of times to retry a request until we give up. */
 	private static final int MAX_RETRIES = 3;
@@ -56,7 +57,9 @@ public class ImageSyncer extends Syncer {
 
 	@Override
 	public void sync() {
-		Util.startTimer();
+		Timer syncTimer = new Timer();
+		syncTimer.start();
+		
 		/*
 		 * If we don't yet have any images in the database we can seed it by
 		 * retrieving images for every category from the server.
@@ -64,7 +67,7 @@ public class ImageSyncer extends Syncer {
 		if (PicdoraApp.SEED_IMAGE_DATABASE) {
 			List<Category> allCategories = CategoryUtils.getAll(true);
 			boolean success = getNewImages(allCategories);
-			Util.lap("Seeded images: " + success);
+			syncTimer.lap("Seeded images: " + success);
 			/*
 			 * We don't need to do updates since these are all new images. We're
 			 * done.
@@ -75,8 +78,6 @@ public class ImageSyncer extends Syncer {
 		/* Check for updates for the images in our local database. */
 		long updateStartTime = Util.getUnixTime();
 		boolean updateSuccess = updateImages();
-		
-		Util.lap("Updated Images: " + updateSuccess);
 
 		/*
 		 * On update success record our update time and then check for new
@@ -109,8 +110,6 @@ public class ImageSyncer extends Syncer {
 		}
 
 		boolean newImageSuccess = getNewImages(lowCategories);
-		
-		Util.lap("Got new Images: " + newImageSuccess);
 	}
 
 	/**
@@ -237,8 +236,10 @@ public class ImageSyncer extends Syncer {
 		 * we don't already have by passing our lowest image score and the
 		 * creation date of our newest image.
 		 */
+		
 		for (Category category : categories) {
-			Util.startTimer();
+			Timer timer = new Timer();
+			timer.start();
 
 			int score = CategoryUtils.getLowestImageScore(category);
 			long lastCreatedAt = CategoryUtils.getNewestImageDate(category);
@@ -265,7 +266,7 @@ public class ImageSyncer extends Syncer {
 					String body = responseToString(response);
 					JSONArray json = new JSONArray(body);
 					putImagesInDb(json, false);
-					Util.lap(category.getName() + " done");
+					timer.lap("put images in db");
 					break;
 				} catch (IOException e) {
 					Util.logException(e);

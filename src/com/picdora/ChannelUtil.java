@@ -81,7 +81,7 @@ public class ChannelUtil {
 		 * 
 		 */
 		SQLiteDatabase db = Sprinkles.getDatabase();
-		String query = "SELECT count(distinct Images.id) FROM Images JOIN CategoryImages ON Images.id = CategoryImages.imageId WHERE categoryId IN "
+		String query = "SELECT count(distinct id) FROM ImagesWithCategories WHERE categoryId IN "
 				+ CategoryUtils.getCategoryIdsString(categories);
 
 		// add the gif setting
