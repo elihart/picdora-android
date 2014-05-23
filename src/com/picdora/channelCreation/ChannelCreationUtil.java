@@ -87,7 +87,8 @@ public class ChannelCreationUtil {
 			channel = new ChannelPreview(info.categories, info.gifSetting);
 		} else {
 			/* Can't set the categories until the channel is saved. */
-			channel = new Channel(info.channelName, info.gifSetting, info.categories);
+			channel = new Channel(info.channelName, info.gifSetting,
+					info.categories);
 			/*
 			 * If it's not valid then break the loading. We've done validations
 			 * on everything up until this point though so we should be good to
@@ -228,6 +229,17 @@ public class ChannelCreationUtil {
 
 		if (!mActivity.isFinishing()) {
 			busyDialog.show();
+			/*
+			 * If the back button is pressed while the channel loads we need to
+			 * turn the loading status off.
+			 */
+			busyDialog.setOnCancelListener(new OnCancelListener() {
+
+				@Override
+				public void onCancel(DialogInterface dialog) {
+					setLoadingStatus(false);
+				}
+			});
 		}
 	}
 

@@ -37,6 +37,6 @@ public class ChannelPreview extends Channel {
 	}
 
 	public static boolean isPreview(Channel channel) {
-		return (channel instanceof ChannelPreview);
+		return channel.getId() == PREVIEW_ID;
 	}
 }

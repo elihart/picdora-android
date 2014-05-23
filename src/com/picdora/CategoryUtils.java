@@ -89,7 +89,7 @@ public abstract class CategoryUtils {
 	 * @return
 	 */
 	public static int getImageCount(Category category, boolean excludeSeen) {
-		String query = "SELECT COUNT(distinct Images.id) FROM ImagesWithCategories WHERE deleted=0 AND reported=0 AND categoryId="
+		String query = "SELECT COUNT(distinct id) FROM ImagesWithCategories WHERE deleted=0 AND reported=0 AND categoryId="
 				+ category.getId();
 		
 		if(excludeSeen){
