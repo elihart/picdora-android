@@ -24,6 +24,7 @@ import com.picdora.ChannelUtil;
 import com.picdora.PicdoraActivity;
 import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
+import com.picdora.models.Category;
 import com.picdora.models.Channel;
 import com.picdora.models.Channel.GifSetting;
 import com.picdora.ui.ActionSpinner;
@@ -152,8 +153,10 @@ public class LikesActivity extends PicdoraActivity {
 		 */
 		List<Channel> channelsToShow = new ArrayList<Channel>(mChannels);
 		// dummy Channel. All we care about is the name.
+		List<Category> dummyCategories = new ArrayList<Category>();
+		dummyCategories.add(new Category());
 		Channel allChannelsDummy = new Channel(getResources().getString(
-				R.string.likes_channel_spinner_value_all), GifSetting.ALLOWED);
+				R.string.likes_channel_spinner_value_all), GifSetting.ALLOWED, dummyCategories);
 		// insert dummy at top of list.
 		channelsToShow.add(0, allChannelsDummy);
 

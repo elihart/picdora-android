@@ -26,9 +26,8 @@ public class ChannelPreview extends Channel {
 	 * @param gifSetting
 	 */
 	public ChannelPreview(List<Category> categories, GifSetting gifSetting) {
-		super("preview", gifSetting);
+		super("preview", gifSetting, categories);
 		mId = PREVIEW_ID;
-		mCategories = categories;
 	}
 
 	@Override

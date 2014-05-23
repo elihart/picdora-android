@@ -198,6 +198,7 @@ public class ImageSyncer extends Syncer {
 	private long getLastUpdated() {
 		long lastUpdated = mPrefs.lastImageUpdate().get();
 
+
 		/*
 		 * If the update time is 0 then we have never recorded an update. In
 		 * this case we should base our update time on the most recent updated

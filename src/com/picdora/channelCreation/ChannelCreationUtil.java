@@ -8,6 +8,7 @@ import org.androidannotations.annotations.UiThread.Propagation;
 
 import android.app.Dialog;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnCancelListener;
 import android.widget.TextView;
 
 import com.picdora.ChannelUtil;
@@ -86,7 +87,7 @@ public class ChannelCreationUtil {
 			channel = new ChannelPreview(info.categories, info.gifSetting);
 		} else {
 			/* Can't set the categories until the channel is saved. */
-			channel = new Channel(info.channelName, info.gifSetting);
+			channel = new Channel(info.channelName, info.gifSetting, info.categories);
 			/*
 			 * If it's not valid then break the loading. We've done validations
 			 * on everything up until this point though so we should be good to
@@ -99,8 +100,7 @@ public class ChannelCreationUtil {
 			/* Save to db so we get a channel id. */
 			channel.save();
 			/* Set and save the categories now that we have an id. */
-			channel.setCategories(info.categories);
-			channel.save();
+			channel.saveCategoriesToDb();
 		}
 
 		launchChannel(channel, info.preview);
@@ -108,7 +108,7 @@ public class ChannelCreationUtil {
 
 	@UiThread(propagation = Propagation.REUSE)
 	protected void showNoImagesDialog() {
-		new PicdoraDialog.Builder(mActivity)
+		PicdoraDialog dialog = new PicdoraDialog.Builder(mActivity)
 				.setMessage(
 						"The categories and settings you chose don't match any images! Try changing the gif setting or choosing more categories.")
 				.setTitle("Warning!")
@@ -117,9 +117,18 @@ public class ChannelCreationUtil {
 						/* Stop the loading screen. */
 						setLoadingStatus(false);
 					}
-				})
+				}).create();
 
-				.show();
+		/* Cancel the loading screen if the dialog is canceled. */
+		dialog.setOnCancelListener(new OnCancelListener() {
+
+			@Override
+			public void onCancel(DialogInterface dialog) {
+				setLoadingStatus(false);
+			}
+		});
+
+		dialog.show();
 	}
 
 	@UiThread(propagation = Propagation.REUSE)
@@ -132,7 +141,7 @@ public class ChannelCreationUtil {
 			positive = "Create anyway";
 		}
 
-		new PicdoraDialog.Builder(mActivity)
+		PicdoraDialog dialog = new PicdoraDialog.Builder(mActivity)
 				.setMessage(
 						"The categories and settings you chose only match "
 								+ count + " images!")
@@ -156,9 +165,17 @@ public class ChannelCreationUtil {
 								 */
 								setLoadingStatus(false);
 							}
-						})
+						}).create();
 
-				.show();
+		dialog.setOnCancelListener(new OnCancelListener() {
+
+			@Override
+			public void onCancel(DialogInterface dialog) {
+				setLoadingStatus(false);
+			}
+		});
+
+		dialog.show();
 	}
 
 	@UiThread(propagation = Propagation.REUSE)
@@ -185,6 +202,14 @@ public class ChannelCreationUtil {
 
 	@UiThread(propagation = Propagation.REUSE)
 	protected void setLoadingStatus(boolean loading) {
+		/*
+		 * If the status is already set to what we want then don't need to do it
+		 * again.
+		 */
+		if (loading == mIsLoadingChannel) {
+			return;
+		}
+
 		mIsLoadingChannel = loading;
 
 		if (loading) {
@@ -201,7 +226,9 @@ public class ChannelCreationUtil {
 		busyDialog.setContentView(R.layout.lightbox_dialog);
 		((TextView) busyDialog.findViewById(R.id.dialogText)).setText(message);
 
-		busyDialog.show();
+		if (!mActivity.isFinishing()) {
+			busyDialog.show();
+		}
 	}
 
 	@UiThread(propagation = Propagation.REUSE)

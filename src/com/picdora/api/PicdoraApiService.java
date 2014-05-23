@@ -44,7 +44,7 @@ public class PicdoraApiService implements PicdoraApi {
 	}
 
 	@Override
-	@POST("/user/login")
+	@POST("/users/login")
 	public Response login(@Query("key") String key) {
 		try {
 			return client.login(key);

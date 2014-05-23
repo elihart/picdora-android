@@ -70,7 +70,7 @@ public interface PicdoraApi {
 	@GET("/images/update")
 	public Response updateImages(@Query("id") int id,
 			@Query("last_updated") long lastUpdated,
-			@Query("last_created") long createdBefore,
+			@Query("created_before") long createdBefore,
 			@Query("limit") int limit);
 
 	@GET("/categories")

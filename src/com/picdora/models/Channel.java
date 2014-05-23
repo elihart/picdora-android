@@ -6,11 +6,13 @@ import java.util.List;
 import se.emilsjolander.sprinkles.CursorList;
 import se.emilsjolander.sprinkles.Model;
 import se.emilsjolander.sprinkles.Query;
+import se.emilsjolander.sprinkles.Sprinkles;
 import se.emilsjolander.sprinkles.Transaction;
 import se.emilsjolander.sprinkles.annotations.AutoIncrementPrimaryKey;
 import se.emilsjolander.sprinkles.annotations.Column;
 import se.emilsjolander.sprinkles.annotations.NotNull;
 import se.emilsjolander.sprinkles.annotations.Table;
+import android.database.sqlite.SQLiteDatabase;
 
 import com.picdora.Util;
 import com.picdora.ui.grid.Selectable;
@@ -68,10 +70,12 @@ public class Channel extends Model implements Selectable {
 	 * @param name
 	 * @param gifSetting
 	 */
-	public Channel(String name, GifSetting gifSetting) {
+	public Channel(String name, GifSetting gifSetting, List<Category> categories) {
 		if (Util.isStringBlank(name)) {
 			throw new IllegalArgumentException("Name can't be blank");
 		}
+		
+		setCategories(categories);
 
 		mName = name;
 		mGifSetting = gifSetting.ordinal();
@@ -125,10 +129,17 @@ public class Channel extends Model implements Selectable {
 		return mCategories;
 	}
 
-	@Override
-	protected void beforeSave() {
-		// create a json string to represent the categories in the database
-		saveCategoriesToDb();
+	/**
+	 * Clear all categories associated with this channel in preparation for
+	 * setting new ones.
+	 * 
+	 */
+	private void clearChannelCategories() {
+		SQLiteDatabase db = Sprinkles.getDatabase();
+
+		String query = "DELETE from ChannelCategories WHERE channelId=" + mId;
+
+		db.execSQL(query);
 	}
 
 	/**
@@ -151,23 +162,27 @@ public class Channel extends Model implements Selectable {
 
 	/**
 	 * Save the categories that characterize this channel to the db. Does a
-	 * synchronous db access! Make sure categories have been set before this is
-	 * called otherwise there will be a NPE.
+	 * synchronous db access! A regular save() of a Channel does
+	 * not save the categories, they must be saved manually with this.
 	 * 
 	 */
-	private void saveCategoriesToDb() {
+	public void saveCategoriesToDb() {
+		if (mCategories == null) {
+			throw new IllegalStateException("Categories can't be null");
+		}
+		else if (mCategories.isEmpty()) {
+			throw new IllegalStateException("Categories can't be empty");
+		}
+		
 		/*
 		 * TODO: Could maybe optimize this to not delete everything before
 		 * saving the new ones if the deletions aren't necessary
 		 */
 
 		/* Clear the existing categories before getting the new ones. */
-		List<Category> categories = getCategoriesFromDb();
+		clearChannelCategories();
 
 		Transaction t = new Transaction();
-		for (Category c : categories) {
-			c.delete(t);
-		}
 
 		/* Add the new categories to the db */
 		for (Category c : mCategories) {
@@ -217,7 +232,6 @@ public class Channel extends Model implements Selectable {
 
 	public void setGifSetting(GifSetting gifSetting) {
 		mGifSetting = gifSetting.ordinal();
-
 	}
 
 	/**
@@ -247,7 +261,7 @@ public class Channel extends Model implements Selectable {
 	 * to use an image from the categories, and set the channel nsfw setting
 	 * based on the categories. This must only be used once the channel has been
 	 * saved to the database. You should manually save the channel after setting
-	 * the categories.
+	 * the categories as well as call saveCategoriesToDb().
 	 * 
 	 * @param categories
 	 */
@@ -255,23 +269,18 @@ public class Channel extends Model implements Selectable {
 		if (categories == null) {
 			throw new IllegalArgumentException("Categories can't be null");
 		}
-		if (categories.isEmpty()) {
+		else if (categories.isEmpty()) {
 			throw new IllegalArgumentException("Categories can't be empty");
-		}
-		/*
-		 * The channel must be saved before setting categories because the
-		 * categories are saved in a table, indexed with the channel id. If the
-		 * channel isn't saved it won't have an id yet to associate with!
-		 */
-		if (mId < 1) {
-			throw new IllegalArgumentException("Channel hasn't been saved yet");
 		}
 
 		mCategories = categories;
 
+		/* Set the channel icon based on the categories. */
 		mPreviewImage = getCategories().get(0).getIconId();
 
-		for (Category c : getCategories()) {
+		/* Set nsfw based on categories. */
+		mNsfw = false;
+		for (Category c : mCategories) {
 			if (c.isNsfw()) {
 				mNsfw = true;
 				break;
