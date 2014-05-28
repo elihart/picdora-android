@@ -12,8 +12,10 @@ import org.json.JSONObject;
 import retrofit.client.Response;
 import se.emilsjolander.sprinkles.Sprinkles;
 import android.content.ContentValues;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
+import android.text.TextUtils;
 
 import com.picdora.CategoryUtils;
 import com.picdora.ImageUtils;
@@ -238,20 +240,23 @@ public class ImageSyncer extends Syncer {
 		 * creation date of our newest image.
 		 */
 
+		int numImagesInserted = 0;
+		long totalDbTime = 0;
 		for (Category category : categories) {
 			Timer timer = new Timer();
-			
 
 			int score = CategoryUtils.getLowestImageScore(category);
 			long lastCreatedAt = CategoryUtils.getNewestImageDate(category);
 
-			int attempts = 0;
+			int attempts = 0;			
 			while (attempts < MAX_RETRIES) {
-				//Util.log("Category " + category.getName() + " Score: " + score + " Created: " + lastCreatedAt);
+				// Util.log("Category " + category.getName() + " Score: " +
+				// score
+				// + " Created: " + lastCreatedAt);
 				Response response = mApiService.newImages(category.getId(),
 						score, lastCreatedAt, NUM_IMAGES_FOR_LOW_CATEGORY);
 
-				//timer.lap("server response received");
+				// timer.lap("server response received");
 
 				/*
 				 * Check for a successful response and keep track of consecutive
@@ -268,12 +273,20 @@ public class ImageSyncer extends Syncer {
 				try {
 					String body = responseToString(response);
 					JSONArray json = new JSONArray(body);
-					//timer.lap("Parse response into json");
-					timer = new Timer();
-					timer.start();
-					putImagesInDb(json, false);
-					timer.lap(json.length() + " new images inserted in "
+					int numImages = json.length();
+
+					Util.log("Putting " + numImages + " images into "
 							+ category.getName());
+					// timer.lap("Parse response into json");
+					long startTime = System.currentTimeMillis();
+					putImagesInDb(json, false);
+					long elapsed = System.currentTimeMillis() - startTime;
+					numImagesInserted += numImages;
+					totalDbTime += elapsed;
+					Util.log(category.getName() + " averaged "
+							+ (numImages/ (elapsed / 1000.0))
+							+ " inserts per second. Running average is "
+							+ (numImagesInserted / (totalDbTime / 1000.0)));
 					break;
 				} catch (IOException e) {
 					Util.logException(e);
@@ -300,113 +313,144 @@ public class ImageSyncer extends Syncer {
 	 * 
 	 */
 	protected void putImagesInDb(JSONArray array, boolean update) {
+		int numImages = array.length();
+		List<String> imageValues = new ArrayList<String>(numImages);
+		List<String> categoryValues = new ArrayList<String>(numImages * 2);
+		List<Integer> ids = new ArrayList<Integer>(numImages);
+
 		SQLiteDatabase db = Sprinkles.getDatabase();
 
-//		String imageSql = "INSERT OR IGNORE INTO Images (id, imgurId, redditScore, "
-//				+ "nsfw, gif, deleted, reported, lastUpdated, createdAt) "
-//				+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);";
-		String imageSql = "INSERT OR IGNORE INTO Images (id, imgurId, redditScore, "
-				+ "nsfw, gif, deleted, reported, lastUpdated, createdAt) "
-				+ "VALUES ";
-		//SQLiteStatement imageStm = db.compileStatement(imageSql);
-		
-		String categorySql = "INSERT OR IGNORE INTO ImageCategories (imageId, categoryId) "
-				+ "VALUES (?, ?);";
-		SQLiteStatement categoryStm = db.compileStatement(categorySql);
-
 		db.beginTransaction();
-
 		try {
-			int count = 0;			
-			int numImages = array.length();
-			List<Integer> ids = new ArrayList<Integer>(numImages);
-			StringBuilder sqlBuilder = null;
-			
-			for (int i = numImages - 1; i >= 0; i--) {
-				if(count == 0){
-					sqlBuilder = new StringBuilder(imageSql);
-				} else {
-					sqlBuilder.append(", ");	
+
+			try {
+				for (int i = numImages - 1; i >= 0; i--) {
+					JSONObject imageJson = array.getJSONObject(i);
+
+					int id = imageJson.getInt("id");
+					ids.add(id);
+
+					 StringBuilder valueBuilder = new StringBuilder();
+					 valueBuilder.append("(");
+					 valueBuilder.append(id);
+					 valueBuilder.append(",'");
+					 valueBuilder.append(imageJson.getString("imgurId"));
+					 valueBuilder.append("',");
+					 valueBuilder.append(imageJson.getLong("reddit_score"));
+					 valueBuilder.append(",");
+					 valueBuilder.append(imageJson.getBoolean("nsfw") ? 1 :
+					 0);
+					 valueBuilder.append(",");
+					 valueBuilder.append(imageJson.getBoolean("gif") ? 1 : 0);
+					 valueBuilder.append(",");
+					 valueBuilder.append(imageJson.getBoolean("deleted") ? 1 :
+					 0);
+					 valueBuilder.append(",");
+					 valueBuilder.append(imageJson.getBoolean("reported") ? 1
+					 : 0);
+					 valueBuilder.append(",");
+					 valueBuilder.append(imageJson.getLong("updated_at"));
+					 valueBuilder.append(",");
+					 valueBuilder.append(imageJson.getLong("created_at"));
+					 valueBuilder.append(")");
+					
+					 imageValues.add(valueBuilder.toString());
+
+//					ContentValues values = new ContentValues();
+//					values.put("id", id);
+//					values.put("lastUpdated", imageJson.getLong("updated_at"));
+//					values.put("createdAt", imageJson.getLong("created_at"));
+//					values.put("imgurId", imageJson.getString("imgurId"));
+//					values.put("redditScore", imageJson.getLong("reddit_score"));
+//					values.put("nsfw", imageJson.getBoolean("nsfw"));
+//					values.put("gif", imageJson.getBoolean("gif"));
+//					values.put("deleted", imageJson.getBoolean("deleted"));
+//					values.put("reported", imageJson.getBoolean("reported"));
+//
+//					db.insertWithOnConflict("Images", null, values,
+//							SQLiteDatabase.CONFLICT_IGNORE);
+
+					JSONArray categories = imageJson.getJSONArray("categories");
+					int numCategories = categories.length();
+					for (int j = 0; j < numCategories; j++) {
+						StringBuilder catValue = new StringBuilder();
+						catValue.append("(");
+						catValue.append(id);
+						catValue.append(", ");
+						catValue.append(categories.getInt(j));
+						catValue.append(")");
+						categoryValues.add(catValue.toString());
+					}
 				}
-				
-				count++;
-				JSONObject imageJson = array.getJSONObject(i);				
-
-				int id = imageJson.getInt("id");	
-				ids.add(id);
-				
-				StringBuilder valueBuilder = new StringBuilder();
-				valueBuilder.append("(");
-				valueBuilder.append(id);
-				valueBuilder.append(",'");
-				valueBuilder.append(imageJson.getString("imgurId"));
-				valueBuilder.append("',");
-				valueBuilder.append(imageJson.getLong("reddit_score"));
-				valueBuilder.append(",");
-				valueBuilder.append(imageJson.getBoolean("nsfw") ? 1 : 0);
-				valueBuilder.append(",");
-				valueBuilder.append(imageJson.getBoolean("gif") ? 1 : 0);
-				valueBuilder.append(",");
-				valueBuilder.append(imageJson.getBoolean("deleted") ? 1 : 0);
-				valueBuilder.append(",");
-				valueBuilder.append(imageJson.getBoolean("reported") ? 1 : 0);
-				valueBuilder.append(",");
-				valueBuilder.append(imageJson.getLong("updated_at"));
-				valueBuilder.append(",");
-				valueBuilder.append(imageJson.getLong("created_at"));
-				valueBuilder.append(")");
-				
-				sqlBuilder.append(valueBuilder);
-
-				/* Insert or update depending on the param. */
-				if (update) {
-					//imageStm.execute();
-					/*
-					 * If no rows were affected then the image isn't in our
-					 * database and can't be updated. Skip the categories step
-					 * and move to the next image.
-					 */
-//					if (numRowsAffected == 0) {
-//						continue;
-//					}
-				} 
-				
-				if(count == 400){
-					/*
-					 * If the image already exists we don't want to replace it,
-					 * as that will delete it, causing cascading deletes of
-					 * dependent likes/collections. Instead we'll ignore it and
-					 * and continue on. This case shouldn't happen if our image
-					 * retrieval logic is sound and bug-free however.
-					 */
-					String sql = sqlBuilder.toString();
-					//Util.log(sql);
-					db.execSQL(sql);
-					count = 0;
-				}
-
-				/*
-				 * Set the categories for this image. First delete any
-				 * categories it may have had before and then recreate them all.
-				 */
-				//db.delete("ImageCategories", "imageId=" + id, null);
-
-//				JSONArray categories = imageJson.getJSONArray("categories");
-//				int numCategories = categories.length();
-//				for (int j = 0; j < numCategories; j++) {
-//					categoryStm.clearBindings();					
-//					categoryStm.bindLong(1, id);
-//					categoryStm.bindLong(2, categories.getLong(j));
-//					categoryStm.executeInsert();
-//				}
+			} catch (JSONException e) {
+				Util.logException(e);
+				return;
 			}
-			// Util.log("Batch successful!");
+
+			 String imageSql =
+			 "INSERT OR IGNORE INTO Images (id, imgurId, redditScore, "
+			 + "nsfw, gif, deleted, reported, lastUpdated, createdAt) "
+			 + "VALUES ";
+			
+			 StringBuilder imageSqlBuilder = null;
+			
+			 for (int i = 0; i < numImages; i++) {
+			 if (imageSqlBuilder == null) {
+			 imageSqlBuilder = new StringBuilder(imageSql);
+			 } else {
+			 imageSqlBuilder.append(", ");
+			 }
+			 imageSqlBuilder.append(imageValues.get(i));
+			
+			 if (i % 450 == 0) {
+			 db.execSQL(imageSqlBuilder.toString());
+			 imageSqlBuilder = null;
+			 }
+			 }
+			
+			 if (imageSqlBuilder != null) {
+			 db.execSQL(imageSqlBuilder.toString());
+			 }
+
+			/*
+			 * Set the categories for this image. First delete any categories it
+			 * may have had before and then recreate them all.
+			 */
+
+			String whereClause = "imageId IN (" + TextUtils.join(",", ids)
+					+ ")";
+			db.delete("ImageCategories", whereClause, null);
+
+			String categorySql = "INSERT OR IGNORE INTO ImageCategories (imageId, categoryId) "
+					+ "VALUES ";
+			int numCatValues = categoryValues.size();
+			StringBuilder catSqlBuilder = null;
+			for (int i = 0; i < numCatValues; i++) {
+				String cat = categoryValues.get(i);
+				if (catSqlBuilder == null) {
+					catSqlBuilder = new StringBuilder(categorySql);
+				} else {
+					catSqlBuilder.append(", ");
+				}
+
+				catSqlBuilder.append(cat);
+
+				if (i % 450 == 0) {
+					db.execSQL(catSqlBuilder.toString());
+					catSqlBuilder = null;
+				}
+			}
+
+			if (catSqlBuilder != null) {
+				db.execSQL(catSqlBuilder.toString());
+			}
+
 			db.setTransactionSuccessful();
-		} catch (JSONException e) {
+		} catch (SQLException e) {
 			Util.logException(e);
+			return;
 		} finally {
 			db.endTransaction();
 		}
 	}
-
 }
