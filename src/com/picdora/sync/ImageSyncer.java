@@ -300,13 +300,10 @@ public class ImageSyncer extends Syncer {
 	protected void putImagesInDb(JSONArray array, boolean update) {
 		SQLiteDatabase db = Sprinkles.getDatabase();
 
-//		String imageSql = "INSERT OR IGNORE INTO Images (id, imgurId, redditScore, "
-//				+ "nsfw, gif, deleted, reported, lastUpdated, createdAt) "
-//				+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);";
 		String imageSql = "INSERT OR IGNORE INTO Images (id, imgurId, redditScore, "
 				+ "nsfw, gif, deleted, reported, lastUpdated, createdAt) "
 				+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);";
-		//SQLiteStatement imageStm = db.compileStatement(imageSql);
+		SQLiteStatement imageStm = db.compileStatement(imageSql);
 		
 		String categorySql = "INSERT OR IGNORE INTO ImageCategories (imageId, categoryId) "
 				+ "VALUES (?, ?);";
@@ -358,16 +355,16 @@ public class ImageSyncer extends Syncer {
 				 * Set the categories for this image. First delete any
 				 * categories it may have had before and then recreate them all.
 				 */
-				//db.delete("ImageCategories", "imageId=" + id, null);
+				db.delete("ImageCategories", "imageId=" + id, null);
 
-//				JSONArray categories = imageJson.getJSONArray("categories");
-//				int numCategories = categories.length();
-//				for (int j = 0; j < numCategories; j++) {
-//					categoryStm.clearBindings();					
-//					categoryStm.bindLong(1, id);
-//					categoryStm.bindLong(2, categories.getLong(j));
-//					categoryStm.executeInsert();
-//				}
+				JSONArray categories = imageJson.getJSONArray("categories");
+				int numCategories = categories.length();
+				for (int j = 0; j < numCategories; j++) {
+					categoryStm.clearBindings();					
+					categoryStm.bindLong(1, id);
+					categoryStm.bindLong(2, categories.getLong(j));
+					categoryStm.executeInsert();
+				}
 			}
 			// Util.log("Batch successful!");
 			db.setTransactionSuccessful();
