@@ -240,7 +240,7 @@ public class ImageSyncer extends Syncer {
 
 		for (Category category : categories) {
 			Timer timer = new Timer();
-			timer.start();
+			
 
 			int score = CategoryUtils.getLowestImageScore(category);
 			long lastCreatedAt = CategoryUtils.getNewestImageDate(category);
@@ -269,6 +269,8 @@ public class ImageSyncer extends Syncer {
 					String body = responseToString(response);
 					JSONArray json = new JSONArray(body);
 					//timer.lap("Parse response into json");
+					timer = new Timer();
+					timer.start();
 					putImagesInDb(json, false);
 					timer.lap(json.length() + " new images inserted in "
 							+ category.getName());
@@ -305,7 +307,7 @@ public class ImageSyncer extends Syncer {
 //				+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);";
 		String imageSql = "INSERT OR IGNORE INTO Images (id, imgurId, redditScore, "
 				+ "nsfw, gif, deleted, reported, lastUpdated, createdAt) "
-				+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);";
+				+ "VALUES ";
 		//SQLiteStatement imageStm = db.compileStatement(imageSql);
 		
 		String categorySql = "INSERT OR IGNORE INTO ImageCategories (imageId, categoryId) "
@@ -315,22 +317,46 @@ public class ImageSyncer extends Syncer {
 		db.beginTransaction();
 
 		try {
+			int count = 0;			
 			int numImages = array.length();
+			List<Integer> ids = new ArrayList<Integer>(numImages);
+			StringBuilder sqlBuilder = null;
+			
 			for (int i = numImages - 1; i >= 0; i--) {
-				JSONObject imageJson = array.getJSONObject(i);
-				imageStm.clearBindings();
-
-				long id = imageJson.getLong("id");				
+				if(count == 0){
+					sqlBuilder = new StringBuilder(imageSql);
+				} else {
+					sqlBuilder.append(", ");	
+				}
 				
-				imageStm.bindLong(1, id);				
-				imageStm.bindString(2, imageJson.getString("imgurId"));
-				imageStm.bindLong(3, imageJson.getLong("reddit_score"));
-				imageStm.bindLong(4, imageJson.getBoolean("nsfw") ? 1 : 0);
-				imageStm.bindLong(5, imageJson.getBoolean("gif") ? 1 : 0);
-				imageStm.bindLong(6, imageJson.getBoolean("deleted") ? 1 : 0);
-				imageStm.bindLong(7, imageJson.getBoolean("reported") ? 1 : 0);
-				imageStm.bindLong(8, imageJson.getLong("updated_at"));
-				imageStm.bindLong(9, imageJson.getLong("created_at"));
+				count++;
+				JSONObject imageJson = array.getJSONObject(i);				
+
+				int id = imageJson.getInt("id");	
+				ids.add(id);
+				
+				StringBuilder valueBuilder = new StringBuilder();
+				valueBuilder.append("(");
+				valueBuilder.append(id);
+				valueBuilder.append(",'");
+				valueBuilder.append(imageJson.getString("imgurId"));
+				valueBuilder.append("',");
+				valueBuilder.append(imageJson.getLong("reddit_score"));
+				valueBuilder.append(",");
+				valueBuilder.append(imageJson.getBoolean("nsfw") ? 1 : 0);
+				valueBuilder.append(",");
+				valueBuilder.append(imageJson.getBoolean("gif") ? 1 : 0);
+				valueBuilder.append(",");
+				valueBuilder.append(imageJson.getBoolean("deleted") ? 1 : 0);
+				valueBuilder.append(",");
+				valueBuilder.append(imageJson.getBoolean("reported") ? 1 : 0);
+				valueBuilder.append(",");
+				valueBuilder.append(imageJson.getLong("updated_at"));
+				valueBuilder.append(",");
+				valueBuilder.append(imageJson.getLong("created_at"));
+				valueBuilder.append(")");
+				
+				sqlBuilder.append(valueBuilder);
 
 				/* Insert or update depending on the param. */
 				if (update) {
@@ -343,7 +369,9 @@ public class ImageSyncer extends Syncer {
 //					if (numRowsAffected == 0) {
 //						continue;
 //					}
-				} else {
+				} 
+				
+				if(count == 400){
 					/*
 					 * If the image already exists we don't want to replace it,
 					 * as that will delete it, causing cascading deletes of
@@ -351,7 +379,10 @@ public class ImageSyncer extends Syncer {
 					 * and continue on. This case shouldn't happen if our image
 					 * retrieval logic is sound and bug-free however.
 					 */
-					imageStm.executeInsert();
+					String sql = sqlBuilder.toString();
+					//Util.log(sql);
+					db.execSQL(sql);
+					count = 0;
 				}
 
 				/*
