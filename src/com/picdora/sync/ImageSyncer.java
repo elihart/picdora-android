@@ -12,8 +12,9 @@ import org.json.JSONObject;
 import retrofit.client.Response;
 import se.emilsjolander.sprinkles.Sprinkles;
 import android.content.ContentValues;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteStatement;
+import android.text.TextUtils;
 
 import com.picdora.CategoryUtils;
 import com.picdora.ImageUtils;
@@ -238,20 +239,23 @@ public class ImageSyncer extends Syncer {
 		 * creation date of our newest image.
 		 */
 
+		int numImagesInserted = 0;
+		long totalDbTime = 0;
 		for (Category category : categories) {
 			Timer timer = new Timer();
-			timer.start();
 
 			int score = CategoryUtils.getLowestImageScore(category);
 			long lastCreatedAt = CategoryUtils.getNewestImageDate(category);
 
 			int attempts = 0;
 			while (attempts < MAX_RETRIES) {
-				//Util.log("Category " + category.getName() + " Score: " + score + " Created: " + lastCreatedAt);
+				// Util.log("Category " + category.getName() + " Score: " +
+				// score
+				// + " Created: " + lastCreatedAt);
 				Response response = mApiService.newImages(category.getId(),
 						score, lastCreatedAt, NUM_IMAGES_FOR_LOW_CATEGORY);
 
-				//timer.lap("server response received");
+				// timer.lap("server response received");
 
 				/*
 				 * Check for a successful response and keep track of consecutive
@@ -268,10 +272,20 @@ public class ImageSyncer extends Syncer {
 				try {
 					String body = responseToString(response);
 					JSONArray json = new JSONArray(body);
-					//timer.lap("Parse response into json");
-					putImagesInDb(json, false);
-					timer.lap(json.length() + " new images inserted in "
+					int numImages = json.length();
+
+					Util.log("Putting " + numImages + " images into "
 							+ category.getName());
+					// timer.lap("Parse response into json");
+					long startTime = System.currentTimeMillis();
+					putImagesInDb(json, false);
+					long elapsed = System.currentTimeMillis() - startTime;
+					numImagesInserted += numImages;
+					totalDbTime += elapsed;
+					Util.log(category.getName() + " averaged "
+							+ (numImages / (elapsed / 1000.0))
+							+ " inserts per second. Running average is "
+							+ (numImagesInserted / (totalDbTime / 1000.0)));
 					break;
 				} catch (IOException e) {
 					Util.logException(e);
@@ -298,81 +312,151 @@ public class ImageSyncer extends Syncer {
 	 * 
 	 */
 	protected void putImagesInDb(JSONArray array, boolean update) {
+		// number of images in the array
+		int numImages = array.length();
+		/*
+		 * Image category tags are stored in their own table with the imageId
+		 * and categoryId uniquely making a tuple. An image can have multiple
+		 * categories so we may need to insert multiple tuples for each image.
+		 * Additionally, if we are updating an image it may have existing
+		 * categories that may or may not exist in the updated image. To handle
+		 * this efficiently we will mass deleted all category tags for the
+		 * inserted images and then reinsert them in a bulk insert. The category
+		 * values list will hold the sql values for an image/category tuple to
+		 * be inserted at the end. Initialize the list size assuming each image
+		 * has on average 2 categories.
+		 */
+		List<String> categoryValues = new ArrayList<String>(numImages * 2);
+		/*
+		 * Keep track of all the ids that we insert so we can clear out that
+		 * category tags before inserting the updated/new ones.
+		 */
+		List<Integer> ids = new ArrayList<Integer>(numImages);
+
 		SQLiteDatabase db = Sprinkles.getDatabase();
 
-		String imageSql = "INSERT OR IGNORE INTO Images (id, imgurId, redditScore, "
-				+ "nsfw, gif, deleted, reported, lastUpdated, createdAt) "
-				+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);";
-		SQLiteStatement imageStm = db.compileStatement(imageSql);
-		
-		String categorySql = "INSERT OR IGNORE INTO ImageCategories (imageId, categoryId) "
-				+ "VALUES (?, ?);";
-		SQLiteStatement categoryStm = db.compileStatement(categorySql);
-
 		db.beginTransaction();
-
 		try {
-			int numImages = array.length();
-			for (int i = numImages - 1; i >= 0; i--) {
-				JSONObject imageJson = array.getJSONObject(i);
-				imageStm.clearBindings();
+			try {
+				/* Get each image from json and insert it into the db. */
+				for (int i = numImages - 1; i >= 0; i--) {
+					JSONObject imageJson = array.getJSONObject(i);
 
-				long id = imageJson.getLong("id");				
-				
-				imageStm.bindLong(1, id);				
-				imageStm.bindString(2, imageJson.getString("imgurId"));
-				imageStm.bindLong(3, imageJson.getLong("reddit_score"));
-				imageStm.bindLong(4, imageJson.getBoolean("nsfw") ? 1 : 0);
-				imageStm.bindLong(5, imageJson.getBoolean("gif") ? 1 : 0);
-				imageStm.bindLong(6, imageJson.getBoolean("deleted") ? 1 : 0);
-				imageStm.bindLong(7, imageJson.getBoolean("reported") ? 1 : 0);
-				imageStm.bindLong(8, imageJson.getLong("updated_at"));
-				imageStm.bindLong(9, imageJson.getLong("created_at"));
+					int id = imageJson.getInt("id");
 
-				/* Insert or update depending on the param. */
-				if (update) {
-					//imageStm.execute();
+					ContentValues values = new ContentValues();
+
+					values.put("lastUpdated", imageJson.getLong("updated_at"));
+					values.put("createdAt", imageJson.getLong("created_at"));
+					values.put("imgurId", imageJson.getString("imgurId"));
+					values.put("redditScore", imageJson.getLong("reddit_score"));
+					values.put("nsfw", imageJson.getBoolean("nsfw"));
+					values.put("gif", imageJson.getBoolean("gif"));
+					values.put("deleted", imageJson.getBoolean("deleted"));
+					values.put("reported", imageJson.getBoolean("reported"));
+
 					/*
-					 * If no rows were affected then the image isn't in our
-					 * database and can't be updated. Skip the categories step
-					 * and move to the next image.
+					 * Do an update or insert depending on the param setting. If
+					 * the update doesn't affect any rows then we don't have
+					 * that image and we shouldn't insert category tags for it.
 					 */
-//					if (numRowsAffected == 0) {
-//						continue;
-//					}
-				} else {
+					if (update) {
+						int numRowsAffected = db.update("Images", values, "id="
+								+ id, null);
+						if (numRowsAffected == 0) {
+							continue;
+						}
+					}
 					/*
-					 * If the image already exists we don't want to replace it,
-					 * as that will delete it, causing cascading deletes of
-					 * dependent likes/collections. Instead we'll ignore it and
-					 * and continue on. This case shouldn't happen if our image
-					 * retrieval logic is sound and bug-free however.
+					 * Insert with ignoring conflicts. We don't want to replace
+					 * because that will trigger a cascade delete on
+					 * dependencies likes Likes and Collections.
 					 */
-					imageStm.executeInsert();
+					else {
+						values.put("id", id);
+						db.insertWithOnConflict("Images", null, values,
+								SQLiteDatabase.CONFLICT_IGNORE);
+					}
+
+					/*
+					 * Parse and store the category data for a bulk insert
+					 * later. We could do them one at a time but it is much
+					 * faster to do it all together. Store the id so we know
+					 * which image category tags to delete later.
+					 */
+					ids.add(id);
+					JSONArray categories = imageJson.getJSONArray("categories");
+					int numCategories = categories.length();
+					for (int j = 0; j < numCategories; j++) {
+						StringBuilder catValue = new StringBuilder();
+						catValue.append("(");
+						catValue.append(id);
+						catValue.append(", ");
+						catValue.append(categories.getInt(j));
+						catValue.append(")");
+						categoryValues.add(catValue.toString());
+					}
 				}
+			} catch (JSONException e) {
+				Util.logException(e);
+				return;
+			}
+
+			/*
+			 * Finally, do the bulk category info insert. First delete any
+			 * category tags previously assigned to these images.
+			 */
+			String whereClause = "imageId IN (" + TextUtils.join(",", ids)
+					+ ")";
+			db.delete("ImageCategories", whereClause, null);
+
+			/*
+			 * Bulk insert of the category tags. Sqlite has a limit of how many
+			 * separate values can be added in one insert so we'll break it into
+			 * batches.
+			 */
+			String categorySql = "INSERT OR IGNORE INTO ImageCategories (imageId, categoryId) "
+					+ "VALUES ";
+			int numCatValues = categoryValues.size();
+			StringBuilder catSqlBuilder = null;
+			for (int i = 0; i < numCatValues; i++) {
+				/*
+				 * Append each one of our category tag values onto the insert
+				 * query.
+				 */
+				String cat = categoryValues.get(i);
+				if (catSqlBuilder == null) {
+					catSqlBuilder = new StringBuilder(categorySql);
+				} else {
+					catSqlBuilder.append(", ");
+				}
+
+				catSqlBuilder.append(cat);
 
 				/*
-				 * Set the categories for this image. First delete any
-				 * categories it may have had before and then recreate them all.
+				 * When the batch gets big enough execute the query and start a
+				 * new one.
 				 */
-				db.delete("ImageCategories", "imageId=" + id, null);
 
-				JSONArray categories = imageJson.getJSONArray("categories");
-				int numCategories = categories.length();
-				for (int j = 0; j < numCategories; j++) {
-					categoryStm.clearBindings();					
-					categoryStm.bindLong(1, id);
-					categoryStm.bindLong(2, categories.getLong(j));
-					categoryStm.executeInsert();
+				if (i % 450 == 0) {
+					db.execSQL(catSqlBuilder.toString());
 				}
 			}
-			// Util.log("Batch successful!");
+
+			/*
+			 * Execute the remnants that weren't big enough to fill a whole
+			 * batch.
+			 */
+			if (catSqlBuilder != null) {
+				db.execSQL(catSqlBuilder.toString());
+			}
+
 			db.setTransactionSuccessful();
-		} catch (JSONException e) {
+		} catch (SQLException e) {
 			Util.logException(e);
+			return;
 		} finally {
 			db.endTransaction();
 		}
 	}
-
 }
