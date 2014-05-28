@@ -111,7 +111,7 @@ public abstract class CategoryUtils {
 		final String query = "SELECT MIN(redditScore) FROM ImagesWithCategories WHERE categoryId="
 				+ category.getId();
 
-		return (int) DbUtils.simpleQueryForLong(query, -1);
+		return (int) DbUtils.simpleQueryForLong(query, 0);
 	}
 
 	/**

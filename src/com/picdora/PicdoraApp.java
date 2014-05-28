@@ -15,13 +15,13 @@ public class PicdoraApp extends Application {
 	public static final boolean DEBUG = true;
 	public static final boolean SFW_VERSION = false;
 	/** Whether new images should be retrieved for all categories. */
-	public static final boolean SEED_IMAGE_DATABASE = false;
+	public static final boolean SEED_IMAGE_DATABASE = true;
 
 	@Override
 	public void onCreate() {
 		super.onCreate();
 
-		//resetApp();
+		resetApp();
 		// clearCache();
 
 		/* In the sfw version we make sure the nsfw preference is set to false. */

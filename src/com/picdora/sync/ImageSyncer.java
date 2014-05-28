@@ -13,6 +13,7 @@ import retrofit.client.Response;
 import se.emilsjolander.sprinkles.Sprinkles;
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
 
 import com.picdora.CategoryUtils;
 import com.picdora.ImageUtils;
@@ -40,7 +41,7 @@ public class ImageSyncer extends Syncer {
 	 */
 	private static final int LOW_IMAGE_THRESHOLD = 200;
 	/** The number of fresh images to get for a category that is low on images. */
-	private static final int NUM_IMAGES_FOR_LOW_CATEGORY = 100;
+	private static final int NUM_IMAGES_FOR_LOW_CATEGORY = 600;
 
 	/** The maximum number of times to retry a request until we give up. */
 	private static final int MAX_RETRIES = 3;
@@ -59,7 +60,7 @@ public class ImageSyncer extends Syncer {
 	public void sync() {
 		Timer syncTimer = new Timer();
 		syncTimer.start();
-		
+
 		/*
 		 * If we don't yet have any images in the database we can seed it by
 		 * retrieving images for every category from the server.
@@ -67,7 +68,7 @@ public class ImageSyncer extends Syncer {
 		if (PicdoraApp.SEED_IMAGE_DATABASE) {
 			List<Category> allCategories = CategoryUtils.getAll(true);
 			boolean success = getNewImages(allCategories);
-			syncTimer.lap("Seeded images: " + success);
+			syncTimer.lap("Seeded images successful? " + success);
 			/*
 			 * We don't need to do updates since these are all new images. We're
 			 * done.
@@ -198,7 +199,6 @@ public class ImageSyncer extends Syncer {
 	private long getLastUpdated() {
 		long lastUpdated = mPrefs.lastImageUpdate().get();
 
-
 		/*
 		 * If the update time is 0 then we have never recorded an update. In
 		 * this case we should base our update time on the most recent updated
@@ -237,7 +237,7 @@ public class ImageSyncer extends Syncer {
 		 * we don't already have by passing our lowest image score and the
 		 * creation date of our newest image.
 		 */
-		
+
 		for (Category category : categories) {
 			Timer timer = new Timer();
 			timer.start();
@@ -247,9 +247,11 @@ public class ImageSyncer extends Syncer {
 
 			int attempts = 0;
 			while (attempts < MAX_RETRIES) {
-
+				//Util.log("Category " + category.getName() + " Score: " + score + " Created: " + lastCreatedAt);
 				Response response = mApiService.newImages(category.getId(),
 						score, lastCreatedAt, NUM_IMAGES_FOR_LOW_CATEGORY);
+
+				//timer.lap("server response received");
 
 				/*
 				 * Check for a successful response and keep track of consecutive
@@ -266,8 +268,10 @@ public class ImageSyncer extends Syncer {
 				try {
 					String body = responseToString(response);
 					JSONArray json = new JSONArray(body);
+					//timer.lap("Parse response into json");
 					putImagesInDb(json, false);
-					timer.lap("put images in db");
+					timer.lap(json.length() + " new images inserted in "
+							+ category.getName());
 					break;
 				} catch (IOException e) {
 					Util.logException(e);
@@ -295,37 +299,50 @@ public class ImageSyncer extends Syncer {
 	 */
 	protected void putImagesInDb(JSONArray array, boolean update) {
 		SQLiteDatabase db = Sprinkles.getDatabase();
+
+//		String imageSql = "INSERT OR IGNORE INTO Images (id, imgurId, redditScore, "
+//				+ "nsfw, gif, deleted, reported, lastUpdated, createdAt) "
+//				+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);";
+		String imageSql = "INSERT OR IGNORE INTO Images (id, imgurId, redditScore, "
+				+ "nsfw, gif, deleted, reported, lastUpdated, createdAt) "
+				+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);";
+		//SQLiteStatement imageStm = db.compileStatement(imageSql);
+		
+		String categorySql = "INSERT OR IGNORE INTO ImageCategories (imageId, categoryId) "
+				+ "VALUES (?, ?);";
+		SQLiteStatement categoryStm = db.compileStatement(categorySql);
+
 		db.beginTransaction();
 
 		try {
 			int numImages = array.length();
 			for (int i = numImages - 1; i >= 0; i--) {
 				JSONObject imageJson = array.getJSONObject(i);
+				imageStm.clearBindings();
 
-				long id = imageJson.getLong("id");
-				ContentValues values = new ContentValues();
-				values.put("id", id);
-				values.put("lastUpdated", imageJson.getLong("updated_at"));
-				values.put("createdAt", imageJson.getLong("created_at"));
-				values.put("imgurId", imageJson.getString("imgurId"));
-				values.put("redditScore", imageJson.getLong("reddit_score"));
-				values.put("nsfw", imageJson.getBoolean("nsfw"));
-				values.put("gif", imageJson.getBoolean("gif"));
-				values.put("deleted", imageJson.getBoolean("deleted"));
-				values.put("reported", imageJson.getBoolean("reported"));
+				long id = imageJson.getLong("id");				
+				
+				imageStm.bindLong(1, id);				
+				imageStm.bindString(2, imageJson.getString("imgurId"));
+				imageStm.bindLong(3, imageJson.getLong("reddit_score"));
+				imageStm.bindLong(4, imageJson.getBoolean("nsfw") ? 1 : 0);
+				imageStm.bindLong(5, imageJson.getBoolean("gif") ? 1 : 0);
+				imageStm.bindLong(6, imageJson.getBoolean("deleted") ? 1 : 0);
+				imageStm.bindLong(7, imageJson.getBoolean("reported") ? 1 : 0);
+				imageStm.bindLong(8, imageJson.getLong("updated_at"));
+				imageStm.bindLong(9, imageJson.getLong("created_at"));
 
 				/* Insert or update depending on the param. */
 				if (update) {
-					int numRowsAffected = db.update("Images", values, "id="
-							+ id, null);
+					//imageStm.execute();
 					/*
 					 * If no rows were affected then the image isn't in our
 					 * database and can't be updated. Skip the categories step
 					 * and move to the next image.
 					 */
-					if (numRowsAffected == 0) {
-						continue;
-					}
+//					if (numRowsAffected == 0) {
+//						continue;
+//					}
 				} else {
 					/*
 					 * If the image already exists we don't want to replace it,
@@ -334,29 +351,23 @@ public class ImageSyncer extends Syncer {
 					 * and continue on. This case shouldn't happen if our image
 					 * retrieval logic is sound and bug-free however.
 					 */
-					db.insertWithOnConflict("Images", null, values,
-							SQLiteDatabase.CONFLICT_IGNORE);
+					imageStm.executeInsert();
 				}
 
 				/*
 				 * Set the categories for this image. First delete any
 				 * categories it may have had before and then recreate them all.
 				 */
-				db.delete("ImageCategories", "imageId=" + id, null);
+				//db.delete("ImageCategories", "imageId=" + id, null);
 
-				JSONArray categories = imageJson.getJSONArray("categories");
-				int numCategories = categories.length();
-				for (int j = 0; j < numCategories; j++) {
-					ContentValues categoryValues = new ContentValues();
-					categoryValues.put("categoryId", categories.getString(j));
-					categoryValues.put("imageId", id);
-					/*
-					 * No existing row should match since we just deleted them,
-					 * but we'll do a replace on conflict just in case.
-					 */
-					db.insertWithOnConflict("ImageCategories", null,
-							categoryValues, SQLiteDatabase.CONFLICT_REPLACE);
-				}
+//				JSONArray categories = imageJson.getJSONArray("categories");
+//				int numCategories = categories.length();
+//				for (int j = 0; j < numCategories; j++) {
+//					categoryStm.clearBindings();					
+//					categoryStm.bindLong(1, id);
+//					categoryStm.bindLong(2, categories.getLong(j));
+//					categoryStm.executeInsert();
+//				}
 			}
 			// Util.log("Batch successful!");
 			db.setTransactionSuccessful();
