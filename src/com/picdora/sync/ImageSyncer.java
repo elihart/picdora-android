@@ -14,7 +14,6 @@ import se.emilsjolander.sprinkles.Sprinkles;
 import android.content.ContentValues;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteStatement;
 import android.text.TextUtils;
 
 import com.picdora.CategoryUtils;
@@ -248,7 +247,7 @@ public class ImageSyncer extends Syncer {
 			int score = CategoryUtils.getLowestImageScore(category);
 			long lastCreatedAt = CategoryUtils.getNewestImageDate(category);
 
-			int attempts = 0;			
+			int attempts = 0;
 			while (attempts < MAX_RETRIES) {
 				// Util.log("Category " + category.getName() + " Score: " +
 				// score
@@ -284,7 +283,7 @@ public class ImageSyncer extends Syncer {
 					numImagesInserted += numImages;
 					totalDbTime += elapsed;
 					Util.log(category.getName() + " averaged "
-							+ (numImages/ (elapsed / 1000.0))
+							+ (numImages / (elapsed / 1000.0))
 							+ " inserts per second. Running average is "
 							+ (numImagesInserted / (totalDbTime / 1000.0)));
 					break;
@@ -313,63 +312,79 @@ public class ImageSyncer extends Syncer {
 	 * 
 	 */
 	protected void putImagesInDb(JSONArray array, boolean update) {
+		// number of images in the array
 		int numImages = array.length();
-		List<String> imageValues = new ArrayList<String>(numImages);
+		/*
+		 * Image category tags are stored in their own table with the imageId
+		 * and categoryId uniquely making a tuple. An image can have multiple
+		 * categories so we may need to insert multiple tuples for each image.
+		 * Additionally, if we are updating an image it may have existing
+		 * categories that may or may not exist in the updated image. To handle
+		 * this efficiently we will mass deleted all category tags for the
+		 * inserted images and then reinsert them in a bulk insert. The category
+		 * values list will hold the sql values for an image/category tuple to
+		 * be inserted at the end. Initialize the list size assuming each image
+		 * has on average 2 categories.
+		 */
 		List<String> categoryValues = new ArrayList<String>(numImages * 2);
+		/*
+		 * Keep track of all the ids that we insert so we can clear out that
+		 * category tags before inserting the updated/new ones.
+		 */
 		List<Integer> ids = new ArrayList<Integer>(numImages);
 
 		SQLiteDatabase db = Sprinkles.getDatabase();
 
 		db.beginTransaction();
 		try {
-
 			try {
+				/* Get each image from json and insert it into the db. */
 				for (int i = numImages - 1; i >= 0; i--) {
 					JSONObject imageJson = array.getJSONObject(i);
 
 					int id = imageJson.getInt("id");
+
+					ContentValues values = new ContentValues();
+
+					values.put("lastUpdated", imageJson.getLong("updated_at"));
+					values.put("createdAt", imageJson.getLong("created_at"));
+					values.put("imgurId", imageJson.getString("imgurId"));
+					values.put("redditScore", imageJson.getLong("reddit_score"));
+					values.put("nsfw", imageJson.getBoolean("nsfw"));
+					values.put("gif", imageJson.getBoolean("gif"));
+					values.put("deleted", imageJson.getBoolean("deleted"));
+					values.put("reported", imageJson.getBoolean("reported"));
+
+					/*
+					 * Do an update or insert depending on the param setting. If
+					 * the update doesn't affect any rows then we don't have
+					 * that image and we shouldn't insert category tags for it.
+					 */
+					if (update) {
+						int numRowsAffected = db.update("Images", values, "id="
+								+ id, null);
+						if (numRowsAffected == 0) {
+							continue;
+						}
+					}
+					/*
+					 * Insert with ignoring conflicts. We don't want to replace
+					 * because that will trigger a cascade delete on
+					 * dependencies likes Likes and Collections.
+					 */
+					else {
+						values.put("id", id);
+						db.insertWithOnConflict("Images", null, values,
+								SQLiteDatabase.CONFLICT_IGNORE);
+					}
+
+					/*
+					 * Parse and store the category data for a bulk insert
+					 * later. We could do them one at a time but it is much
+					 * faster to do it all together. Store the id so we know
+					 * which image category tags to delete later.
+					 */
 					ids.add(id);
-
-					 StringBuilder valueBuilder = new StringBuilder();
-					 valueBuilder.append("(");
-					 valueBuilder.append(id);
-					 valueBuilder.append(",'");
-					 valueBuilder.append(imageJson.getString("imgurId"));
-					 valueBuilder.append("',");
-					 valueBuilder.append(imageJson.getLong("reddit_score"));
-					 valueBuilder.append(",");
-					 valueBuilder.append(imageJson.getBoolean("nsfw") ? 1 :
-					 0);
-					 valueBuilder.append(",");
-					 valueBuilder.append(imageJson.getBoolean("gif") ? 1 : 0);
-					 valueBuilder.append(",");
-					 valueBuilder.append(imageJson.getBoolean("deleted") ? 1 :
-					 0);
-					 valueBuilder.append(",");
-					 valueBuilder.append(imageJson.getBoolean("reported") ? 1
-					 : 0);
-					 valueBuilder.append(",");
-					 valueBuilder.append(imageJson.getLong("updated_at"));
-					 valueBuilder.append(",");
-					 valueBuilder.append(imageJson.getLong("created_at"));
-					 valueBuilder.append(")");
-					
-					 imageValues.add(valueBuilder.toString());
-
-//					ContentValues values = new ContentValues();
-//					values.put("id", id);
-//					values.put("lastUpdated", imageJson.getLong("updated_at"));
-//					values.put("createdAt", imageJson.getLong("created_at"));
-//					values.put("imgurId", imageJson.getString("imgurId"));
-//					values.put("redditScore", imageJson.getLong("reddit_score"));
-//					values.put("nsfw", imageJson.getBoolean("nsfw"));
-//					values.put("gif", imageJson.getBoolean("gif"));
-//					values.put("deleted", imageJson.getBoolean("deleted"));
-//					values.put("reported", imageJson.getBoolean("reported"));
-//
-//					db.insertWithOnConflict("Images", null, values,
-//							SQLiteDatabase.CONFLICT_IGNORE);
-
 					JSONArray categories = imageJson.getJSONArray("categories");
 					int numCategories = categories.length();
 					for (int j = 0; j < numCategories; j++) {
@@ -387,40 +402,19 @@ public class ImageSyncer extends Syncer {
 				return;
 			}
 
-			 String imageSql =
-			 "INSERT OR IGNORE INTO Images (id, imgurId, redditScore, "
-			 + "nsfw, gif, deleted, reported, lastUpdated, createdAt) "
-			 + "VALUES ";
-			
-			 StringBuilder imageSqlBuilder = null;
-			
-			 for (int i = 0; i < numImages; i++) {
-			 if (imageSqlBuilder == null) {
-			 imageSqlBuilder = new StringBuilder(imageSql);
-			 } else {
-			 imageSqlBuilder.append(", ");
-			 }
-			 imageSqlBuilder.append(imageValues.get(i));
-			
-			 if (i % 450 == 0) {
-			 db.execSQL(imageSqlBuilder.toString());
-			 imageSqlBuilder = null;
-			 }
-			 }
-			
-			 if (imageSqlBuilder != null) {
-			 db.execSQL(imageSqlBuilder.toString());
-			 }
-
 			/*
-			 * Set the categories for this image. First delete any categories it
-			 * may have had before and then recreate them all.
+			 * Finally, do the bulk category info insert. First delete any
+			 * category tags previously assigned to these images.
 			 */
-
 			String whereClause = "imageId IN (" + TextUtils.join(",", ids)
 					+ ")";
 			db.delete("ImageCategories", whereClause, null);
 
+			/*
+			 * Bulk insert of the category tags. Sqlite has a limit of how many
+			 * separate values can be added in one insert so we'll break it into
+			 * batches.
+			 */
 			String categorySql = "INSERT OR IGNORE INTO ImageCategories (imageId, categoryId) "
 					+ "VALUES ";
 			int numCatValues = categoryValues.size();
@@ -435,12 +429,20 @@ public class ImageSyncer extends Syncer {
 
 				catSqlBuilder.append(cat);
 
+				/*
+				 * When the batch gets big enough execute the query and start a
+				 * new one.
+				 */
 				if (i % 450 == 0) {
 					db.execSQL(catSqlBuilder.toString());
 					catSqlBuilder = null;
 				}
 			}
 
+			/*
+			 * Execute the remnants that weren't big enough to fill a whole
+			 * batch.
+			 */
 			if (catSqlBuilder != null) {
 				db.execSQL(catSqlBuilder.toString());
 			}
