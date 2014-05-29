@@ -3,7 +3,6 @@ package com.picdora.launch;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.sharedpreferences.Pref;
 
-import se.emilsjolander.sprinkles.Migration;
 import se.emilsjolander.sprinkles.Sprinkles;
 import android.app.Activity;
 import android.content.Intent;
@@ -18,16 +17,6 @@ import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
 import com.picdora.channelSelection.ChannelSelectionActivity_;
 import com.picdora.imageloader.PicdoraImageLoader;
-import com.picdora.models.AssetDatabaseOpenHelper;
-import com.picdora.models.Category;
-import com.picdora.models.ImageCategory;
-import com.picdora.models.Channel;
-import com.picdora.models.ChannelCategory;
-import com.picdora.models.ChannelImage;
-import com.picdora.models.Collection;
-import com.picdora.models.CollectionItem;
-import com.picdora.models.Image;
-import com.picdora.sync.PicdoraSyncService;
 import com.picdora.sync.PicdoraSyncService_;
 import com.picdora.ui.FontHelper;
 import com.picdora.ui.UiUtil;
@@ -85,20 +74,16 @@ public class LaunchActivity extends Activity {
 	 */
 	private void initDb() {
 		/*
-		 * Check if we have a database yet, and if not copy our starter one over
-		 * from assets.
-		 */
-		AssetDatabaseOpenHelper opener = new AssetDatabaseOpenHelper(
-				getApplicationContext(), DB_NAME, DB_VERSION);
-		opener.copyDatabaseIfNotExists();
-
-		/*
 		 * Start up sprinkles and run any migrations we have to alter the
 		 * default database.
 		 */
 		Sprinkles sprinkles = Sprinkles.init(getApplicationContext(), DB_NAME,
 				DB_VERSION);
 
+		/*
+		 * Older migrations that were included in the now default db copied from
+		 * assets.
+		 */
 		// create models
 		// Migration addModelsMigration = new Migration();
 		//

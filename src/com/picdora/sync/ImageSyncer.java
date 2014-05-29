@@ -67,6 +67,11 @@ public class ImageSyncer extends Syncer {
 
 	@Override
 	public void sync() {
+		/*
+		 * For inserting images it is faster to do bulk inserts but this wasn't
+		 * introduced until sqlite 3.7.11. Older android devices do not have
+		 * this version and we have to revert to individual insertions.
+		 */
 		Cursor cursor = SQLiteDatabase.openOrCreateDatabase(":memory:", null)
 				.rawQuery("select sqlite_version() AS sqlite_version", null);
 		String sqliteVersion = "";
@@ -77,7 +82,6 @@ public class ImageSyncer extends Syncer {
 		 * Need at least 3.7.11. TODO: Check for higher versions as well.
 		 */
 		mSupportsBulkInserts = sqliteVersion.equalsIgnoreCase("3.7.11");
-		Util.log(sqliteVersion + " - Supports inserts? " + mSupportsBulkInserts);
 
 		Timer syncTimer = new Timer();
 		syncTimer.start();
@@ -460,7 +464,7 @@ public class ImageSyncer extends Syncer {
 		 * For devices with an older sqlite version that doesn't support bulk
 		 * insert do it one by one. It's about a 25-50% performance decrease.
 		 */
-		if (!mSupportsBulkInserts) {			
+		if (!mSupportsBulkInserts) {
 			for (int i = 0; i < numCatValues; i++) {
 				String cat = categoryValues.get(i);
 				db.execSQL(categorySql + cat);
