@@ -54,13 +54,11 @@ public class PicdoraApiService implements PicdoraApi {
 	}
 
 	@Override
-	@GET("/images/new")
-	public Response newImages(@Query("category_id") long categoryId,
-			@Query("score") int score,
-			@Query("created_after") long lastCreatedAt,
+	@GET("/images/top")
+	public Response topImages(@Query("category_id") long categoryId,
 			@Query("count") int count) {
 		try {
-			return client.newImages(categoryId, score, lastCreatedAt, count);
+			return client.topImages(categoryId, count);
 		} catch (Exception e) {
 			return null;
 		}

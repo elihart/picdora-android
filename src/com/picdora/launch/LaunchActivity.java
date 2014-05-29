@@ -18,6 +18,7 @@ import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
 import com.picdora.channelSelection.ChannelSelectionActivity_;
 import com.picdora.imageloader.PicdoraImageLoader;
+import com.picdora.models.AssetDatabaseOpenHelper;
 import com.picdora.models.Category;
 import com.picdora.models.ImageCategory;
 import com.picdora.models.Channel;
@@ -33,6 +34,9 @@ import com.picdora.ui.UiUtil;
 
 @EActivity
 public class LaunchActivity extends Activity {
+	public static final String DB_NAME = "picdora.db";
+	private static final int DB_VERSION = 2;
+
 	@Pref
 	protected PicdoraPreferences_ mPrefs;
 
@@ -45,19 +49,15 @@ public class LaunchActivity extends Activity {
 		PicdoraImageLoader.init(this);
 		initUniversalImageLoader();
 
-		runMigrations();
+		initDb();
 
 		// only use crashlytics when not debugging
 		if (!PicdoraApp.DEBUG) {
 			Crashlytics.start(this);
 		}
 
-		if (mPrefs.firstLaunch().get()) {
-			// TODO: Insert base data into db
-		}
-
 		/* Start the syncing service. */
-		//startService(new Intent(this, PicdoraSyncService.class));
+		// startService(new Intent(this, PicdoraSyncService.class));
 		PicdoraSyncService_.intent(this).start();
 
 		/* Move on to the main activity. */
@@ -83,29 +83,42 @@ public class LaunchActivity extends Activity {
 	 * Run db migrations with sprinkles.
 	 * 
 	 */
-	private void runMigrations() {
-		Sprinkles sprinkles = Sprinkles.init(getApplicationContext());
+	private void initDb() {
+		/*
+		 * Check if we have a database yet, and if not copy our starter one over
+		 * from assets.
+		 */
+		AssetDatabaseOpenHelper opener = new AssetDatabaseOpenHelper(
+				getApplicationContext(), DB_NAME, DB_VERSION);
+		opener.copyDatabaseIfNotExists();
+
+		/*
+		 * Start up sprinkles and run any migrations we have to alter the
+		 * default database.
+		 */
+		Sprinkles sprinkles = Sprinkles.init(getApplicationContext(), DB_NAME,
+				DB_VERSION);
 
 		// create models
-		Migration addModelsMigration = new Migration();
-
-		addModelsMigration.createTable(Image.class);
-		addModelsMigration.createTable(Category.class);
-		addModelsMigration.createTable(ImageCategory.class);
-
-		addModelsMigration.createTable(Channel.class);
-		addModelsMigration.createTable(ChannelImage.class);
-		addModelsMigration.createTable(ChannelCategory.class);
-
-		addModelsMigration.createTable(Collection.class);
-		addModelsMigration.createTable(CollectionItem.class);
-
-		sprinkles.addMigration(addModelsMigration);
-
-		Migration views = new Migration();
-
-		views.addRawStatement("CREATE VIEW IF NOT EXISTS ImagesWithCategories AS SELECT * FROM Images JOIN ImageCategories ON Images.id = ImageCategories.imageId");
-		sprinkles.addMigration(views);
+		// Migration addModelsMigration = new Migration();
+		//
+		// addModelsMigration.createTable(Image.class);
+		// addModelsMigration.createTable(Category.class);
+		// addModelsMigration.createTable(ImageCategory.class);
+		//
+		// addModelsMigration.createTable(Channel.class);
+		// addModelsMigration.createTable(ChannelImage.class);
+		// addModelsMigration.createTable(ChannelCategory.class);
+		//
+		// addModelsMigration.createTable(Collection.class);
+		// addModelsMigration.createTable(CollectionItem.class);
+		//
+		// sprinkles.addMigration(addModelsMigration);
+		//
+		// Migration views = new Migration();
+		//
+		// views.addRawStatement("CREATE VIEW IF NOT EXISTS ImagesWithCategories AS SELECT * FROM Images JOIN ImageCategories ON Images.id = ImageCategories.imageId");
+		// sprinkles.addMigration(views);
 	}
 
 }

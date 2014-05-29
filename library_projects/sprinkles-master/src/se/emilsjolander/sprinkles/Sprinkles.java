@@ -26,6 +26,8 @@ public final class Sprinkles {
 
     static Sprinkles sInstance;
     static SQLiteDatabase sDatabase;
+    
+    public static final String DEFAULT_DATABASE_NAME = "sprinkles.db";
 
     Context mContext;
     List<Migration> mMigrations = new ArrayList<Migration>();
@@ -69,7 +71,7 @@ public final class Sprinkles {
      * The default DB name is "sprinkles.db".
      */
     public static synchronized Sprinkles init(Context context) {
-        return init(context, "sprinkles.db", 0);
+        return init(context, DEFAULT_DATABASE_NAME, 0);
     }
 
     /**

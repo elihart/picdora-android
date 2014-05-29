@@ -6,6 +6,7 @@ import org.androidannotations.annotations.sharedpreferences.Pref;
 import android.app.Application;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
+import com.picdora.launch.LaunchActivity;
 
 @EApplication
 public class PicdoraApp extends Application {
@@ -15,7 +16,7 @@ public class PicdoraApp extends Application {
 	public static final boolean DEBUG = true;
 	public static final boolean SFW_VERSION = false;
 	/** Whether new images should be retrieved for all categories. */
-	public static final boolean SEED_IMAGE_DATABASE = true;
+	public static final boolean SEED_IMAGE_DATABASE = false;
 
 	@Override
 	public void onCreate() {
@@ -42,7 +43,7 @@ public class PicdoraApp extends Application {
 
 	/** Clear the database and reset all preferences. */
 	private void resetApp() {
-		deleteDatabase("sprinkles.db");
+		boolean success = deleteDatabase(LaunchActivity.DB_NAME);
 		mPrefs.clear();
 	}
 

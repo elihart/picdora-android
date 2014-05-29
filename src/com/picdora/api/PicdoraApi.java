@@ -36,11 +36,8 @@ public interface PicdoraApi {
 	 *         than this it is because there are not enough unique images to
 	 *         meet our request.
 	 */
-	@GET("/images/new")
-	public Response newImages(@Query("category_id") long categoryId,
-			@Query("score") int score,
-			@Query("created_after") long createdAfter,
-			@Query("count") int count);
+	@GET("/images/top")
+	public Response topImages(@Query("category_id") long categoryId, @Query("count") int count);
 
 	/**
 	 * Check for updates of images that we already have. Unfortunately it isn't

@@ -12,6 +12,7 @@ import org.json.JSONObject;
 import retrofit.client.Response;
 import se.emilsjolander.sprinkles.Sprinkles;
 import android.content.ContentValues;
+import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
@@ -42,7 +43,12 @@ public class ImageSyncer extends Syncer {
 	 */
 	private static final int LOW_IMAGE_THRESHOLD = 200;
 	/** The number of fresh images to get for a category that is low on images. */
-	private static final int NUM_IMAGES_FOR_LOW_CATEGORY = 600;
+	private static final int NUM_IMAGES_FOR_LOW_CATEGORY = 1000;
+	/**
+	 * Number of images to seed each category with for a default database
+	 * creation.
+	 */
+	private static final int BASE_IMAGE_COUNT_PER_CATEGORY = 600;
 
 	/** The maximum number of times to retry a request until we give up. */
 	private static final int MAX_RETRIES = 3;
@@ -56,9 +62,23 @@ public class ImageSyncer extends Syncer {
 	private long mLastUpdated;
 	/** The creation date of our newest image. */
 	private long mLastCreated;
+	/** If the device has a slqite version that supports bulk inserts. */
+	private boolean mSupportsBulkInserts = false;
 
 	@Override
 	public void sync() {
+		Cursor cursor = SQLiteDatabase.openOrCreateDatabase(":memory:", null)
+				.rawQuery("select sqlite_version() AS sqlite_version", null);
+		String sqliteVersion = "";
+		while (cursor.moveToNext()) {
+			sqliteVersion += cursor.getString(0);
+		}
+		/*
+		 * Need at least 3.7.11. TODO: Check for higher versions as well.
+		 */
+		mSupportsBulkInserts = sqliteVersion.equalsIgnoreCase("3.7.11");
+		Util.log(sqliteVersion + " - Supports inserts? " + mSupportsBulkInserts);
+
 		Timer syncTimer = new Timer();
 		syncTimer.start();
 
@@ -68,8 +88,9 @@ public class ImageSyncer extends Syncer {
 		 */
 		if (PicdoraApp.SEED_IMAGE_DATABASE) {
 			List<Category> allCategories = CategoryUtils.getAll(true);
-			boolean success = getNewImages(allCategories);
-			syncTimer.lap("Seeded images successful? " + success);
+			for (Category c : allCategories) {
+				getTopImages(c, BASE_IMAGE_COUNT_PER_CATEGORY);
+			}
 			/*
 			 * We don't need to do updates since these are all new images. We're
 			 * done.
@@ -102,16 +123,19 @@ public class ImageSyncer extends Syncer {
 		 * Check the unseen image count for each category. If the count is low
 		 * we'll try to get more pictures for it.
 		 */
-		List<Category> lowCategories = new ArrayList<Category>();
-		/* Get image counts and identify the low categories. */
+
+		/*
+		 * TODO: Some categories have very low image counts and the syste will
+		 * try to get new images every time. We should try to make them more
+		 * efficient.
+		 */
 		for (Category c : categoriesInUse) {
 			int numUnseenImages = CategoryUtils.getImageCount(c, true);
 			if (numUnseenImages < LOW_IMAGE_THRESHOLD) {
-				lowCategories.add(c);
+				int totalImages = CategoryUtils.getImageCount(c, false);
+				getTopImages(c, totalImages + NUM_IMAGES_FOR_LOW_CATEGORY);
 			}
 		}
-
-		boolean newImageSuccess = getNewImages(lowCategories);
 	}
 
 	/**
@@ -224,80 +248,70 @@ public class ImageSyncer extends Syncer {
 	}
 
 	/**
-	 * Retrieve new images from the database that were created since we last
-	 * synced. If the server has more images than we want in our batch size it
-	 * will give us the id of the next image to use in our next batch
+	 * Get the top images in a category. Ignores deleted and reported images.
 	 * 
-	 * @param categories
-	 *            The categories to get pictures for
+	 * @param category
+	 *            The categoryto get pictures for
+	 * @param numImagesToGet
+	 *            The number of images to get. The response may be less if there
+	 *            aren't a sufficient number available
 	 * @return True on success, false on failure.
 	 */
-	public boolean getNewImages(List<Category> categories) {
+	public boolean getTopImages(Category category, int numImagesToGet) {
 		/*
-		 * Try to get more images for each of the categories. We can get images
-		 * we don't already have by passing our lowest image score and the
-		 * creation date of our newest image.
+		 * If the query to server fails retry it until it works or the max
+		 * number of attempts is reached.
 		 */
+		int attempts = 0;
+		while (attempts < MAX_RETRIES) {
+			/*
+			 * TODO: If numImagesToGet is large this can use lots of memory,
+			 * especially in the parsing of the json. We can either break up the
+			 * queries to the server (although those aren't that much of a
+			 * problem) or break up the json parsing into smaller chunks..
+			 */
 
-		int numImagesInserted = 0;
-		long totalDbTime = 0;
-		for (Category category : categories) {
-			Timer timer = new Timer();
+			Response response = mApiService.topImages(category.getId(),
+					numImagesToGet);
 
-			int score = CategoryUtils.getLowestImageScore(category);
-			long lastCreatedAt = CategoryUtils.getNewestImageDate(category);
+			/*
+			 * Check for a successful response and keep track of consecutive
+			 * failures. Reset the count on success.
+			 */
+			if (response == null || response.getBody() == null) {
+				attempts++;
+				/* Try again... */
+				continue;
+			} else {
+				attempts = 0;
+			}
 
-			int attempts = 0;
-			while (attempts < MAX_RETRIES) {
-				// Util.log("Category " + category.getName() + " Score: " +
-				// score
-				// + " Created: " + lastCreatedAt);
-				Response response = mApiService.newImages(category.getId(),
-						score, lastCreatedAt, NUM_IMAGES_FOR_LOW_CATEGORY);
-
-				// timer.lap("server response received");
-
+			try {
 				/*
-				 * Check for a successful response and keep track of consecutive
-				 * failures. Reset the count on success.
+				 * Parse the response into json and insert the data into the db.
 				 */
-				if (response == null || response.getBody() == null) {
-					attempts++;
-					/* Try again... */
-					continue;
-				} else {
-					attempts = 0;
-				}
+				String body = responseToString(response);
+				JSONArray json = new JSONArray(body);
+				int numImages = json.length();
+				long startTime = System.currentTimeMillis();
+				putImagesInDb(json, false);
+				long elapsed = System.currentTimeMillis() - startTime;
+				Util.log("Inserted " + numImages + " images into "
+						+ category.getName() + " in " + elapsed + " ms : "
+						+ Math.round(numImages / (elapsed / 1000.0))
+						+ " inserts/second. ");
 
-				try {
-					String body = responseToString(response);
-					JSONArray json = new JSONArray(body);
-					int numImages = json.length();
-
-					Util.log("Putting " + numImages + " images into "
-							+ category.getName());
-					// timer.lap("Parse response into json");
-					long startTime = System.currentTimeMillis();
-					putImagesInDb(json, false);
-					long elapsed = System.currentTimeMillis() - startTime;
-					numImagesInserted += numImages;
-					totalDbTime += elapsed;
-					Util.log(category.getName() + " averaged "
-							+ (numImages / (elapsed / 1000.0))
-							+ " inserts per second. Running average is "
-							+ (numImagesInserted / (totalDbTime / 1000.0)));
-					break;
-				} catch (IOException e) {
-					Util.logException(e);
-					return false;
-				} catch (JSONException e) {
-					Util.logException(e);
-					return false;
-				}
+				return true;
+			} catch (IOException e) {
+				Util.logException(e);
+				return false;
+			} catch (JSONException e) {
+				Util.logException(e);
+				return false;
 			}
 		}
-
-		return true;
+		// Gave up after too many failed attempts
+		return false;
 	}
 
 	/**
@@ -402,23 +416,56 @@ public class ImageSyncer extends Syncer {
 				return;
 			}
 
-			/*
-			 * Finally, do the bulk category info insert. First delete any
-			 * category tags previously assigned to these images.
-			 */
-			String whereClause = "imageId IN (" + TextUtils.join(",", ids)
-					+ ")";
-			db.delete("ImageCategories", whereClause, null);
+			insertCategoryInfo(categoryValues, ids, db);
 
-			/*
-			 * Bulk insert of the category tags. Sqlite has a limit of how many
-			 * separate values can be added in one insert so we'll break it into
-			 * batches.
-			 */
-			String categorySql = "INSERT OR IGNORE INTO ImageCategories (imageId, categoryId) "
-					+ "VALUES ";
-			int numCatValues = categoryValues.size();
-			StringBuilder catSqlBuilder = null;
+			db.setTransactionSuccessful();
+		} catch (SQLException e) {
+			Util.logException(e);
+			return;
+		} finally {
+			db.endTransaction();
+		}
+	}
+
+	/**
+	 * Insert the category data into the database.
+	 * 
+	 * @param categoryValues
+	 *            Strings of the form "(imageId, categoryId)" for inserting into
+	 *            sql query.
+	 * @param imageIds
+	 *            List of all images that we are adding categories for.
+	 * @param db
+	 */
+	private void insertCategoryInfo(List<String> categoryValues,
+			List<Integer> imageIds, SQLiteDatabase db) {
+		/*
+		 * First delete any category tags previously assigned to these images.
+		 */
+		String whereClause = "imageId IN (" + TextUtils.join(",", imageIds)
+				+ ")";
+		db.delete("ImageCategories", whereClause, null);
+
+		/*
+		 * Bulk insert of the category tags. Sqlite has a limit of how many
+		 * separate values can be added in one insert so we'll break it into
+		 * batches.
+		 */
+		String categorySql = "INSERT OR IGNORE INTO ImageCategories (imageId, categoryId) "
+				+ "VALUES ";
+		int numCatValues = categoryValues.size();
+		StringBuilder catSqlBuilder = null;
+
+		/*
+		 * For devices with an older sqlite version that doesn't support bulk
+		 * insert do it one by one. It's about a 25-50% performance decrease.
+		 */
+		if (!mSupportsBulkInserts) {			
+			for (int i = 0; i < numCatValues; i++) {
+				String cat = categoryValues.get(i);
+				db.execSQL(categorySql + cat);
+			}
+		} else {
 			for (int i = 0; i < numCatValues; i++) {
 				/*
 				 * Append each one of our category tag values onto the insert
@@ -440,6 +487,7 @@ public class ImageSyncer extends Syncer {
 
 				if (i % 450 == 0) {
 					db.execSQL(catSqlBuilder.toString());
+					catSqlBuilder = null;
 				}
 			}
 
@@ -450,13 +498,6 @@ public class ImageSyncer extends Syncer {
 			if (catSqlBuilder != null) {
 				db.execSQL(catSqlBuilder.toString());
 			}
-
-			db.setTransactionSuccessful();
-		} catch (SQLException e) {
-			Util.logException(e);
-			return;
-		} finally {
-			db.endTransaction();
 		}
 	}
 }

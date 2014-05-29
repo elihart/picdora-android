@@ -42,8 +42,12 @@ public class ChannelCreationUtil {
 	public void createChannel(ChannelCreationInfo info,
 			boolean ignoreLowImageCount) {
 
-		// if we're already loading, don't load again
-		if (mIsLoadingChannel) {
+		/*
+		 * If we're already loading, don't load again unless we're returning
+		 * from the low image count dialog with a setting to ignore the low
+		 * image warning.
+		 */
+		if (mIsLoadingChannel && !ignoreLowImageCount) {
 			return;
 		}
 		/* Don't load if there aren't any categories. */
