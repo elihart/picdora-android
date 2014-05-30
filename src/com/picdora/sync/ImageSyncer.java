@@ -102,6 +102,10 @@ public class ImageSyncer extends Syncer {
 			return;
 		}
 
+		/*
+		 * TODO: Test updating and new images.
+		 */
+
 		/* Check for updates for the images in our local database. */
 		long updateStartTime = Util.getUnixTime();
 		boolean updateSuccess = updateImages();
@@ -129,7 +133,7 @@ public class ImageSyncer extends Syncer {
 		 */
 
 		/*
-		 * TODO: Some categories have very low image counts and the syste will
+		 * TODO: Some categories have very low image counts and the system will
 		 * try to get new images every time. We should try to make them more
 		 * efficient.
 		 */

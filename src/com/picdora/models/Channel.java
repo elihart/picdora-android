@@ -56,12 +56,16 @@ public class Channel extends Model implements Selectable {
 	protected long mCreatedAt;
 
 	protected List<Category> mCategories;
+	/**
+	 * Flag for whether or not the categories have been changed. If true we know
+	 * that we need to save the categories when the model is saved.
+	 * 
+	 */
+	private boolean mCategoriesChanged = false;
 
 	@Column("gifSetting")
 	@NotNull
 	protected int mGifSetting;
-
-	// TODO: Implement parcelable to pass this between activities
 
 	/**
 	 * Create a new channel with a unique name. The channel must be first saved
@@ -74,7 +78,7 @@ public class Channel extends Model implements Selectable {
 		if (Util.isStringBlank(name)) {
 			throw new IllegalArgumentException("Name can't be blank");
 		}
-		
+
 		setCategories(categories);
 
 		mName = name;
@@ -98,6 +102,22 @@ public class Channel extends Model implements Selectable {
 	protected void beforeCreate() {
 		mCreatedAt = Util.getUnixTime();
 		mLastUsed = Util.getUnixTime();
+	}
+
+	@Override
+	protected void afterSave() {
+		/*
+		 * Save categories that the channel is based on. This must be done after
+		 * the initial save so an id can be assigned to the channel, but let's
+		 * only do it if new categories have been set in order to be more
+		 * efficient. There are also some cases where model data may be changed
+		 * and saved without ever loading categories into memory, and trying to
+		 * save them would cause an error, so we avoid that case with this as well.
+		 */
+		if (mCategoriesChanged) {
+			saveCategoriesToDb();
+			mCategoriesChanged = false;
+		}
 	}
 
 	public long getId() {
@@ -124,7 +144,7 @@ public class Channel extends Model implements Selectable {
 	 */
 	public List<Category> getCategories() {
 		if (mCategories == null) {
-			getCategoriesFromDb();
+			mCategories = getCategoriesFromDb();
 		}
 		return mCategories;
 	}
@@ -162,18 +182,16 @@ public class Channel extends Model implements Selectable {
 
 	/**
 	 * Save the categories that characterize this channel to the db. Does a
-	 * synchronous db access! A regular save() of a Channel does
-	 * not save the categories, they must be saved manually with this.
+	 * synchronous db access!
 	 * 
 	 */
-	public void saveCategoriesToDb() {
+	private void saveCategoriesToDb() {
 		if (mCategories == null) {
 			throw new IllegalStateException("Categories can't be null");
-		}
-		else if (mCategories.isEmpty()) {
+		} else if (mCategories.isEmpty()) {
 			throw new IllegalStateException("Categories can't be empty");
 		}
-		
+
 		/*
 		 * TODO: Could maybe optimize this to not delete everything before
 		 * saving the new ones if the deletions aren't necessary
@@ -268,10 +286,11 @@ public class Channel extends Model implements Selectable {
 	public void setCategories(List<Category> categories) {
 		if (categories == null) {
 			throw new IllegalArgumentException("Categories can't be null");
-		}
-		else if (categories.isEmpty()) {
+		} else if (categories.isEmpty()) {
 			throw new IllegalArgumentException("Categories can't be empty");
 		}
+
+		mCategoriesChanged = true;
 
 		mCategories = categories;
 

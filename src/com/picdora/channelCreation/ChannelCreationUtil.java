@@ -85,12 +85,11 @@ public class ChannelCreationUtil {
 			}
 		}
 
-		/* Create the channel. */
+		/* Create the channel/preview and launch it */
 		Channel channel = null;
 		if (info.preview) {
 			channel = new ChannelPreview(info.categories, info.gifSetting);
 		} else {
-			/* Can't set the categories until the channel is saved. */
 			channel = new Channel(info.channelName, info.gifSetting,
 					info.categories);
 			/*
@@ -102,10 +101,7 @@ public class ChannelCreationUtil {
 				setLoadingStatus(false);
 				return;
 			}
-			/* Save to db so we get a channel id. */
 			channel.save();
-			/* Set and save the categories now that we have an id. */
-			channel.saveCategoriesToDb();
 		}
 
 		launchChannel(channel, info.preview);
