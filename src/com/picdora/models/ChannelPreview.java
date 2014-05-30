@@ -10,7 +10,7 @@ public class ChannelPreview extends Channel {
 	// for normal channels
 	private static final int PREVIEW_ID = -2;
 
-	// TODO: ChannelImages won't save without this being saved, so the user will
+	// ChannelImages won't save since the channel isn't saved, so the user will
 	// keep seeing the same initial images repeated. Should be enough for a
 	// preview though
 
@@ -26,7 +26,7 @@ public class ChannelPreview extends Channel {
 	 * @param gifSetting
 	 */
 	public ChannelPreview(List<Category> categories, GifSetting gifSetting) {
-		super("preview", categories, gifSetting);
+		super("preview", gifSetting, categories);
 		mId = PREVIEW_ID;
 	}
 

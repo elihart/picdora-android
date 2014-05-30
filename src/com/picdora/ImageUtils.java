@@ -4,15 +4,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import se.emilsjolander.sprinkles.Sprinkles;
-import se.emilsjolander.sprinkles.Transaction;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDoneException;
 import android.database.sqlite.SQLiteStatement;
@@ -117,95 +112,6 @@ public abstract class ImageUtils {
 	 */
 	public static String getImgurLink(Image image, ImgurSize size) {
 		return getImgurLink(image.getImgurId(), size);
-	}
-
-	/**
-	 * Get a list of image ids as strings for use in telling the server which
-	 * ids to exclude
-	 * 
-	 * @param categoryIds
-	 * @return
-	 */
-	private static List<String> getImageIdsInCategories(List<String> categoryIds) {
-		List<String> ids = new ArrayList<String>();
-		SQLiteDatabase db = Sprinkles.getDatabase();
-
-		String idString = "(" + TextUtils.join(",", categoryIds) + ")";
-		String selection = "categoryId IN " + idString;
-
-		Cursor cursor = db.query("Images", new String[] { "id" }, selection,
-				null, null, null, null);
-
-		int index = cursor.getColumnIndex("id");
-		while (cursor.moveToNext()) {
-			int id = cursor.getInt(index);
-			ids.add(Integer.toString(id));
-		}
-
-		cursor.close();
-
-		return ids;
-	}
-
-	public static long getLastId() {
-		SQLiteDatabase db = Sprinkles.getDatabase();
-		final String query = "SELECT MAX(id) FROM Images";
-
-		SQLiteStatement s = db.compileStatement(query);
-
-		long result = 0;
-		try {
-			result = s.simpleQueryForLong();
-		} catch (SQLiteDoneException ex) {
-			// no result
-		}
-
-		return result;
-	}
-
-	/**
-	 * Parse a json array of Images and save them to the database
-	 * 
-	 * @param json
-	 * @param images
-	 * @return Whether or not the images saved successfully
-	 */
-	public static boolean saveImagesToDb(JSONArray json) {
-		Transaction t = new Transaction();
-		boolean success = true;
-		try {
-			int numImages = json.length();
-			for (int i = numImages - 1; i >= 0; i--) {
-				Image image = new Image(json.getJSONObject((i)));
-				image.save(t);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			success = false;
-		} finally {
-			t.setSuccessful(success);
-			t.finish();
-		}
-
-		return success;
-	}
-
-	public interface OnResultListener {
-		public void onSuccess();
-
-		public void onFailure();
-	}
-
-	public interface OnServerResultListener {
-		public void onSuccess(JSONArray json);
-
-		public void onFailure();
-	}
-
-	public interface OnImageUpdateListener {
-		public void onSuccess(JSONObject json);
-
-		public void onFailure();
 	}
 
 	/**
@@ -336,31 +242,6 @@ public abstract class ImageUtils {
 	}
 
 	/**
-	 * Create a parenthesized, comma separated list of the imgur ids of the
-	 * given images for use in db queries.
-	 * 
-	 * @param images
-	 * @return Id list - "("we1asd", "oij23j")"
-	 */
-	public static String getImgurIds(List<Image> images) {
-		StringBuilder builder = new StringBuilder();
-		builder.append("(");
-
-		/* Add imgurid in quotes and end with a comma */
-		for (Image i : images) {
-			builder.append("\"");
-			builder.append(i.getImgurId());
-			builder.append("\",");
-		}
-
-		/* Replace last comma with closing parenthesis */
-		builder.deleteCharAt(builder.length() - 1);
-		builder.append(")");
-		String result = builder.toString();
-		return result;
-	}
-
-	/**
 	 * Create a parenthesized, comma separated list of the ids of the given
 	 * channels for use in db queries.
 	 * 
@@ -391,8 +272,7 @@ public abstract class ImageUtils {
 		 * If this isn't an image from the db or the gif value already matches
 		 * then don't save it. The id will be 0 if it isn't from db.
 		 */
-		if (image.getId() == 0
-				|| Boolean.valueOf(gif).equals(image.isGif())) {
+		if (image.getId() == 0 || Boolean.valueOf(gif).equals(image.isGif())) {
 			return;
 		}
 
@@ -414,7 +294,8 @@ public abstract class ImageUtils {
 
 	}
 
-	/** Get a comma separated list of Image ids for use in db queries.
+	/**
+	 * Get a comma separated list of Image ids for use in db queries.
 	 * 
 	 * @param images
 	 * @return
@@ -426,5 +307,29 @@ public abstract class ImageUtils {
 		}
 
 		return ("(" + TextUtils.join(",", ids) + ")");
+	}
+
+	/**
+	 * Get the date of the most recent update in all the images, in unix time.
+	 * Returns 0 if there are no images.
+	 * 
+	 * @return
+	 */
+	public static long getLastUpdated() {
+		final String query = "SELECT MAX(lastUpdated) FROM Images";
+
+		return DbUtils.simpleQueryForLong(query, 0);
+	}
+
+	/**
+	 * Get the date in unix time of the creation of our newest image. Returns 0
+	 * if there are no images.
+	 * 
+	 * @return
+	 */
+	public static long getNewestImageDate() {
+		final String query = "SELECT MAX(createdAt) FROM Images";
+
+		return DbUtils.simpleQueryForLong(query, 0);
 	}
 }

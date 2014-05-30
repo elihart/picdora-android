@@ -2,17 +2,18 @@ package com.picdora.api;
 
 import org.androidannotations.annotations.EBean;
 
-import com.picdora.PicdoraApp;
-
 import retrofit.RestAdapter;
 import retrofit.client.Response;
 import retrofit.http.GET;
+import retrofit.http.POST;
 import retrofit.http.Query;
+
+import com.picdora.PicdoraApp;
 
 @EBean
 public class PicdoraApiService implements PicdoraApi {
 	private static final String BASE_URL = "http://picdora.com:3000/";
-	public static final String DEBUG_URL = "http://192.168.1.5:3000/";
+	public static final String DEBUG_URL = "http://192.168.1.100:3000/";
 
 	private static PicdoraApi client;
 
@@ -33,21 +34,45 @@ public class PicdoraApiService implements PicdoraApi {
 	}
 
 	@Override
-	@GET("/images/new")
-	public Response newImages(@Query("id") int afterId,
-			@Query("time") long afterTime, @Query("limit") int batchSize) {
+	@GET("/categories")
+	public Response categories() {
 		try {
-			return client.newImages(afterId, afterTime, batchSize);
+			return client.categories();
 		} catch (Exception e) {
 			return null;
 		}
 	}
 
 	@Override
-	@GET("/categories")
-	public Response categories() {
+	@POST("/users/login")
+	public Response login(@Query("key") String key) {
 		try {
-			return client.categories();
+			return client.login(key);
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	@Override
+	@GET("/images/top")
+	public Response topImages(@Query("category_id") long categoryId,
+			@Query("count") int count) {
+		try {
+			return client.topImages(categoryId, count);
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	@Override
+	@GET("/images/update")
+	public Response updateImages(@Query("after_id") int minimumId,
+			@Query("last_updated") long lastUpdated,
+			@Query("created_before") long createdBefore,
+			@Query("limit") int limit) {
+		try {
+			return client.updateImages(minimumId, lastUpdated, createdBefore,
+					limit);
 		} catch (Exception e) {
 			return null;
 		}

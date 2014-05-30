@@ -543,6 +543,7 @@ public abstract class SelectionFragment extends Fragment implements
 	@UiThread(propagation = Propagation.REUSE)
 	protected void setSelectedItems(List<Selectable> items) {
 		mSelector.setSelectedItems(items);
+		onSelectionChanged(items);
 	}
 
 	/**

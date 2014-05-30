@@ -14,10 +14,10 @@ import android.content.DialogInterface.OnClickListener;
 import com.picdora.ImageUtils;
 import com.picdora.ImageUtils.OnDownloadCompleteListener;
 import com.picdora.R;
-import com.picdora.collections.Collection;
 import com.picdora.collections.CollectionUtil;
 import com.picdora.collections.CollectionUtil.OnCollectionSelectedListener;
 import com.picdora.models.ChannelImage;
+import com.picdora.models.Collection;
 import com.picdora.ui.PicdoraDialog;
 import com.picdora.ui.SatelliteMenu.SatelliteMenu;
 import com.picdora.ui.SatelliteMenu.SatelliteMenu.SateliteClickedListener;
@@ -118,7 +118,7 @@ public class MenuManager {
 	 * Send a browser intent to lookup the current image in google.
 	 */
 	protected void searchClicked() {
-		ImageUtils.lookupImage(mActivity, mCurrentImage.getImgurId());
+		ImageUtils.lookupImage(mActivity, mCurrentImage.getImage().getImgurId());
 	}
 
 	/**
@@ -146,7 +146,7 @@ public class MenuManager {
 
 	protected void downloadClicked() {
 		mActivity.showNotification("Downloading image...");
-		ImageUtils.saveImgurImage(mActivity, mCurrentImage.getImgurId(),
+		ImageUtils.saveImgurImage(mActivity, mCurrentImage.getImage().getImgurId(),
 				new OnDownloadCompleteListener() {
 
 					@Override
@@ -180,7 +180,7 @@ public class MenuManager {
 	 * Lauch the share chooser
 	 */
 	protected void shareClicked() {
-		ImageUtils.shareImage(mActivity, mCurrentImage.getImgurId());
+		ImageUtils.shareImage(mActivity, mCurrentImage.getImage().getImgurId());
 	}
 
 	/**

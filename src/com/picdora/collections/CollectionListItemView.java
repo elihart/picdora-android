@@ -9,6 +9,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.picdora.R;
+import com.picdora.models.Collection;
 import com.picdora.ui.FontHelper;
 import com.picdora.ui.FontHelper.FontStyle;
 

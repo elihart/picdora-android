@@ -27,6 +27,7 @@ import com.picdora.channelDetail.ChannelDetailActivity_;
 import com.picdora.channelPlayer.ChannelViewActivity_;
 import com.picdora.models.Category;
 import com.picdora.models.Channel;
+import com.picdora.models.Channel.GifSetting;
 import com.picdora.models.ChannelImage;
 import com.picdora.models.Image;
 
@@ -36,25 +37,29 @@ public class ChannelUtil {
 	Context context;
 
 	/**
-	 * Launch the ChannelViewActivity with the given channel.
+	 * Launch the ChannelViewActivity with the given channel. Update the last
+	 * played time to now and save the channel asynchronously.
 	 * 
 	 * @param channel
 	 *            The channel to play.
 	 * @param activity
 	 *            The activity context to launch the ChannelViewActivity from.
-	 * @param save
+	 * @param updateLastPlayedTime
 	 *            Whether the channel should be saved and it's Last Used field
-	 *            updated to now. Save is synchronous!
+	 *            updated to now. Save is asynchronous, so watch out for race
+	 *            conditions with the View activity getting updated data,
+	 *            specifically the id being set on save callback when it is
+	 *            created.
 	 */
 	public static void playChannel(Channel channel, Activity activity,
-			boolean save) {
+			boolean updateLastPlayedTime) {
 		if (channel == null) {
 			throw new IllegalArgumentException("Channel can't be null");
 		}
 
-		if (save) {
+		if (updateLastPlayedTime) {
 			channel.setLastUsed(new Date());
-			channel.save();
+			channel.saveAsync();
 		}
 
 		Intent intent = new Intent(activity, ChannelViewActivity_.class);
@@ -66,19 +71,21 @@ public class ChannelUtil {
 
 	/**
 	 * Get the number of images in the local database that can be used in this
-	 * channel
+	 * channel.
 	 * 
 	 * @param channel
-	 * @param unseen
-	 *            Whether or not to just count images where view count is 0
 	 */
-	public static long getImageCount(Channel channel, boolean unseen) {
+	public static long getImageCount(GifSetting gifSetting,
+			List<Category> categories) {
+		/* TODO: Need to test this since it's been changed. 
+		 * 
+		 */
 		SQLiteDatabase db = Sprinkles.getDatabase();
-		String query = "SELECT count(*) FROM Images WHERE categoryId IN "
-				+ ChannelUtil.getCategoryIdsString(channel);
+		String query = "SELECT count(distinct id) FROM ImagesWithCategories WHERE categoryId IN "
+				+ CategoryUtils.getCategoryIdsString(categories);
 
 		// add the gif setting
-		switch (channel.getGifSetting()) {
+		switch (gifSetting) {
 		case ALLOWED:
 			break;
 		case NONE:
@@ -89,29 +96,9 @@ public class ChannelUtil {
 			break;
 		}
 
-		if (unseen) {
-			query += " AND viewCount=0";
-		}
-
 		SQLiteStatement s = db.compileStatement(query);
 
 		return s.simpleQueryForLong();
-	}
-
-	/**
-	 * get a comma separated list of categories ids for use in a sql query
-	 * 
-	 * @return
-	 */
-	public static String getCategoryIdsString(Channel channel) {
-		List<Category> categories = channel.getCategories();
-
-		List<Integer> ids = new ArrayList<Integer>();
-		for (Category cat : categories) {
-			ids.add((int) cat.getId());
-		}
-
-		return ("(" + TextUtils.join(",", ids) + ")");
 	}
 
 	/**
@@ -121,17 +108,16 @@ public class ChannelUtil {
 	 * @return
 	 */
 	public static boolean isNameTaken(String name) {
-		SQLiteDatabase db = Sprinkles.getDatabase();
 		String query = "SELECT count(*) FROM Channels WHERE name = '" + name
 				+ "'  COLLATE NOCASE";
-
-		SQLiteStatement s = db.compileStatement(query);
-
-		try {
-			return s.simpleQueryForLong() > 0;
-		} catch (SQLiteDoneException e) {
+		
+		long result = DbUtils.simpleQueryForLong(query, 0);
+		if(result == 0){
 			return false;
+		} else {
+			return true;
 		}
+
 	}
 
 	public static List<Channel> getAllChannels(boolean includeNsfw) {
@@ -173,13 +159,10 @@ public class ChannelUtil {
 	}
 
 	public static int getNumImagesViewed(Channel channel) {
-		SQLiteDatabase db = Sprinkles.getDatabase();
 		String query = "SELECT count(*) FROM Views WHERE channelId="
 				+ channel.getId();
 
-		SQLiteStatement s = db.compileStatement(query);
-
-		return (int) s.simpleQueryForLong();
+		return (int) DbUtils.simpleQueryForLong(query, 0);
 	}
 
 	/**
@@ -195,8 +178,10 @@ public class ChannelUtil {
 		 * other hand they might not like seeing the blank image and having to
 		 * delete it manually. For now let's let them deal with it.
 		 */
+		
+		// TODO: Test!
 
-		String query = "SELECT * FROM Images WHERE imgurId IN (SELECT image FROM Views WHERE liked="
+		String query = "SELECT * FROM Images WHERE id IN (SELECT imageId FROM Views WHERE liked="
 				+ ChannelImage.LIKE_STATUS.LIKED.getId()
 				+ " AND channelId IN "
 				+ getChannelIds(channels) + ")";
@@ -242,7 +227,7 @@ public class ChannelUtil {
 		String query = "UPDATE Views SET liked="
 				+ ChannelImage.LIKE_STATUS.NEUTRAL.getId()
 				+ " WHERE channelId IN " + getChannelIds(channels)
-				+ " AND image IN " + ImageUtils.getImgurIds(images);
+				+ " AND imageId IN " + ImageUtils.getImageIds(images);
 
 		db.compileStatement(query).execute();
 	}

@@ -10,6 +10,7 @@ import se.emilsjolander.sprinkles.annotations.Table;
 import android.content.Context;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.google.gson.Gson;
 
 public class Util {
@@ -70,7 +71,9 @@ public class Util {
 	 *            The message to log
 	 */
 	public static void log(String msg) {
-		System.out.println(msg);
+		if (PicdoraApp.DEBUG) {
+			System.out.println(msg);
+		}
 	}
 
 	/**
@@ -124,15 +127,27 @@ public class Util {
 		}
 		return buffer.toString();
 	}
-	
-	private static long startTime;
-	public static void startTimer(){
-		startTime = System.currentTimeMillis();
+
+	/**
+	 * Get the current unix time: the number of seconds since 1970.
+	 * 
+	 * @return
+	 */
+	public static long getUnixTime() {
+		return System.currentTimeMillis() / 1000L;
 	}
-	
-	public static void lap(String msg){
-		long curr = System.currentTimeMillis();
-		log(msg + " : " + (curr - startTime));
-		startTime =  curr;
+
+	/**
+	 * If debug mode is enabled then the exception is printed, otherwise it is
+	 * logged with crashlytics.
+	 * 
+	 * @param e
+	 */
+	public static void logException(Throwable e) {
+		if (PicdoraApp.DEBUG) {
+			e.printStackTrace();
+		} else {
+			Crashlytics.logException(e);
+		}
 	}
 }

@@ -16,44 +16,50 @@ import com.picdora.models.Category;
 
 @EBean
 public class CategorySyncer extends Syncer {
-	// TODO: Keep track of last sync time and only do an update when something
-	// changes
+	/*
+	 * To be more efficient we could tell the server the last time our
+	 * categories were updated, and it could give us the categories updated
+	 * since then. Right now we just get the entire list.
+	 */
 
+	@Override
 	public void sync() {
-		Util.log("Category sync");
-		getCategories();
-	}
+		/*
+		 * Get the categories from the server and update them locally.
+		 */
 
-	private void getCategories() {
 		Response response = mApiService.categories();
-		if(response == null || response.getBody() == null){
+		if (response == null || response.getBody() == null) {
 			onFailure();
 			return;
 		}
-		
+
 		try {
 			String json = responseToString(response);
 			JSONArray arr = new JSONArray(json);
 			List<Category> categories = getCategoriesFromJson(arr);
 			if (saveCategoriesToDb(categories)) {
 				onSuccess();
-				
 			} else {
 				onFailure();
 			}
 		} catch (IOException e) {
+			Util.logException(e);
 			onFailure();
 		} catch (JSONException e) {
+			Util.logException(e);
 			onFailure();
 		}
 	}
-	
-	private void onFailure(){
+
+	private void onFailure() {
 		Util.log("Category Sync failure");
+		doneSyncing();
 	}
-	
-	private void onSuccess(){
+
+	private void onSuccess() {
 		Util.log("Category Sync success");
+		doneSyncing();
 	}
 
 	/**
@@ -84,8 +90,7 @@ public class CategorySyncer extends Syncer {
 			}
 			t.setSuccessful(true);
 		} catch (Exception e) {
-			Util.log("Exception thrown while saving categories");
-			e.printStackTrace();
+			Util.logException(e);
 			t.setSuccessful(false);
 		} finally {
 			t.finish();

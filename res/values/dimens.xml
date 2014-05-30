@@ -33,5 +33,9 @@
     <dimen name="action_spinner_item_text">18dp</dimen>
     <dimen name="action_spinner_item_side_padding">8dp</dimen>
     <dimen name="action_spinner_item_vertical_padding">4dp</dimen>
+    
+    <!-- Launch Activity -->
+    <dimen name="launch_title_size">30dp</dimen>
+    <dimen name="launch_title_padding">20dp</dimen>
 
 </resources>

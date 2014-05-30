@@ -13,7 +13,7 @@ import org.androidannotations.annotations.sharedpreferences.Pref;
 import se.emilsjolander.sprinkles.CursorList;
 import se.emilsjolander.sprinkles.Query;
 
-import com.picdora.ChannelUtil;
+import com.picdora.CategoryUtils;
 import com.picdora.PicdoraPreferences_;
 import com.picdora.models.Channel;
 import com.picdora.models.ChannelImage;
@@ -218,10 +218,14 @@ public class ChannelPlayer {
 	 * @return resultCount The number of images retrieved from the db
 	 */
 	private int loadImageBatch(int count, Collection<ChannelImage> images) {
+		// TODO: Test this with the new db schema changes
+		
 		// build the query. Start by only selecting images from categories that
 		// this channel includes
-		String query = "SELECT * FROM Images WHERE categoryId IN "
-				+ ChannelUtil.getCategoryIdsString(mChannel);
+		String imageIdsFromCategories = "(SELECT distinct imageId FROM ImageCategories WHERE categoryId IN "
+				+ CategoryUtils.getCategoryIdsString(mChannel.getCategories()) + ")";
+		
+		String query = "SELECT * FROM Images WHERE id IN " + imageIdsFromCategories;
 
 		// add the gif setting
 		switch (mChannel.getGifSetting()) {
@@ -240,7 +244,7 @@ public class ChannelPlayer {
 		}
 
 		/* TODO: We need to reuse images at some point... */
-		query += " AND imgurId NOT IN (SELECT image FROM Views WHERE channelId="
+		query += " AND id NOT IN (SELECT imageId FROM Views WHERE channelId="
 				+ mChannel.getId() + ")";
 
 		// set ordering and add limit
@@ -262,6 +266,7 @@ public class ChannelPlayer {
 					&& !imageQueue.contains(channelImage)) {
 				// don't save if we're previewing.
 				if (!ChannelPreview.isPreview(mChannel)) {
+					channelImage.markView();
 					channelImage.save();
 				}
 				images.add(channelImage);

@@ -47,7 +47,7 @@ public class ChannelInfoFragment extends Fragment implements
 	/*
 	 * TODO: Needs a big ui overhaul.
 	 */
-	
+
 	// if the user chooses channel settings that match less than this many
 	// images then show a warning
 	private static final long LOW_IMAGE_THRESHOLD = 100;
@@ -164,8 +164,14 @@ public class ChannelInfoFragment extends Fragment implements
 
 	@Background(serial = "update")
 	protected void saveChannel() {
-		long imageCount = ChannelUtil.getImageCount(mChannel, false);
+		long imageCount = ChannelUtil.getImageCount(mChannel.getGifSetting(),
+				mChannel.getCategories());
 		mChannel.save();
+
+		/*
+		 * TODO: Maybe ask confirmation on change if the count is low, instead
+		 * of saving and then telling them of the problem.
+		 */
 
 		if (imageCount < LOW_IMAGE_THRESHOLD) {
 			showLowImageCountWarning(imageCount);

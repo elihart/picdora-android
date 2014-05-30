@@ -1,20 +1,19 @@
 package com.picdora.models;
 
-import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import se.emilsjolander.sprinkles.CursorList;
 import se.emilsjolander.sprinkles.Model;
+import se.emilsjolander.sprinkles.Query;
+import se.emilsjolander.sprinkles.Sprinkles;
+import se.emilsjolander.sprinkles.Transaction;
 import se.emilsjolander.sprinkles.annotations.AutoIncrementPrimaryKey;
 import se.emilsjolander.sprinkles.annotations.Column;
 import se.emilsjolander.sprinkles.annotations.NotNull;
 import se.emilsjolander.sprinkles.annotations.Table;
+import android.database.sqlite.SQLiteDatabase;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import com.picdora.ImageUtils;
-import com.picdora.ImageUtils.ImgurSize;
 import com.picdora.Util;
 import com.picdora.ui.grid.Selectable;
 
@@ -48,34 +47,47 @@ public class Channel extends Model implements Selectable {
 	@NotNull
 	protected String mPreviewImage;
 
+	/** The unix time that the channel was last played */
 	@Column("lastUsed")
 	protected long mLastUsed;
 
+	/** The unix time that the channel was created. */
 	@Column("createdAt")
 	protected long mCreatedAt;
 
-	@Column("categories")
-	@NotNull
-	protected String mCategoriesAsJson;
 	protected List<Category> mCategories;
+	/**
+	 * Flag for whether or not the categories have been changed. If true we know
+	 * that we need to save the categories when the model is saved.
+	 * 
+	 */
+	private boolean mCategoriesChanged = false;
 
 	@Column("gifSetting")
 	@NotNull
 	protected int mGifSetting;
 
-	// TODO: Implement parcelable to pass this between activities
+	/**
+	 * Create a new channel with a unique name. The channel must be first saved
+	 * to the database before categories can be added.
+	 * 
+	 * @param name
+	 * @param gifSetting
+	 */
+	public Channel(String name, GifSetting gifSetting, List<Category> categories) {
+		if (Util.isStringBlank(name)) {
+			throw new IllegalArgumentException("Name can't be blank");
+		}
 
-	public Channel(String name, List<Category> categories, GifSetting gifSetting) {
+		setCategories(categories);
+
 		mName = name;
-		mCategories = categories;
 		mGifSetting = gifSetting.ordinal();
 	}
 
 	@Override
 	public boolean isValid() {
 		if (Util.isStringBlank(mName)) {
-			return false;
-		} else if (getCategories().isEmpty()) {
 			return false;
 		} else {
 			return true;
@@ -88,16 +100,23 @@ public class Channel extends Model implements Selectable {
 
 	@Override
 	protected void beforeCreate() {
-		mCreatedAt = System.currentTimeMillis();
-		mLastUsed = System.currentTimeMillis();
+		mCreatedAt = Util.getUnixTime();
+		mLastUsed = Util.getUnixTime();
+	}
 
-		mPreviewImage = getCategories().get(0).getIconId();
-
-		for (Category c : getCategories()) {
-			if (c.isNsfw()) {
-				mNsfw = true;
-				break;
-			}
+	@Override
+	protected void afterSave() {
+		/*
+		 * Save categories that the channel is based on. This must be done after
+		 * the initial save so an id can be assigned to the channel, but let's
+		 * only do it if new categories have been set in order to be more
+		 * efficient. There are also some cases where model data may be changed
+		 * and saved without ever loading categories into memory, and trying to
+		 * save them would cause an error, so we avoid that case with this as well.
+		 */
+		if (mCategoriesChanged) {
+			saveCategoriesToDb();
+			mCategoriesChanged = false;
 		}
 	}
 
@@ -106,11 +125,7 @@ public class Channel extends Model implements Selectable {
 	}
 
 	public String getName() {
-		if (mName == null) {
-			return "";
-		} else {
-			return mName;
-		}
+		return mName;
 	}
 
 	public boolean isNsfw() {
@@ -121,51 +136,78 @@ public class Channel extends Model implements Selectable {
 		return GifSetting.values()[mGifSetting];
 	}
 
+	/**
+	 * Get the categories set to this channel. May do a db access to load the
+	 * categories, so there is potential for a synchronous db access.
+	 * 
+	 * @return
+	 */
 	public List<Category> getCategories() {
 		if (mCategories == null) {
-			getCategoriesFromList();
+			mCategories = getCategoriesFromDb();
 		}
 		return mCategories;
 	}
 
-	@Override
-	protected void beforeSave() {
-		// create a json string to represent the categories in the database
-		saveCategoriesAsJson(mCategories);
-	}
+	/**
+	 * Clear all categories associated with this channel in preparation for
+	 * setting new ones.
+	 * 
+	 */
+	private void clearChannelCategories() {
+		SQLiteDatabase db = Sprinkles.getDatabase();
 
-	protected void saveCategoriesAsJson(List<Category> categories) {
-		if (categories == null) {
-			categories = new ArrayList<Category>();
-		}
+		String query = "DELETE from ChannelCategories WHERE channelId=" + mId;
 
-		mCategoriesAsJson = new Gson().toJson(mCategories);
+		db.execSQL(query);
 	}
 
 	/**
-	 * Convert the database string of categories into a list of Category objects
+	 * Get the categories that characterize this channel from the db. Does a
+	 * synchronous db access!
+	 * 
 	 */
-	protected void getCategoriesFromList() {
-		if (Util.isStringBlank(mCategoriesAsJson)) {
-			mCategories = new ArrayList<Category>();
-		} else {
-			Type type = new TypeToken<List<Category>>() {
-			}.getType();
-			mCategories = new Gson().fromJson(mCategoriesAsJson, type);
-		}
+	private List<Category> getCategoriesFromDb() {
+		/* Get all the categories saved to this channel. */
+		String query = "select * from Categories where id in "
+				+ "(select categoryId from ChannelCategories where channelId=?)";
+
+		CursorList<Category> result = Query.many(Category.class, query, mId)
+				.get();
+		List<Category> categories = result.asList();
+		result.close();
+
+		return categories;
 	}
 
-	public String getCategoriesAsJson() {
-		// update the json with the current categories in case they were changed
-		if (mCategories != null) {
-			saveCategoriesAsJson(mCategories);
+	/**
+	 * Save the categories that characterize this channel to the db. Does a
+	 * synchronous db access!
+	 * 
+	 */
+	private void saveCategoriesToDb() {
+		if (mCategories == null) {
+			throw new IllegalStateException("Categories can't be null");
+		} else if (mCategories.isEmpty()) {
+			throw new IllegalStateException("Categories can't be empty");
 		}
 
-		if (mCategoriesAsJson == null) {
-			return "";
-		} else {
-			return mCategoriesAsJson;
+		/*
+		 * TODO: Could maybe optimize this to not delete everything before
+		 * saving the new ones if the deletions aren't necessary
+		 */
+
+		/* Clear the existing categories before getting the new ones. */
+		clearChannelCategories();
+
+		Transaction t = new Transaction();
+
+		/* Add the new categories to the db */
+		for (Category c : mCategories) {
+			new ChannelCategory(c, this).save(t);
 		}
+		t.setSuccessful(true);
+		t.finish();
 	}
 
 	@Override
@@ -185,24 +227,16 @@ public class Channel extends Model implements Selectable {
 		Channel ch = (Channel) obj;
 
 		// If either channel wasn't taken out of the database it won't have an
-		// id, so compare names instead
+		// id, so compare info instead
 
-		return ch.getId() == getId() && ch.getName().equals(getName())
-				&& ch.isNsfw() == isNsfw()
-				&& ch.getGifSetting() == getGifSetting()
-				&& ch.getCategoriesAsJson().equals(getCategoriesAsJson());
+		return ch.mId == mId
+				&& ch.mName.equals(mName)
+				&& ch.mNsfw == mNsfw
+				&& ch.mGifSetting == mGifSetting
+				&& ((ch.mCategories == null && mCategories == null) || (ch.mCategories != null
+						&& mCategories != null && ch.mCategories
+							.containsAll(mCategories)));
 
-	}
-
-	/**
-	 * Get the icon representing this channel.
-	 * 
-	 * @param size
-	 *            The thumbnail size to resize to
-	 * @return
-	 */
-	public String getIcon(ImgurSize size) {
-		return ImageUtils.getImgurLink(mPreviewImage, size);
 	}
 
 	@Override
@@ -216,11 +250,16 @@ public class Channel extends Model implements Selectable {
 
 	public void setGifSetting(GifSetting gifSetting) {
 		mGifSetting = gifSetting.ordinal();
-
 	}
 
+	/**
+	 * Get the last time the channel was used, in Unix time.
+	 * 
+	 * @param date
+	 */
 	public void setLastUsed(Date date) {
-		mLastUsed = date.getTime();
+		/* Turn the millisecond value to unix time in seconds. */
+		mLastUsed = date.getTime() / 1000L;
 	}
 
 	public Date getLastUsed() {
@@ -235,8 +274,37 @@ public class Channel extends Model implements Selectable {
 		mName = name;
 	}
 
+	/**
+	 * Set the categories to be used for this channel. Updates the channel icon
+	 * to use an image from the categories, and set the channel nsfw setting
+	 * based on the categories. This must only be used once the channel has been
+	 * saved to the database. You should manually save the channel after setting
+	 * the categories as well as call saveCategoriesToDb().
+	 * 
+	 * @param categories
+	 */
 	public void setCategories(List<Category> categories) {
+		if (categories == null) {
+			throw new IllegalArgumentException("Categories can't be null");
+		} else if (categories.isEmpty()) {
+			throw new IllegalArgumentException("Categories can't be empty");
+		}
+
+		mCategoriesChanged = true;
+
 		mCategories = categories;
+
+		/* Set the channel icon based on the categories. */
+		mPreviewImage = getCategories().get(0).getIconId();
+
+		/* Set nsfw based on categories. */
+		mNsfw = false;
+		for (Category c : mCategories) {
+			if (c.isNsfw()) {
+				mNsfw = true;
+				break;
+			}
+		}
 	}
 
 	/** For the Selectable interface and use with the selection fragment. */

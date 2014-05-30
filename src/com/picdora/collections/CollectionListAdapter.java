@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
 import com.picdora.PicdoraPreferences_;
+import com.picdora.models.Collection;
 
 /**
  * Show the names of a list of collections.
