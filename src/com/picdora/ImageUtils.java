@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import se.emilsjolander.sprinkles.Query;
 import se.emilsjolander.sprinkles.Sprinkles;
 import android.app.Activity;
 import android.content.Context;
@@ -17,6 +18,7 @@ import android.text.TextUtils;
 
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
+import com.picdora.models.Category;
 import com.picdora.models.Channel;
 import com.picdora.models.ChannelImage;
 import com.picdora.models.Image;
@@ -331,5 +333,16 @@ public abstract class ImageUtils {
 		final String query = "SELECT MAX(createdAt) FROM Images";
 
 		return DbUtils.simpleQueryForLong(query, 0);
+	}
+
+	/**
+	 * Get the Image with the given id, or null if it doesn't exist.
+	 * 
+	 * @param imageId The id of the image to get.
+	 * @return The matching image, or null on no match.
+	 */
+	public static Image getImageById(long imageId) {
+		return Query.one(Image.class, "SELECT * FROM Images WHERE id=?",
+				imageId).get();
 	}
 }

@@ -70,6 +70,11 @@ public class Image extends Model implements Selectable {
 		return mId;
 	}
 
+	/**
+	 * Get the imgurId of this image.
+	 * 
+	 * @return
+	 */
 	public String getImgurId() {
 		return mImgurId;
 	}
@@ -152,6 +157,11 @@ public class Image extends Model implements Selectable {
 	 * used in a selection grid
 	 */
 
+	/**
+	 * Used for Selectable interface for gallery fragment. Same thing as
+	 * imgurId.
+	 * 
+	 */
 	@Override
 	public String getIconId() {
 		return mImgurId;

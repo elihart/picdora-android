@@ -2,6 +2,8 @@ package com.picdora.models;
 
 import java.util.Date;
 
+import com.picdora.ImageUtils;
+
 import se.emilsjolander.sprinkles.Model;
 import se.emilsjolander.sprinkles.annotations.CascadeDelete;
 import se.emilsjolander.sprinkles.annotations.Column;
@@ -143,8 +145,15 @@ public class ChannelImage extends Model {
 		mLikeStatus = status.getId();
 	}
 
+	/**
+	 * Get the Image model referenced by this. Does a synchronous db access.
+	 * 
+	 * @return
+	 */
 	public Image getImage() {
-		// TODO: Get image from db if necessary
+		if (mImage == null) {
+			mImage = ImageUtils.getImageById(mImageId);
+		}
 		return mImage;
 	}
 

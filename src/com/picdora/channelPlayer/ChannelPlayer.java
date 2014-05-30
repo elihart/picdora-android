@@ -239,7 +239,7 @@ public class ChannelPlayer {
 			break;
 		}
 
-		if (!mPrefs.showNsfw().get()) {
+		if (!mPrefs.showNsfw().get() || !mChannel.isNsfw()) {
 			query += " AND nsfw=0";
 		}
 

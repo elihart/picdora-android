@@ -14,7 +14,6 @@ import uk.co.senab.photoview.PhotoView;
 import uk.co.senab.photoview.PhotoViewAttacher.OnMatrixChangedListener;
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.v4.app.Fragment;
 import android.view.View;
@@ -22,6 +21,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.picdora.ImageUtils;
+import com.picdora.PicdoraApp;
 import com.picdora.R;
 import com.picdora.channelPlayer.ChannelPlayer.OnGetChannelImageResultListener;
 import com.picdora.imageloader.PicdoraImageLoader;
@@ -38,7 +38,7 @@ import com.picdora.ui.UiUtil;
 @EFragment(R.layout.fragment_swipable_image)
 public class ImageSwipeFragment extends Fragment implements
 		PicdoraImageLoader.LoadCallbacks {
-	
+
 	@ColorRes(R.color.transparent)
 	protected int mColorTransparent;
 	@ColorRes(R.color.glow_liked)
@@ -56,6 +56,8 @@ public class ImageSwipeFragment extends Fragment implements
 	TextView mProgressText;
 	@ViewById
 	TextView deletedText;
+	@ViewById
+	TextView debugText;
 	@ViewById
 	GlowView glow;
 
@@ -173,6 +175,7 @@ public class ImageSwipeFragment extends Fragment implements
 		if (mDestroyed) {
 			return;
 		}
+
 		// we can't load an image if we don't have one...
 		else if (mImage == null) {
 			showLoadingCircle();
@@ -181,11 +184,38 @@ public class ImageSwipeFragment extends Fragment implements
 		} else if (mImage.getImage().isDeleted()) {
 			handleDeletedImage();
 		} else {
+			/*
+			 * Show debug info about the image if we are in debug mode.
+			 */
+			if (PicdoraApp.DEBUG) {
+				showDebugInfo(mImage.getImage());
+			}
 			loadStart = new Date();
 			downloading = false;
 			// Util.log("Load " + mImage.getImgurId());
 			PicdoraImageLoader.instance().loadImage(mImage.getImage(), this);
 		}
+	}
+
+	/**
+	 * Display basic information about the image at the top of the screen.
+	 * 
+	 * @param image
+	 *            The image to show information about
+	 */
+	private void showDebugInfo(Image image) {
+		debugText.setVisibility(View.VISIBLE);
+
+		String info = "(%d, %d, '%s'";
+		if (image.isGif()) {
+			info += ", gif";
+		}
+		if (image.isNsfw()) {
+			info += ", nsfw";
+		}
+		info += ")";
+		debugText.setText(String.format(info, image.getId(),
+				image.getRedditScore(), image.getImgurId()));
 	}
 
 	@Override
@@ -251,11 +281,8 @@ public class ImageSwipeFragment extends Fragment implements
 		 * drawable, otherwise it'll be a normal bitmap drawable. We want to
 		 * make sure the db gif value for the image mirrors this.
 		 */
-		if (drawable instanceof GifDrawable) {
-			ImageUtils.setGifStatus(image, true);
-		} else if (drawable instanceof BitmapDrawable) {
-			ImageUtils.setGifStatus(image, false);
-		}
+		ImageUtils.setGifStatus(image, (drawable instanceof GifDrawable));
+
 
 		if (!mDestroyed) {
 			mPhotoView.setImageDrawable(drawable);
