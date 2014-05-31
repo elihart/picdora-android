@@ -6,8 +6,8 @@ import java.util.Queue;
 
 import android.app.Activity;
 
-import com.picdora.ImageUtils;
-import com.picdora.ImageUtils.OnDownloadCompleteListener;
+import com.picdora.ImageUtil;
+import com.picdora.ImageUtil.OnDownloadCompleteListener;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.models.Image;
@@ -62,7 +62,7 @@ public class DownloadQueue {
 	 */
 	private void downloadNextImage() {
 		/* Delegate download to helper */
-		ImageUtils.saveImgurImage(mContext, mImages.poll().getImgurId(),
+		ImageUtil.saveImgurImage(mContext, mImages.poll().getImgurId(),
 				new OnDownloadCompleteListener() {
 
 					@Override

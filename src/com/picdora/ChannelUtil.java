@@ -227,7 +227,7 @@ public class ChannelUtil {
 		String query = "UPDATE Views SET liked="
 				+ ChannelImage.LIKE_STATUS.NEUTRAL.getId()
 				+ " WHERE channelId IN " + getChannelIds(channels)
-				+ " AND imageId IN " + ImageUtils.getImageIds(images);
+				+ " AND imageId IN " + ImageUtil.getImageIds(images);
 
 		db.compileStatement(query).execute();
 	}

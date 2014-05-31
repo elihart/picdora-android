@@ -11,8 +11,8 @@ import org.androidannotations.annotations.UiThread;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 
-import com.picdora.ImageUtils;
-import com.picdora.ImageUtils.OnDownloadCompleteListener;
+import com.picdora.ImageUtil;
+import com.picdora.ImageUtil.OnDownloadCompleteListener;
 import com.picdora.R;
 import com.picdora.collections.CollectionUtil;
 import com.picdora.collections.CollectionUtil.OnCollectionSelectedListener;
@@ -118,7 +118,7 @@ public class MenuManager {
 	 * Send a browser intent to lookup the current image in google.
 	 */
 	protected void searchClicked() {
-		ImageUtils.lookupImage(mActivity, mCurrentImage.getImage().getImgurId());
+		ImageUtil.lookupImage(mActivity, mCurrentImage.getImage().getImgurId());
 	}
 
 	/**
@@ -138,7 +138,7 @@ public class MenuManager {
 							public void onClick(DialogInterface dialog,
 									int which) {
 								mActivity.showNotification("Image reported");
-								ImageUtils.reportImage(mCurrentImage);
+								ImageUtil.reportImage(mCurrentImage);
 							}
 						}).show();
 
@@ -146,7 +146,7 @@ public class MenuManager {
 
 	protected void downloadClicked() {
 		mActivity.showNotification("Downloading image...");
-		ImageUtils.saveImgurImage(mActivity, mCurrentImage.getImage().getImgurId(),
+		ImageUtil.saveImgurImage(mActivity, mCurrentImage.getImage().getImgurId(),
 				new OnDownloadCompleteListener() {
 
 					@Override
@@ -180,7 +180,7 @@ public class MenuManager {
 	 * Lauch the share chooser
 	 */
 	protected void shareClicked() {
-		ImageUtils.shareImage(mActivity, mCurrentImage.getImage().getImgurId());
+		ImageUtil.shareImage(mActivity, mCurrentImage.getImage().getImgurId());
 	}
 
 	/**

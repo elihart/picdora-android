@@ -11,9 +11,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
-import com.picdora.ImageUtils;
+import com.picdora.ImageUtil;
 import com.picdora.Util;
-import com.picdora.ImageUtils.ImgurSize;
+import com.picdora.ImageUtil.ImgurSize;
 
 /**
  * This adapter displays models for the {@link #ModelGridSelector}. It should be
@@ -32,7 +32,7 @@ public abstract class ModelGridAdapter<T> extends BaseAdapter {
 	protected List<T> mSelectedItems = new ArrayList<T>();
 
 	/** The image size to use */
-	protected ImageUtils.ImgurSize mImageSize = ImgurSize.MEDIUM_THUMBNAIL;
+	protected ImageUtil.ImgurSize mImageSize = ImgurSize.MEDIUM_THUMBNAIL;
 
 	/** Whether to show text overlayed on the image. Default to true. */
 	protected boolean mShowText = true;
@@ -117,7 +117,7 @@ public abstract class ModelGridAdapter<T> extends BaseAdapter {
 		String imgurId = getImgurId(item);
 		String url = null;
 		if (!Util.isStringBlank(imgurId)) {
-			url = ImageUtils.getImgurLink(getImgurId(item), mImageSize);
+			url = ImageUtil.getImgurLink(getImgurId(item), mImageSize);
 		}
 
 		itemView.bind(getText(item), url, highlight);
@@ -156,7 +156,7 @@ public abstract class ModelGridAdapter<T> extends BaseAdapter {
 	 * 
 	 * @return
 	 */
-	public ImageUtils.ImgurSize getImageSize() {
+	public ImageUtil.ImgurSize getImageSize() {
 		return mImageSize;
 	}
 
@@ -165,7 +165,7 @@ public abstract class ModelGridAdapter<T> extends BaseAdapter {
 	 * 
 	 * @param imageSize
 	 */
-	public void setImageSize(ImageUtils.ImgurSize imageSize) {
+	public void setImageSize(ImageUtil.ImgurSize imageSize) {
 		/* Only update if the size is different. */
 		if (imageSize.equals(mImageSize)) {
 			mImageSize = imageSize;

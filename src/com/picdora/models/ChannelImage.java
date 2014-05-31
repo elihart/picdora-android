@@ -2,7 +2,7 @@ package com.picdora.models;
 
 import java.util.Date;
 
-import com.picdora.ImageUtils;
+import com.picdora.ImageUtil;
 
 import se.emilsjolander.sprinkles.Model;
 import se.emilsjolander.sprinkles.annotations.CascadeDelete;
@@ -152,7 +152,7 @@ public class ChannelImage extends Model {
 	 */
 	public Image getImage() {
 		if (mImage == null) {
-			mImage = ImageUtils.getImageById(mImageId);
+			mImage = ImageUtil.getImageById(mImageId);
 		}
 		return mImage;
 	}

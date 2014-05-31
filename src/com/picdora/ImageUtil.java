@@ -23,7 +23,7 @@ import com.picdora.models.Channel;
 import com.picdora.models.ChannelImage;
 import com.picdora.models.Image;
 
-public abstract class ImageUtils {
+public abstract class ImageUtil {
 	// the imgur api endpoint for getting images
 	private static final String IMGUR_BASE_URL = "http://i.imgur.com/";
 	// an extension must be included to get direct access to the image. It
@@ -289,11 +289,13 @@ public abstract class ImageUtils {
 	 * Mark the selected image as deleted in the local database and queue the
 	 * deletion to be reported to the main server.
 	 * 
-	 * @param image
+	 * @param channelImage
 	 */
-	public static void markImageDeleted(ChannelImage image) {
-		// TODO Auto-generated method stub
-
+	public static void markImageDeleted(ChannelImage channelImage) {
+		Image img = channelImage.getImage();
+		img.setDeleted(true);
+		img.saveAsync();
+		
 	}
 
 	/**

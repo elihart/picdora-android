@@ -18,7 +18,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
 import com.picdora.CategoryUtils;
-import com.picdora.ImageUtils;
+import com.picdora.ImageUtil;
 import com.picdora.PicdoraApp;
 import com.picdora.Timer;
 import com.picdora.Util;
@@ -156,7 +156,7 @@ public class ImageSyncer extends Syncer {
 		mUpdateBatchId = 0;
 		/* Get update and creation dates from db. */
 		mLastUpdated = getLastUpdated();
-		mLastCreated = ImageUtils.getNewestImageDate();
+		mLastCreated = ImageUtil.getNewestImageDate();
 
 		/*
 		 * Retrieve batches until either we get all the images or we hit too
@@ -169,7 +169,7 @@ public class ImageSyncer extends Syncer {
 			 * the updated and creation dates, so it may return images that we
 			 * don't have in the database. We will ignore those.
 			 */
-			Response response = mApiService.updateImages(mUpdateBatchId,
+			Response response = mApiService.getImageUpdates(mUpdateBatchId,
 					mLastUpdated, mLastCreated, BATCH_SIZE);
 
 			/*
@@ -241,7 +241,7 @@ public class ImageSyncer extends Syncer {
 		if (lastUpdated > 0) {
 			return lastUpdated;
 		} else {
-			return ImageUtils.getLastUpdated();
+			return ImageUtil.getLastUpdated();
 		}
 	}
 

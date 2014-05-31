@@ -5,8 +5,8 @@ import se.emilsjolander.sprinkles.annotations.Column;
 import se.emilsjolander.sprinkles.annotations.PrimaryKey;
 import se.emilsjolander.sprinkles.annotations.Table;
 
-import com.picdora.ImageUtils;
-import com.picdora.ImageUtils.ImgurSize;
+import com.picdora.ImageUtil;
+import com.picdora.ImageUtil.ImgurSize;
 import com.picdora.ui.grid.Selectable;
 
 /**
@@ -123,7 +123,7 @@ public class Image extends Model implements Selectable {
 	 * @return
 	 */
 	public String getUrl(ImgurSize size) {
-		return ImageUtils.getImgurLink(this, size);
+		return ImageUtil.getImgurLink(this, size);
 	}
 
 	@Override

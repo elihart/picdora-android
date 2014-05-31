@@ -5,7 +5,6 @@ import java.io.InputStream;
 
 import org.androidannotations.annotations.App;
 import org.androidannotations.annotations.Background;
-import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EBean;
 import org.androidannotations.annotations.RootContext;
 import org.androidannotations.annotations.UiThread;
@@ -18,14 +17,15 @@ import android.content.Context;
 
 import com.picdora.PicdoraApp;
 import com.picdora.PicdoraPreferences_;
+import com.picdora.api.PicdoraApi;
 import com.picdora.api.PicdoraApiService;
 
 @EBean
 public abstract class Syncer implements SyncTask {
 	@Pref
 	protected PicdoraPreferences_ mPrefs;
-	@Bean
-	protected PicdoraApiService mApiService;
+	/** A reference to the static api client. */
+	protected final PicdoraApi mApiService = PicdoraApiService.client;
 	@RootContext
 	protected Context mContext;
 	@App

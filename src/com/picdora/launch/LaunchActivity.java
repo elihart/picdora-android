@@ -15,6 +15,7 @@ import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.picdora.PicdoraApp;
 import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
+import com.picdora.api.PicdoraApiService;
 import com.picdora.channelSelection.ChannelSelectionActivity_;
 import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.sync.PicdoraSyncService_;
@@ -37,6 +38,7 @@ public class LaunchActivity extends Activity {
 		UiUtil.init(getApplicationContext());
 		PicdoraImageLoader.init(this);
 		initUniversalImageLoader();
+		PicdoraApiService.init();
 
 		initDb();
 

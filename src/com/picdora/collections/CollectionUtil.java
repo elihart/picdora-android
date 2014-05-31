@@ -27,7 +27,7 @@ import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 
-import com.picdora.ImageUtils;
+import com.picdora.ImageUtil;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.models.ChannelImage;
@@ -384,7 +384,7 @@ public class CollectionUtil {
 		SQLiteDatabase db = Sprinkles.getDatabase();
 		String query = "DELETE from " + CollectionItem.TABLE_NAME
 				+ " WHERE collectionId=" + collection.getId()
-				+ " AND imageId IN " + ImageUtils.getImageIds(images);
+				+ " AND imageId IN " + ImageUtil.getImageIds(images);
 
 		db.execSQL(query);
 	}

@@ -14,7 +14,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 
-import com.picdora.ImageUtils;
+import com.picdora.ImageUtil;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.models.Image;
@@ -96,7 +96,7 @@ public abstract class GalleryFragment extends SelectionFragment {
 	 * 
 	 */
 	protected void shareSelection() {
-		ImageUtils.shareImages(getActivity(), getSelectedImages());
+		ImageUtil.shareImages(getActivity(), getSelectedImages());
 	}
 
 	/**

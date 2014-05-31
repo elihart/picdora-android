@@ -1,8 +1,11 @@
 package com.picdora.api;
 
+import retrofit.Callback;
 import retrofit.client.Response;
 import retrofit.http.GET;
 import retrofit.http.POST;
+import retrofit.http.PUT;
+import retrofit.http.Path;
 import retrofit.http.Query;
 
 public interface PicdoraApi {
@@ -37,7 +40,8 @@ public interface PicdoraApi {
 	 *         meet our request.
 	 */
 	@GET("/images/top")
-	public Response topImages(@Query("category_id") long categoryId, @Query("count") int count);
+	public Response topImages(@Query("category_id") long categoryId,
+			@Query("count") int count);
 
 	/**
 	 * Check for updates of images that we already have. Unfortunately it isn't
@@ -51,7 +55,8 @@ public interface PicdoraApi {
 	 * batches by using the next id.
 	 * 
 	 * @param id
-	 *            Only return images with an id greater than this one. Does not include this id.
+	 *            Only return images with an id greater than this one. Does not
+	 *            include this id.
 	 * @param lastUpdated
 	 *            The date of the last time we updated successfully in unix time
 	 * @param createdBefore
@@ -64,8 +69,8 @@ public interface PicdoraApi {
 	 *         after and created before the given dates.
 	 * 
 	 */
-	@GET("/images/update")
-	public Response updateImages(@Query("id") int id,
+	@GET("/images/updates")
+	public Response getImageUpdates(@Query("id") int id,
 			@Query("last_updated") long lastUpdated,
 			@Query("created_before") long createdBefore,
 			@Query("limit") int limit);
@@ -75,5 +80,30 @@ public interface PicdoraApi {
 
 	@POST("/users/login")
 	public Response login(@Query("key") String key);
+
+	/**
+	 * Update an image to be reported or deleted, or change it's gif status.
+	 * 
+	 * @param key
+	 *            The device key that was used to login
+	 * @param imageId
+	 *            The id of the image to report
+	 * @param reported
+	 *            True if the image should be marked as reported.
+	 * @param deleted
+	 *            True if the image should be deleted
+	 * @param gif
+	 *            True if the gif status of the image should be reviewed and
+	 *            changed.
+	 * @param cb
+	 *            Callback for the response. Don't bother with this as the
+	 *            response will be blank.
+	 */
+	@PUT("/images/{id}")
+	public void updateImage(@Query("key") String key,
+			@Path("id") long imageId,
+			@Query("reported") boolean reported,
+			@Query("deleted") boolean deleted, @Query("gif") boolean gif,
+			Callback<Response> cb);
 
 }

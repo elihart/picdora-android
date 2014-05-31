@@ -23,7 +23,7 @@ import android.os.AsyncTask;
 import android.os.SystemClock;
 import android.util.DisplayMetrics;
 
-import com.picdora.ImageUtils.ImgurSize;
+import com.picdora.ImageUtil.ImgurSize;
 import com.picdora.loopj.AsyncHttpClient;
 import com.picdora.loopj.BinaryHttpResponseHandler;
 import com.picdora.loopj.RequestHandle;

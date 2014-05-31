@@ -20,7 +20,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.picdora.ImageUtils;
+import com.picdora.ImageUtil;
 import com.picdora.PicdoraApp;
 import com.picdora.R;
 import com.picdora.channelPlayer.ChannelPlayer.OnGetChannelImageResultListener;
@@ -281,7 +281,7 @@ public class ImageSwipeFragment extends Fragment implements
 		 * drawable, otherwise it'll be a normal bitmap drawable. We want to
 		 * make sure the db gif value for the image mirrors this.
 		 */
-		ImageUtils.setGifStatus(image, (drawable instanceof GifDrawable));
+		ImageUtil.setGifStatus(image, (drawable instanceof GifDrawable));
 
 
 		if (!mDestroyed) {
@@ -353,7 +353,7 @@ public class ImageSwipeFragment extends Fragment implements
 	 * that fails we can show a message on screen.
 	 */
 	private void handleDeletedImage() {
-		ImageUtils.markImageDeleted(mImage);
+		ImageUtil.markImageDeleted(mImage);
 
 		if (mDestroyed) {
 			return;

@@ -1,6 +1,6 @@
 package com.picdora.ui.grid;
 
-import com.picdora.ImageUtils.ImgurSize;
+import com.picdora.ImageUtil.ImgurSize;
 
 /**
  * The size of a grid row. This includes the width of the row and the
