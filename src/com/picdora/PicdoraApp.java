@@ -1,9 +1,16 @@
 package com.picdora;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.util.UUID;
+
 import org.androidannotations.annotations.EApplication;
 import org.androidannotations.annotations.sharedpreferences.Pref;
 
 import android.app.Application;
+import android.content.Context;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.picdora.launch.LaunchActivity;
@@ -17,12 +24,16 @@ public class PicdoraApp extends Application {
 	public static final boolean SFW_VERSION = false;
 	/** Whether new images should be retrieved for all categories. */
 	public static final boolean SEED_IMAGE_DATABASE = false;
+	/** Store the application context for use by static methods outside. */
+	private static Context context;
 
 	@Override
 	public void onCreate() {
 		super.onCreate();
 
-		//resetApp();
+		context = getApplicationContext();
+
+		// resetApp();
 		// clearCache();
 
 		/* In the sfw version we make sure the nsfw preference is set to false. */
@@ -37,7 +48,7 @@ public class PicdoraApp extends Application {
 	 */
 	public void clearMemoryCaches() {
 		/* Not using ion right now. */
-		//Ion.getDefault(this).getBitmapCache().clear();
+		// Ion.getDefault(this).getBitmapCache().clear();
 		ImageLoader.getInstance().clearMemoryCache();
 	}
 
@@ -55,6 +66,16 @@ public class PicdoraApp extends Application {
 	private void trimMemory() {
 		clearMemoryCaches();
 		System.gc();
+	}
+
+	/**
+	 * Get the application context. Will return null before the App's onCreate
+	 * method is called.
+	 * 
+	 * @return
+	 */
+	public static Context getAppContext() {
+		return context;
 	}
 
 }

@@ -353,7 +353,7 @@ public class ImageSwipeFragment extends Fragment implements
 	 * that fails we can show a message on screen.
 	 */
 	private void handleDeletedImage() {
-		ImageUtil.markImageDeleted(mImage);
+		ImageUtil.markImageDeleted(mImage.getImage());
 
 		if (mDestroyed) {
 			return;

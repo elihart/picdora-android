@@ -5,22 +5,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import se.emilsjolander.sprinkles.Query;
-import se.emilsjolander.sprinkles.Sprinkles;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteDoneException;
-import android.database.sqlite.SQLiteStatement;
 import android.net.Uri;
 import android.os.Environment;
 import android.text.TextUtils;
 
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
-import com.picdora.models.Category;
+import com.picdora.api.PicdoraApiService;
 import com.picdora.models.Channel;
-import com.picdora.models.ChannelImage;
 import com.picdora.models.Image;
 
 public abstract class ImageUtil {
@@ -191,9 +186,13 @@ public abstract class ImageUtil {
 	 * 
 	 * @param currentImage
 	 */
-	public static void reportImage(ChannelImage currentImage) {
-		// TODO Auto-generated method stub
-
+	public static void reportImage(Image image) {
+		/* Only report if not already reported. */
+		if(!image.isReported()){
+			image.setReported(true);
+			image.saveAsync();
+			updateImageOnServer(image, false);
+		}
 	}
 
 	/**
@@ -271,31 +270,48 @@ public abstract class ImageUtil {
 	 */
 	public static void setGifStatus(Image image, boolean gif) {
 		/*
-		 * If this isn't an image from the db or the gif value already matches
-		 * then don't save it. The id will be 0 if it isn't from db.
+		 * If the new status isn't different from the old one then don't bother continuing.
 		 */
-		if (image.getId() == 0 || Boolean.valueOf(gif).equals(image.isGif())) {
+		if (gif == image.isGif()) {
 			return;
 		}
 
 		image.setGif(gif);
 		image.saveAsync();
 
-		/* TODO: Queue the change to be reported to the server */
+		updateImageOnServer(image, true);
 
 	}
 
 	/**
 	 * Mark the selected image as deleted in the local database and queue the
-	 * deletion to be reported to the main server.
+	 * deletion to be reported to the main server asynchronously.
 	 * 
-	 * @param channelImage
+	 * @param image
 	 */
-	public static void markImageDeleted(ChannelImage channelImage) {
-		Image img = channelImage.getImage();
-		img.setDeleted(true);
-		img.saveAsync();
-		
+	public static void markImageDeleted(Image image) {
+		/*
+		 * If the image is already marked as deleted then don't do it again.
+		 */
+		if (!image.isDeleted()) {
+			image.setDeleted(true);
+			image.saveAsync();
+			updateImageOnServer(image, false);
+		}
+	}
+
+	/**
+	 * Send a PUT request to update the information of a certain image on the
+	 * server.
+	 * 
+	 * @param image The image to update
+	 * @param updateGif Whether the gif status should be reviewed.
+	 */
+	private static void updateImageOnServer(Image image, boolean updateGif) {
+		PicdoraApiService.getClient().updateImage(
+				DeviceKeyUtils.getDeviceKey(PicdoraApp.getAppContext()),
+				image.getId(), image.isReported(), image.isDeleted(),
+				updateGif, null);
 	}
 
 	/**
@@ -340,7 +356,8 @@ public abstract class ImageUtil {
 	/**
 	 * Get the Image with the given id, or null if it doesn't exist.
 	 * 
-	 * @param imageId The id of the image to get.
+	 * @param imageId
+	 *            The id of the image to get.
 	 * @return The matching image, or null on no match.
 	 */
 	public static Image getImageById(long imageId) {

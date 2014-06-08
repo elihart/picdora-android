@@ -138,7 +138,7 @@ public class MenuManager {
 							public void onClick(DialogInterface dialog,
 									int which) {
 								mActivity.showNotification("Image reported");
-								ImageUtil.reportImage(mCurrentImage);
+								ImageUtil.reportImage(mCurrentImage.getImage());
 							}
 						}).show();
 
