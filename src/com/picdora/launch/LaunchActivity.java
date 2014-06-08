@@ -38,7 +38,6 @@ public class LaunchActivity extends Activity {
 		UiUtil.init(getApplicationContext());
 		PicdoraImageLoader.init(this);
 		initUniversalImageLoader();
-		PicdoraApiService.init();
 
 		initDb();
 

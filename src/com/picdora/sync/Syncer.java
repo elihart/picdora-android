@@ -25,7 +25,7 @@ public abstract class Syncer implements SyncTask {
 	@Pref
 	protected PicdoraPreferences_ mPrefs;
 	/** A reference to the static api client. */
-	protected final PicdoraApi mApiService = PicdoraApiService.client;
+	protected final PicdoraApi mApiService = PicdoraApiService.getClient();
 	@RootContext
 	protected Context mContext;
 	@App

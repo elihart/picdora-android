@@ -13,15 +13,16 @@ public class PicdoraApiService implements PicdoraApi {
 	public static final String DEBUG_URL = "http://192.168.1.100:3000/";
 
 	/** A public client that can be used to make static calls to the api. */
-	public static PicdoraApi client;
+	private volatile static PicdoraApi client;
 
 	/**
-	 * Initialize a client that can be used to be static api calls. Only needs
-	 * to be called once, but must be called before using the client.
+	 * Initialization of a client that can be used to make static api calls.
+	 * Synchronized method with null check to avoid concurrent initializations
+	 * as it should only be done once.
 	 * 
 	 * 
 	 */
-	public static void init() {
+	private synchronized static void initClient() {
 		if (client == null) {
 			String url;
 			if (PicdoraApp.DEBUG) {
@@ -35,6 +36,19 @@ public class PicdoraApiService implements PicdoraApi {
 
 			client = restAdapter.create(PicdoraApi.class);
 		}
+	}
+
+	/**
+	 * Get a copy of the API client to make API calls with.
+	 * 
+	 * @return
+	 */
+	public static PicdoraApi getClient() {
+		if (client == null) {
+			initClient();
+		}
+
+		return client;
 	}
 
 	@Override

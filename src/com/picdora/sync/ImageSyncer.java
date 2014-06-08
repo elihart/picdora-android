@@ -67,21 +67,7 @@ public class ImageSyncer extends Syncer {
 
 	@Override
 	public void sync() {
-		/*
-		 * For inserting images it is faster to do bulk inserts but this wasn't
-		 * introduced until sqlite 3.7.11. Older android devices do not have
-		 * this version and we have to revert to individual insertions.
-		 */
-		Cursor cursor = SQLiteDatabase.openOrCreateDatabase(":memory:", null)
-				.rawQuery("select sqlite_version() AS sqlite_version", null);
-		String sqliteVersion = "";
-		while (cursor.moveToNext()) {
-			sqliteVersion += cursor.getString(0);
-		}
-		/*
-		 * Need at least 3.7.11. TODO: Check for higher versions as well.
-		 */
-		mSupportsBulkInserts = sqliteVersion.equalsIgnoreCase("3.7.11");
+		getSqliteVersion();
 
 		Timer syncTimer = new Timer();
 		syncTimer.start();
@@ -101,10 +87,6 @@ public class ImageSyncer extends Syncer {
 			 */
 			return;
 		}
-
-		/*
-		 * TODO: Test updating and new images.
-		 */
 
 		/* Check for updates for the images in our local database. */
 		long updateStartTime = Util.getUnixTime();
@@ -144,6 +126,28 @@ public class ImageSyncer extends Syncer {
 				getTopImages(c, totalImages + NUM_IMAGES_FOR_LOW_CATEGORY);
 			}
 		}
+	}
+
+	/**
+	 * Check what version of sqlite the device is running.
+	 * 
+	 */
+	private void getSqliteVersion() {
+		/*
+		 * For inserting images it is faster to do bulk inserts but this wasn't
+		 * introduced until sqlite 3.7.11. Older android devices do not have
+		 * this version and we have to revert to individual insertions.
+		 */
+		Cursor cursor = SQLiteDatabase.openOrCreateDatabase(":memory:", null)
+				.rawQuery("select sqlite_version() AS sqlite_version", null);
+		String sqliteVersion = "";
+		while (cursor.moveToNext()) {
+			sqliteVersion += cursor.getString(0);
+		}
+		/*
+		 * Need at least 3.7.11. TODO: Check for higher versions as well.
+		 */
+		mSupportsBulkInserts = sqliteVersion.equalsIgnoreCase("3.7.11");
 	}
 
 	/**
