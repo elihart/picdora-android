@@ -138,16 +138,16 @@ public class Util {
 	}
 
 	/**
-	 * If debug mode is enabled then the exception is printed, otherwise it is
-	 * logged with crashlytics.
+	 * Exception is logged with crashlytics, and printed out to system if in
+	 * debug mode.
 	 * 
 	 * @param e
 	 */
 	public static void logException(Throwable e) {
 		if (PicdoraApp.DEBUG) {
 			e.printStackTrace();
-		} else {
-			Crashlytics.logException(e);
 		}
+
+		Crashlytics.logException(e);
 	}
 }

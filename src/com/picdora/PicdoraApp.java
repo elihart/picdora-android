@@ -1,11 +1,5 @@
 package com.picdora;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.util.UUID;
-
 import org.androidannotations.annotations.EApplication;
 import org.androidannotations.annotations.sharedpreferences.Pref;
 
@@ -40,6 +34,9 @@ public class PicdoraApp extends Application {
 		if (SFW_VERSION) {
 			mPrefs.showNsfw().put(false);
 		}
+		
+		/* TODO: Custom error handler. */
+		//Thread.setDefaultUncaughtExceptionHandler();
 	}
 
 	/**

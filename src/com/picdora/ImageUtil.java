@@ -3,15 +3,17 @@ package com.picdora;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
+import retrofit.Callback;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
 import se.emilsjolander.sprinkles.Query;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Environment;
 import android.text.TextUtils;
-
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
 import com.picdora.api.PicdoraApiService;
@@ -188,7 +190,7 @@ public abstract class ImageUtil {
 	 */
 	public static void reportImage(Image image) {
 		/* Only report if not already reported. */
-		if(!image.isReported()){
+		if (!image.isReported()) {
 			image.setReported(true);
 			image.saveAsync();
 			updateImageOnServer(image, false);
@@ -270,7 +272,8 @@ public abstract class ImageUtil {
 	 */
 	public static void setGifStatus(Image image, boolean gif) {
 		/*
-		 * If the new status isn't different from the old one then don't bother continuing.
+		 * If the new status isn't different from the old one then don't bother
+		 * continuing.
 		 */
 		if (gif == image.isGif()) {
 			return;
@@ -304,14 +307,34 @@ public abstract class ImageUtil {
 	 * Send a PUT request to update the information of a certain image on the
 	 * server.
 	 * 
-	 * @param image The image to update
-	 * @param updateGif Whether the gif status should be reviewed.
+	 * @param image
+	 *            The image to update
+	 * @param updateGif
+	 *            Whether the gif status should be reviewed.
 	 */
-	private static void updateImageOnServer(Image image, boolean updateGif) {
+	@SuppressLint("DefaultLocale")
+	private static void updateImageOnServer(final Image image,
+			final boolean updateGif) {
 		PicdoraApiService.getClient().updateImage(
 				DeviceKeyUtils.getDeviceKey(PicdoraApp.getAppContext()),
 				image.getId(), image.isReported(), image.isDeleted(),
-				updateGif, null);
+				updateGif, new Callback<Response>() {
+
+					@Override
+					public void success(Response arg0, Response arg1) {
+						Util.log(String
+								.format("Updated image. id: %d  reported: %b  deleted: %b gif: %b ",
+										image.getId(), image.isReported(),
+										image.isDeleted(), updateGif));
+
+					}
+
+					@Override
+					public void failure(RetrofitError arg0) {
+						Util.log("Failure to update image.");
+						Util.log(arg0.getLocalizedMessage());
+					}
+				});
 	}
 
 	/**

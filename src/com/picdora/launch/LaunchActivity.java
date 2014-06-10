@@ -15,7 +15,6 @@ import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.picdora.PicdoraApp;
 import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
-import com.picdora.api.PicdoraApiService;
 import com.picdora.channelSelection.ChannelSelectionActivity_;
 import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.sync.PicdoraSyncService_;
@@ -41,9 +40,10 @@ public class LaunchActivity extends Activity {
 
 		initDb();
 
-		// only use crashlytics when not debugging
-		if (!PicdoraApp.DEBUG) {
-			Crashlytics.start(this);
+		// use specific tag for crashlytics when debugging
+		Crashlytics.start(this);
+		if (PicdoraApp.DEBUG) {
+			Crashlytics.setBool("debug", true);
 		}
 
 		/* Start the syncing service. */

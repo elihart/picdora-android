@@ -12,11 +12,13 @@ import org.androidannotations.annotations.UiThread.Propagation;
 import org.androidannotations.annotations.sharedpreferences.Pref;
 import org.apache.commons.io.IOUtils;
 
+import retrofit.RetrofitError;
 import retrofit.client.Response;
 import android.content.Context;
 
 import com.picdora.PicdoraApp;
 import com.picdora.PicdoraPreferences_;
+import com.picdora.Util;
 import com.picdora.api.PicdoraApi;
 import com.picdora.api.PicdoraApiService;
 
@@ -50,7 +52,23 @@ public abstract class Syncer implements SyncTask {
 	@Override
 	public void run(OnSyncTaskCompleteListener listener) {
 		mOnCompleteListener = listener;
-		sync();
+		startSyncInBackground();
+	}
+
+	/**
+	 * Start the background process for syncing. And run the sync method that
+	 * the subclass will extend. Wrap in a try/catch for the case that there is
+	 * no internet connection and retrofit throws an error.
+	 * 
+	 */
+	@Background
+	protected void startSyncInBackground() {
+		try {
+			sync();
+		} catch (RetrofitError e) {
+			Util.logException(e);
+			doneSyncing();
+		}
 	}
 
 	/**
@@ -58,7 +76,6 @@ public abstract class Syncer implements SyncTask {
 	 * run in the background.
 	 * 
 	 */
-	@Background
 	protected abstract void sync();
 
 	/**
