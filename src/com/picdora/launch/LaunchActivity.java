@@ -33,18 +33,18 @@ public class LaunchActivity extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
+		// use specific tag for crashlytics when debugging
+		Crashlytics.start(this);
+		if (PicdoraApp.DEBUG) {
+			Crashlytics.setBool("debug", true);
+		}
+
 		FontHelper.init(getApplicationContext());
 		UiUtil.init(getApplicationContext());
 		PicdoraImageLoader.init(this);
 		initUniversalImageLoader();
 
 		initDb();
-
-		// use specific tag for crashlytics when debugging
-		Crashlytics.start(this);
-		if (PicdoraApp.DEBUG) {
-			Crashlytics.setBool("debug", true);
-		}
 
 		/* Start the syncing service. */
 		// startService(new Intent(this, PicdoraSyncService.class));

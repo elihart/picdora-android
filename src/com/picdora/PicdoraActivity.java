@@ -135,7 +135,7 @@ public class PicdoraActivity extends ActionBarActivity {
 	}
 
 	/**
-	 * Get an object returned in {@link #onRetainState())}. This will persist
+	 * Get an object returned in {@link #onRetainState()}. This will persist
 	 * across config changes, but not if the activity is finished().
 	 * 
 	 * @return The saved state, or null if nothing was saved.

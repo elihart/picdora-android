@@ -73,6 +73,7 @@ public class Util {
 	public static void log(String msg) {
 		if (PicdoraApp.DEBUG) {
 			System.out.println(msg);
+			Crashlytics.log(msg);
 		}
 	}
 

@@ -128,7 +128,7 @@ public class ChannelInfoFragment extends Fragment {
 	 * 
 	 * @return
 	 */
-	public ChannelCreationInfo collectInfo() {
+	public ChannelCreationInfo getChannelInfo() {
 		return new ChannelCreationInfo(getGifSetting(), getNsfwSetting(),
 				channelName.getText().toString());
 	}
@@ -210,7 +210,7 @@ public class ChannelInfoFragment extends Fragment {
 		// TODO: Validate in background, put a progress bar, disable further
 		// input, then come back here. The lag right now isn't noticeable
 		// though...
-		ChannelCreationInfo info = collectInfo();
+		ChannelCreationInfo info = getChannelInfo();
 		if (validateChannelName(info.channelName)) {
 			activity.submitChannelInfo(info);
 			hideKeyboard();

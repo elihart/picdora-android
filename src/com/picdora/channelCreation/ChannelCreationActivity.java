@@ -14,6 +14,7 @@ import android.view.MenuItem;
 import com.picdora.PicdoraActivity;
 import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
+import com.picdora.Util;
 import com.picdora.models.Category;
 
 /**
@@ -32,6 +33,11 @@ public class ChannelCreationActivity extends PicdoraActivity {
 	PicdoraPreferences_ prefs;
 	@Bean
 	ChannelCreationUtil mUtils;
+
+	/*
+	 * TODO: Returning from preview loses category selections if activity is
+	 * destroyed.
+	 */
 
 	private ChannelCreationPagerAdapter pagerAdapter;
 
@@ -54,6 +60,9 @@ public class ChannelCreationActivity extends PicdoraActivity {
 	void initViews() {
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 		getSupportActionBar().setHomeButtonEnabled(true);
+
+		/* Get any saved info if the activity was destroyed for config changes. */
+		mInfo = (ChannelCreationInfo) getRetainedState();
 
 		pagerAdapter = new ChannelCreationPagerAdapter(
 				getSupportFragmentManager());
@@ -149,6 +158,29 @@ public class ChannelCreationActivity extends PicdoraActivity {
 	 *            Whether the channel should just be a preview and not saved.
 	 */
 	public void setChannelCategories(List<Category> categories, boolean preview) {
+		/*
+		 * Save the channels to the current channel info and submit it for
+		 * channel creation. If info is null (in the case where we launched a
+		 * preview, the activity was destroyed, and we came back) then we need
+		 * to retrieve the info again from the info fragment.
+		 * 
+		 * TODO: It seems that trying to retrieve the info from the info
+		 * fragment before the fragment is shown causes NPE's since the view
+		 * isn't drawn yet. Haven't yet tried to see if this can be gotten
+		 * around and just forcing the user to return to the info page. This
+		 * should be a pretty rare edge case so not a priority for now.
+		 */
+		if (mInfo == null) {
+			Util.log("Unable to retrieve channel info when settings categories.");
+			/*
+			 * Doesn't work if fragment hasn't been shown yet so we can't get
+			 * info.
+			 */
+			// mInfo = pagerAdapter.getInfoFragment().getChannelInfo();
+			pager.setCurrentItem(pagerAdapter.getInfoFragmentPosition());
+			return;
+		}
+
 		mInfo.categories = categories;
 		mInfo.preview = preview;
 		/*
@@ -164,10 +196,20 @@ public class ChannelCreationActivity extends PicdoraActivity {
 	 * @return
 	 */
 	public NsfwSetting getNsfwSetting() {
+		/* TODO: Try to restore info once we get that working. */
 		if (mInfo == null) {
 			return NsfwSetting.NONE;
 		} else {
 			return mInfo.nsfwSetting;
 		}
+	}
+
+	@Override
+	protected Object onRetainState() {
+		/*
+		 * Save any channel info that has been submitted to be retained on
+		 * config changes.
+		 */
+		return mInfo;
 	}
 }

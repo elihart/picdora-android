@@ -14,8 +14,8 @@ public class PicdoraApp extends Application {
 	@Pref
 	protected PicdoraPreferences_ mPrefs;
 
-	public static final boolean DEBUG = true;
-	public static final boolean SFW_VERSION = false;
+	public static final boolean DEBUG = false;
+	public static final boolean SFW_VERSION = true;
 	/** Whether new images should be retrieved for all categories. */
 	public static final boolean SEED_IMAGE_DATABASE = false;
 	/** Store the application context for use by static methods outside. */
