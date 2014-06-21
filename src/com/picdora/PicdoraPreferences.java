@@ -10,6 +10,10 @@ public interface PicdoraPreferences {
 
 	@DefaultBoolean(true)
 	boolean showNsfw();
+	
+	/** Whether this is the first time the user has run the app. */
+	@DefaultBoolean(true)
+	boolean firstLaunch();
 
 	/**
 	 * The last time our images were successfully updated in unix time. Defaults
