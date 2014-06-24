@@ -1,6 +1,7 @@
 package com.picdora;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -78,9 +79,9 @@ public abstract class CategoryUtils {
 	}
 
 	/**
-	 * Get the number of unique usable images in the given category. This excludes
-	 * deleted and reported images. Images that have already been seen can be
-	 * excluded as well.
+	 * Get the number of unique usable images in the given category. This
+	 * excludes deleted and reported images. Images that have already been seen
+	 * can be excluded as well.
 	 * 
 	 * @param category
 	 * @param excludeSeen
@@ -91,8 +92,8 @@ public abstract class CategoryUtils {
 	public static int getImageCount(Category category, boolean excludeSeen) {
 		String query = "SELECT COUNT(distinct id) FROM ImagesWithCategories WHERE deleted=0 AND reported=0 AND categoryId="
 				+ category.getId();
-		
-		if(excludeSeen){
+
+		if (excludeSeen) {
 			query += " AND id NOT IN (SELECT distinct imageId FROM Views)";
 		}
 
@@ -124,22 +125,41 @@ public abstract class CategoryUtils {
 	public static long getNewestImageDate(Category category) {
 		final String query = "SELECT MAX(createdAt) FROM ImagesWithCategories WHERE categoryId="
 				+ category.getId();
-		
+
 		return DbUtils.simpleQueryForLong(query, 0);
 	}
 
-	/** Get all the categories that are used in existing channels.
+	/**
+	 * Get all the categories that are used in existing channels.
 	 * 
 	 * @return
 	 */
 	public static List<Category> getCategoriesInUse() {
-		List<Category> categories = new ArrayList<Category>();
-		String query = "SELECT * FROM Categories WHERE id IN (SELECT categoryId FROM ChannelCategories)";
-
+		String query = "SELECT * FROM Categories WHERE id IN (SELECT distinct categoryId FROM ChannelCategories)";
 
 		CursorList<Category> list = Query.many(Category.class, query, null)
 				.get();
-		categories.addAll(list.asList());
+		List<Category> categories = list.asList();
+		list.close();
+
+		return categories;
+	}
+
+	/**
+	 * Get the list of categories that don't have any images under them.
+	 * 
+	 * @return
+	 */
+	public static Collection<? extends Category> getCategoriesWithNoImages() {
+		/*
+		 * If a category doesn't have any images then there will be no entries
+		 * with that category id in the ImageCategories table.
+		 */
+		String query = "SELECT * FROM Categories WHERE id NOT IN (SELECT distinct categoryId FROM ImageCategories)";
+
+		CursorList<Category> list = Query.many(Category.class, query, null)
+				.get();
+		List<Category> categories = list.asList();
 		list.close();
 
 		return categories;

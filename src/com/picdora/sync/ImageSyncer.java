@@ -105,9 +105,17 @@ public class ImageSyncer extends Syncer {
 		/*
 		 * Next we want to check if any of our categories are low on images and
 		 * get more if necessary. To be more efficient we'll only check
-		 * categories that are currently being used by a channel.
+		 * categories that are currently being used by a channel. TODO: When the
+		 * algorithm for image choosing starts sourcing from outside channels as
+		 * well we might have to rethink this strategy.
 		 */
 		List<Category> categoriesInUse = CategoryUtils.getCategoriesInUse();
+
+		/*
+		 * Catch the case where new categories are added and we don't have any
+		 * images for them yet but we should try to load some.
+		 */
+		categoriesInUse.addAll(CategoryUtils.getCategoriesWithNoImages());
 
 		/*
 		 * Check the unseen image count for each category. If the count is low

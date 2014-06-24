@@ -26,9 +26,9 @@ import android.widget.TextView;
 import com.picdora.PicdoraApp;
 import com.picdora.R;
 import com.picdora.Util;
-import com.picdora.channelPlayer.ChannelPlayer.ChannelError;
-import com.picdora.channelPlayer.ChannelPlayer.OnGetChannelImageResultListener;
-import com.picdora.channelPlayer.ChannelPlayer.OnLoadListener;
+import com.picdora.channelPlayer.ImageManager.ChannelError;
+import com.picdora.channelPlayer.ImageManager.OnGetChannelImageResultListener;
+import com.picdora.channelPlayer.ImageManager.OnLoadListener;
 import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.imageloader.PicdoraImageLoader.OnDownloadSpaceAvailableListener;
 import com.picdora.models.Channel;
@@ -60,7 +60,7 @@ public class ChannelViewActivity extends FragmentActivity implements
 	protected PicdoraNotifier notifier;
 
 	@Bean
-	protected ChannelPlayer mChannelPlayer;
+	protected ImageManager mChannelPlayer;
 	@Bean
 	protected LikeGestureHandler mLikeGestureHandler;
 	@Bean
@@ -317,10 +317,10 @@ public class ChannelViewActivity extends FragmentActivity implements
 	}
 
 	private class CachedPlayerState {
-		public ChannelPlayer player;
+		public ImageManager player;
 		public int position;
 
-		public CachedPlayerState(ChannelPlayer player, int position) {
+		public CachedPlayerState(ImageManager player, int position) {
 			this.player = player;
 			this.position = position;
 		}

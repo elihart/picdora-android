@@ -20,8 +20,12 @@ import com.picdora.models.ChannelImage;
 import com.picdora.models.ChannelPreview;
 import com.picdora.models.Image;
 
+/**
+ * Decides what images to show for a channel.
+ * 
+ */
 @EBean
-public class ChannelPlayer {
+public class ImageManager {
 	// TODO: Explore loading all images into cursorlist initially and then
 	// pulling them from there. Could be a lot more efficient
 
@@ -44,7 +48,7 @@ public class ChannelPlayer {
 	// TODO: Don't mark replacements as viewed until they are used (or unmark
 	// them if they are never used?)
 
-	protected ChannelPlayer() {
+	protected ImageManager() {
 		// empty constructor for enhanced class
 	}
 
@@ -218,14 +222,15 @@ public class ChannelPlayer {
 	 * @return resultCount The number of images retrieved from the db
 	 */
 	private int loadImageBatch(int count, Collection<ChannelImage> images) {
-		// TODO: Test this with the new db schema changes
-		
+
 		// build the query. Start by only selecting images from categories that
 		// this channel includes
 		String imageIdsFromCategories = "(SELECT distinct imageId FROM ImageCategories WHERE categoryId IN "
-				+ CategoryUtils.getCategoryIdsString(mChannel.getCategories()) + ")";
-		
-		String query = "SELECT * FROM Images WHERE id IN " + imageIdsFromCategories;
+				+ CategoryUtils.getCategoryIdsString(mChannel.getCategories())
+				+ ")";
+
+		String query = "SELECT * FROM Images WHERE id IN "
+				+ imageIdsFromCategories;
 
 		// add the gif setting
 		switch (mChannel.getGifSetting()) {

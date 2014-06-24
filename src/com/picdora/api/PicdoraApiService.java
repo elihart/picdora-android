@@ -10,7 +10,7 @@ import com.picdora.Util;
 
 public class PicdoraApiService implements PicdoraApi {
 	private static final String BASE_URL = "http://picdora.com:3000/";
-	public static final String DEBUG_URL = "http://192.168.1.101:3000/";
+	public static final String DEBUG_URL = "http://192.168.1.100:3000/";
 
 	/** A public client that can be used to make static calls to the api. */
 	private volatile static PicdoraApi client;

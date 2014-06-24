@@ -23,7 +23,7 @@ import android.widget.TextView;
 import com.picdora.ImageUtil;
 import com.picdora.PicdoraApp;
 import com.picdora.R;
-import com.picdora.channelPlayer.ChannelPlayer.OnGetChannelImageResultListener;
+import com.picdora.channelPlayer.ImageManager.OnGetChannelImageResultListener;
 import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.imageloader.PicdoraImageLoader.LoadError;
 import com.picdora.models.ChannelImage;
