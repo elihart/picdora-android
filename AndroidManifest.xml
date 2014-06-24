@@ -23,6 +23,9 @@
             android:value="f8e89955ef243b240a3807307b94b382d9652601" />
         
         <service android:name="com.picdora.sync.PicdoraSyncService_" />
+        
+        <meta-data android:name="com.google.android.gms.version"
+           android:value="@integer/google_play_services_version" />
 
         <activity
             android:name="com.picdora.channelSelection.ChannelSelectionActivity_"

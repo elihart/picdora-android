@@ -1,8 +1,5 @@
 package com.picdora;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.ActionBarDrawerToggle;
@@ -10,8 +7,8 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.ActionBarActivity;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 
+import com.google.android.gms.analytics.GoogleAnalytics;
 import com.picdora.ui.FontHelper;
 
 public class PicdoraActivity extends ActionBarActivity {
@@ -51,6 +48,18 @@ public class PicdoraActivity extends ActionBarActivity {
 					.commit();
 		}
 
+	}
+	
+	@Override
+	protected void onStart(){
+		super.onStart();
+		GoogleAnalytics.getInstance(this).reportActivityStart(this);
+	}
+	
+	@Override
+	protected void onStop(){
+		super.onStop();
+		GoogleAnalytics.getInstance(this).reportActivityStop(this);
 	}
 
 	/**

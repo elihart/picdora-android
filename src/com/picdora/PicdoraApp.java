@@ -6,6 +6,8 @@ import org.androidannotations.annotations.sharedpreferences.Pref;
 import android.app.Application;
 import android.content.Context;
 
+import com.google.android.gms.analytics.GoogleAnalytics;
+import com.google.android.gms.analytics.Tracker;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.picdora.launch.LaunchActivity;
 
@@ -20,7 +22,8 @@ public class PicdoraApp extends Application {
 	public static final boolean SEED_IMAGE_DATABASE = false;
 	/** Store the application context for use by static methods outside. */
 	private static Context context;
-
+	/** Tracker for Google Analytics */
+	private Tracker mTracker;
 
 	@Override
 	public void onCreate() {
@@ -35,9 +38,35 @@ public class PicdoraApp extends Application {
 		if (SFW_VERSION) {
 			mPrefs.showNsfw().put(false);
 		}
-		
+
 		/* TODO: Custom error handler. */
-		//Thread.setDefaultUncaughtExceptionHandler();
+		// Thread.setDefaultUncaughtExceptionHandler();
+
+		initTracker();
+	}
+
+	/**
+	 * Initialize the google analytics tracker.
+	 * 
+	 */
+	private void initTracker() {
+		Tracker tracker = getTracker();
+	}
+
+	/**
+	 * Get the Google Analytics tracker.
+	 * 
+	 * @return
+	 */
+	public synchronized Tracker getTracker() {
+		/* Initialize the tracker if needed and return. */
+		if (mTracker == null) {
+			GoogleAnalytics analytics = GoogleAnalytics.getInstance(this);
+			/* Don't send data when in debug mode. */
+			//analytics.setDryRun(DEBUG);
+			mTracker = analytics.newTracker(R.xml.google_analytics_tracker);
+		}
+		return mTracker;
 	}
 
 	/**
