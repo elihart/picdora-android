@@ -41,16 +41,6 @@ public class PicdoraApp extends Application {
 
 		/* TODO: Custom error handler. */
 		// Thread.setDefaultUncaughtExceptionHandler();
-
-		initTracker();
-	}
-
-	/**
-	 * Initialize the google analytics tracker.
-	 * 
-	 */
-	private void initTracker() {
-		Tracker tracker = getTracker();
 	}
 
 	/**
@@ -63,7 +53,7 @@ public class PicdoraApp extends Application {
 		if (mTracker == null) {
 			GoogleAnalytics analytics = GoogleAnalytics.getInstance(this);
 			/* Don't send data when in debug mode. */
-			//analytics.setDryRun(DEBUG);
+			analytics.setDryRun(DEBUG);
 			mTracker = analytics.newTracker(R.xml.google_analytics_tracker);
 		}
 		return mTracker;

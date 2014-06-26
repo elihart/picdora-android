@@ -1,5 +1,6 @@
 package com.picdora.launch;
 
+import org.androidannotations.annotations.App;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.sharedpreferences.Pref;
 
@@ -28,6 +29,8 @@ public class LaunchActivity extends Activity {
 
 	@Pref
 	protected PicdoraPreferences_ mPrefs;
+	@App
+	protected PicdoraApp mApp;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -38,6 +41,8 @@ public class LaunchActivity extends Activity {
 		if (PicdoraApp.DEBUG) {
 			Crashlytics.setBool("debug", true);
 		}
+		// init GA tracking by doing an initial get of the tracker
+		mApp.getTracker();
 
 		FontHelper.init(getApplicationContext());
 		UiUtil.init(getApplicationContext());

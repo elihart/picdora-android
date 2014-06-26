@@ -190,12 +190,7 @@ public class ImageSwipeFragment extends Fragment implements
 			setDebugText("Image deleted");
 			handleDeletedImage();
 		} else {
-			/*
-			 * Show debug info about the image if we are in debug mode.
-			 */
-			if (PicdoraApp.DEBUG) {
-				showDebugInfo(mImage.getImage());
-			}
+			setDebugText("Loading image: " + getImageInfoString(mImage));
 			PicdoraImageLoader.instance().loadImage(mImage.getImage(), this);
 		}
 	}
@@ -223,6 +218,7 @@ public class ImageSwipeFragment extends Fragment implements
 			mProgress.setVisibility(View.GONE);
 			mImageLoaded = true;
 			checkForImageView();
+			setDebugText("Loaded: " + getImageInfoString(mImage));
 
 			// create a copy of the original image rect so we can tell when
 			// we're zoomed
@@ -258,6 +254,8 @@ public class ImageSwipeFragment extends Fragment implements
 		mImageLoaded = false;
 		mIsImageLoading = false;
 
+		setDebugText("Image load fail: " + error.name());
+
 		switch (error) {
 		case DOWNLOAD_CANCELED:
 		case DOWNLOAD_FAILURE:
@@ -271,7 +269,6 @@ public class ImageSwipeFragment extends Fragment implements
 				loadImage();
 			} else {
 				// TODO: Load error image
-				setDebugText("Image load fail: " + error.toString());
 				showLoadingCircle();
 			}
 			break;
@@ -286,12 +283,13 @@ public class ImageSwipeFragment extends Fragment implements
 	}
 
 	/**
-	 * Display basic information about the image at the top of the screen.
+	 * Create a string containing information about the given image.
 	 * 
-	 * @param image
+	 * @param channelImage
 	 *            The image to show information about
 	 */
-	private void showDebugInfo(Image image) {
+	private String getImageInfoString(ChannelImage channelImage) {
+		Image image = channelImage.getImage();
 		debugText.setVisibility(View.VISIBLE);
 
 		String info = "(%d, %d, '%s'";
@@ -302,8 +300,8 @@ public class ImageSwipeFragment extends Fragment implements
 			info += ", nsfw";
 		}
 		info += ")";
-		debugText.setText(String.format(info, image.getId(),
-				image.getRedditScore(), image.getImgurId()));
+		return String.format(info, image.getId(), image.getRedditScore(),
+				image.getImgurId());
 	}
 
 	/**
@@ -357,15 +355,14 @@ public class ImageSwipeFragment extends Fragment implements
 	}
 
 	/**
-	 * Check if the image is being viewed and mark it if so. Only mark if image
-	 * is loaded and fragment is visible and we haven't marked a view for it yet since the channel started playing (ie avoid duplicate markings).
+	 * Check if the image is being viewed and if so report the view to the
+	 * activity. We only count a view if the image is fully loaded and the
+	 * fragment is visible.
 	 * 
 	 */
 	private void checkForImageView() {
-		if (mImage != null && mImageLoaded && mVisible
-				&& mImage.getLastSeen() < mActivity.getChannelStartTime()) {
-			mImage.markView();
-			mImage.saveAsync();
+		if (mImage != null && mImageLoaded && mVisible) {
+			mActivity.registerImageView(mImage);
 		}
 	}
 

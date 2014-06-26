@@ -12,12 +12,12 @@ import org.androidannotations.annotations.sharedpreferences.Pref;
 
 import se.emilsjolander.sprinkles.CursorList;
 import se.emilsjolander.sprinkles.Query;
+import android.text.TextUtils;
 
 import com.picdora.CategoryUtils;
 import com.picdora.PicdoraPreferences_;
 import com.picdora.models.Channel;
 import com.picdora.models.ChannelImage;
-import com.picdora.models.ChannelPreview;
 import com.picdora.models.Image;
 
 /**
@@ -36,17 +36,28 @@ public class ImageManager {
 	protected PicdoraPreferences_ mPrefs;
 
 	private Channel mChannel;
-	// and then decide on using it
 	private List<ChannelImage> mImages;
 
 	// a reserve of images used to replace deleted ones
 	private LinkedList<ChannelImage> imageQueue;
-	// the size that we'll try to keep the image queue at so we have enough
-	// images without doing too many loads
-	private static final int TARGET_QUEUE_SIZE = 15;
-
-	// TODO: Don't mark replacements as viewed until they are used (or unmark
-	// them if they are never used?)
+	/**
+	 * Whether all images available to this channel have been loaded already. If
+	 * true we can stop trying to load more.
+	 */
+	private boolean mAllImagesUsed = false;
+	/** List of all image ids that have been loaded so far. */
+	private List<Integer> mImageIds;
+	/**
+	 * The size that we'll try to keep the image queue at so we have enough
+	 * images without doing too many loads.
+	 * 
+	 */
+	private static final int TARGET_QUEUE_SIZE = 30;
+	/**
+	 * How low the queue count can go before we try to refill it to the target
+	 * size.
+	 */
+	private static final int QUEUE_REFILL_THRESHOLD = TARGET_QUEUE_SIZE / 2;
 
 	/**
 	 * Initialize the player with the given channel and start loading images to
@@ -66,10 +77,11 @@ public class ImageManager {
 		} else {
 			// init arrays and fields
 			mChannel = channel;
-			mImages = new ArrayList<ChannelImage>();
+			mImages = new ArrayList<ChannelImage>(TARGET_QUEUE_SIZE);
 			imageQueue = new LinkedList<ChannelImage>();
+			mImageIds = new ArrayList<Integer>(TARGET_QUEUE_SIZE);
 			// get the initial images to display
-			loadImageBatch(TARGET_QUEUE_SIZE * 2, imageQueue);
+			loadImageBatch(TARGET_QUEUE_SIZE, imageQueue);
 
 			// check that the load was able to populate the imageQueue
 			if (mImages.isEmpty() && imageQueue.isEmpty()) {
@@ -198,28 +210,22 @@ public class ImageManager {
 	}
 
 	/**
-	 * Whether all images available to this channel have been loaded already. If
-	 * true we can stop trying to load more.
-	 */
-	private boolean allImagesUsed = false;
-
-	/**
 	 * Get the next image to show. Can return null if there are no images left
 	 * to use.
 	 * 
 	 * @return
 	 */
-	private ChannelImage nextImage() {
+	private synchronized ChannelImage nextImage() {
 		// if we don't have any images left in the queue and we still have
 		// unused images in the db then refill the queue
-		if (imageQueue.size() < TARGET_QUEUE_SIZE && !allImagesUsed) {
-			int numToLoad = TARGET_QUEUE_SIZE * 2;
+		if (imageQueue.size() < QUEUE_REFILL_THRESHOLD && !mAllImagesUsed) {
+			int numToLoad = TARGET_QUEUE_SIZE;
 			int numLoaded = loadImageBatch(numToLoad, imageQueue);
 			// if the db can't load as many as we wanted then we already have
 			// all the images it can give us, don't bother trying to get more as
 			// we'll only get the same ones
 			if (numLoaded < numToLoad) {
-				allImagesUsed = true;
+				mAllImagesUsed = true;
 			}
 		}
 
@@ -232,7 +238,8 @@ public class ImageManager {
 	 * 
 	 * @return resultCount The number of images retrieved from the db
 	 */
-	private int loadImageBatch(int count, Collection<ChannelImage> images) {
+	private synchronized int loadImageBatch(int count,
+			Collection<ChannelImage> images) {
 
 		// build the query. Start by only selecting images from categories that
 		// this channel includes
@@ -260,34 +267,42 @@ public class ImageManager {
 			query += " AND nsfw=0";
 		}
 
-		/* TODO: We need to reuse images at some point... */
-		query += " AND id NOT IN (SELECT imageId FROM Views WHERE channelId="
-				+ mChannel.getId() + ")";
+		// not reported or deleted
+		query += " AND reported=0 AND deleted=0";
+
+		// TODO: Join with views and don't use disliked images
+
+		// not one of the images we've already loaded
+		query += " AND id NOT IN " + getImageIdsInUse();
 
 		// set ordering and add limit
 		query += " ORDER BY redditScore DESC LIMIT " + Integer.toString(count);
 
+		/*
+		 * TODO Pull image and view info and create Image and ChannelImage at
+		 * the same time. Need to do this manually without sprinkles.
+		 */
 		CursorList<Image> list = Query.many(Image.class, query, null).get();
 		int resultCount = list.size();
 		for (Image image : list.asList()) {
-			// TODO: Figure out a better way to do this. We have to mark them as
-			// viewed right now because otherwise we will pull them from the
-			// database again. Maybe supply these ids to the db to avoid
-			// instead, or keep a list of unviewed images
-
-			// don't add a duplicate image
-			// TODO: Better way to manage duplicates in the db before we
-			// retrieve them
-			ChannelImage channelImage = new ChannelImage(mChannel, image);
-			if (!mImages.contains(channelImage)
-					&& !imageQueue.contains(channelImage)) {
-				images.add(channelImage);
-			}
+			/* TODO: Check for existing channel image before creating one. */
+			images.add(new ChannelImage(mChannel, image));
+			mImageIds.add((int) image.getId());
 		}
 
 		list.close();
 
 		return resultCount;
+	}
+
+	/**
+	 * Get a string of the image ids that have already been loaded, comma
+	 * separated and in parenthesis.
+	 * 
+	 * @return
+	 */
+	private String getImageIdsInUse() {
+		return "(" + TextUtils.join(",", mImageIds) + ")";
 	}
 
 	/**

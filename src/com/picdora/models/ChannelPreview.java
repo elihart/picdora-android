@@ -10,10 +10,6 @@ public class ChannelPreview extends Channel {
 	// for normal channels
 	private static final int PREVIEW_ID = -2;
 
-	// ChannelImages won't save since the channel isn't saved, so the user will
-	// keep seeing the same initial images repeated. Should be enough for a
-	// preview though
-
 	// TODO: Better way to handle channel previews
 
 	/**
@@ -34,9 +30,5 @@ public class ChannelPreview extends Channel {
 	public boolean isValid() {
 		// never save this model
 		return false;
-	}
-
-	public static boolean isPreview(Channel channel) {
-		return channel.getId() == PREVIEW_ID;
 	}
 }

@@ -35,6 +35,7 @@ import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.imageloader.PicdoraImageLoader.OnDownloadSpaceAvailableListener;
 import com.picdora.models.Channel;
 import com.picdora.models.ChannelImage;
+import com.picdora.models.ChannelPreview;
 import com.picdora.ui.PicdoraNotifier;
 import com.picdora.ui.SatelliteMenu.SatelliteMenu;
 
@@ -91,6 +92,8 @@ public class ChannelViewActivity extends FragmentActivity implements
 	private Dialog mLoadingDialog;
 	/** The time the channel view was started. */
 	private long mStartTime;
+	/** The channel we are displaying. */
+	private Channel mChannel;
 
 	/**
 	 * Used when the user indicates a like or dislike on an image.
@@ -118,7 +121,7 @@ public class ChannelViewActivity extends FragmentActivity implements
 
 		// Load bundled channel and play when ready
 		String json = getIntent().getStringExtra("channel");
-		Channel channel = Util.fromJson(json, Channel.class);
+		mChannel = Util.fromJson(json, Channel.class);
 
 		/* If we have a saved state from before then resume it */
 		if (mOnConfigChangeState != null) {
@@ -127,7 +130,7 @@ public class ChannelViewActivity extends FragmentActivity implements
 		}
 
 		/* Otherwise we have to state to return to so start from scratch */
-		mChannelPlayer.loadChannel(channel, new OnLoadListener() {
+		mChannelPlayer.loadChannel(mChannel, new OnLoadListener() {
 			@Override
 			public void onSuccess() {
 				// start on the very first image
@@ -405,11 +408,25 @@ public class ChannelViewActivity extends FragmentActivity implements
 	}
 
 	/**
-	 * Get the time that this channel view was started.
+	 * Report a view of an image from a fragment. This means the image is loaded
+	 * in the fragment and the fragment is visible. Fragments should call this
+	 * everytime a view of their image happens.
 	 * 
-	 * @return
+	 * @param image
 	 */
-	public long getChannelStartTime() {
-		return mStartTime;
+	public void registerImageView(ChannelImage image) {
+		/*
+		 * If we're not in preview mode and if the image hasn't registered a
+		 * view for this channel session then mark a view on it and save. We
+		 * don't want to record duplicate views for a single channel session in
+		 * the case that they scroll by it more than once.
+		 */
+		if (!(mChannel instanceof ChannelPreview)
+				&& image.getLastSeen() < mStartTime) {
+			Util.log("Record view: " + image.getImage().getIconId());
+			image.markView();
+			image.saveAsync();
+		}
+
 	}
 }
