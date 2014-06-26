@@ -1,5 +1,7 @@
 package com.picdora.channelPlayer;
 
+import java.util.Date;
+
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.App;
 import org.androidannotations.annotations.Bean;
@@ -65,7 +67,7 @@ public class ChannelViewActivity extends FragmentActivity implements
 	protected LikeGestureHandler mLikeGestureHandler;
 	@Bean
 	protected MenuManager mMenuManager;
-	
+
 	@App
 	protected PicdoraApp mApp;
 
@@ -87,6 +89,8 @@ public class ChannelViewActivity extends FragmentActivity implements
 
 	/** Loading dialog to show while channel initializes */
 	private Dialog mLoadingDialog;
+	/** The time the channel view was started. */
+	private long mStartTime;
 
 	/**
 	 * Used when the user indicates a like or dislike on an image.
@@ -98,12 +102,16 @@ public class ChannelViewActivity extends FragmentActivity implements
 	@AfterViews
 	void initChannel() {
 		mContext = this;
+		mStartTime = new Date().getTime();
 		// show loading screen
 		showBusyDialog("Loading Channel...");
 
 		mMenuManager.initMenu(menu);
 
-		/* Clear the memory caches of the other image loaders to free up memory for our loader */
+		/*
+		 * Clear the memory caches of the other image loaders to free up memory
+		 * for our loader
+		 */
 		mApp.clearMemoryCaches();
 
 		mIimageLoader = PicdoraImageLoader.instance();
@@ -190,6 +198,20 @@ public class ChannelViewActivity extends FragmentActivity implements
 		finish();
 	}
 
+	/**
+	 * Get the image that should be shown by the fragment at the given position.
+	 * If an image is gotten and it is bad (ie deleted) then a different image
+	 * can be requested by using the replacement parameter. Otherwise this
+	 * method should return the same image on repeat calls.
+	 * 
+	 * @param position
+	 *            The position of the fragment displaying the image.
+	 * @param replacement
+	 *            If an image at the position was already gotten a different
+	 *            image will be given.
+	 * @param listener
+	 *            Callback for when image is ready.
+	 */
 	public void getImage(int position, boolean replacement,
 			final OnGetChannelImageResultListener listener) {
 		mChannelPlayer.getImageAsync(position, replacement, listener);
@@ -373,7 +395,8 @@ public class ChannelViewActivity extends FragmentActivity implements
 		return root;
 	}
 
-	/** Show the given message as a notification 
+	/**
+	 * Show the given message as a notification
 	 * 
 	 * @param msg
 	 */
@@ -381,4 +404,12 @@ public class ChannelViewActivity extends FragmentActivity implements
 		notifier.notify(msg);
 	}
 
+	/**
+	 * Get the time that this channel view was started.
+	 * 
+	 * @return
+	 */
+	public long getChannelStartTime() {
+		return mStartTime;
+	}
 }

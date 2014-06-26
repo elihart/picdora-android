@@ -10,6 +10,7 @@ import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.RadialGradient;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.Shader.TileMode;
 import android.util.AttributeSet;
@@ -110,14 +111,23 @@ public class GlowView extends View {
 	 * 
 	 * @param bounds
 	 */
-	public GlowView setGlowBounds(Rect bounds) {
-		mGlowBounds = new Rect(bounds);
+	public GlowView setGlowBounds(RectF bounds) {
+		mGlowBounds = UiUtil.rect(bounds);
 
 		if (mIsGlowing) {
 			calculateGradients();
 		}
 
 		return this;
+	}
+
+	/**
+	 * Whether or not the glow animation is currently going.
+	 * 
+	 * @return
+	 */
+	public boolean isGlowing() {
+		return mIsGlowing;
 	}
 
 	/**
@@ -352,7 +362,7 @@ public class GlowView extends View {
 			p.setDither(true);
 			p.setFilterBitmap(true);
 			p.setMaskFilter(new BlurMaskFilter(15, BlurMaskFilter.Blur.NORMAL));
-			
+
 			show = true;
 			r = new Rect();
 		}

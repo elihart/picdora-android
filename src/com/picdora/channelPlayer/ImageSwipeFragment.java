@@ -1,7 +1,5 @@
 package com.picdora.channelPlayer;
 
-import java.util.Date;
-
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.FragmentArg;
@@ -12,7 +10,6 @@ import org.androidannotations.annotations.res.ColorRes;
 import pl.droidsonroids.gif.GifDrawable;
 import uk.co.senab.photoview.PhotoView;
 import uk.co.senab.photoview.PhotoViewAttacher.OnMatrixChangedListener;
-import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.support.v4.app.Fragment;
@@ -23,6 +20,7 @@ import android.widget.TextView;
 import com.picdora.ImageUtil;
 import com.picdora.PicdoraApp;
 import com.picdora.R;
+import com.picdora.Util;
 import com.picdora.channelPlayer.ImageManager.OnGetChannelImageResultListener;
 import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.imageloader.PicdoraImageLoader.LoadError;
@@ -30,7 +28,6 @@ import com.picdora.models.ChannelImage;
 import com.picdora.models.ChannelImage.LIKE_STATUS;
 import com.picdora.models.Image;
 import com.picdora.ui.GlowView;
-import com.picdora.ui.UiUtil;
 
 /**
  * Display an image for the ChannelViewActivity
@@ -68,27 +65,35 @@ public class ImageSwipeFragment extends Fragment implements
 
 	protected ChannelImage mImage;
 	protected ChannelViewActivity mActivity;
+	/** Whether the fragment is currently visible. */
 	private boolean mVisible;
 
-	// keep track of whether or not this fragment had it's view destroyed
-	private boolean mDestroyed;
-	// keep track of the original photo coords so we can tell when we are zoomed
+	/** keep track of whether or not this fragment had it's view destroyed. */
+	private boolean mDestroyed = false;
+	/**
+	 * keep track of the original photo coords so we can tell when we are
+	 * zoomed.
+	 */
 	private RectF mOriginalImageRect;
-	/*
-	 * when comparing the current image bounds to the original we'll give some
+	/**
+	 * When comparing the current image bounds to the original we'll give some
 	 * leeway of a few pixels in case it's just slightly off.
 	 */
 	private static final int ZOOM_DIFFERENCE_THRESHOLD = 10;
 
-	// the number of times we have tried to load the image unsuccessfully
-	private int mLoadAttempts;
-	// number of times to retry image loading before giving up
+	/** the number of times we have tried to load the image unsuccessfully. */
+	private int mLoadAttempts = 0;
+	/** Whether the image was successfully loaded and is currently displayed. */
+	private boolean mImageLoaded = false;
+	/** Whether an image is actively being loaded. */
+	private boolean mIsImageLoading = false;
+	/** number of times to retry image loading before giving up. */
 	private static final int MAX_LOAD_ATTEMPTS = 2;
 
+	/** Initialize and get the image that this fragment should be showing. */
 	@AfterViews
-	void addImage() {
-		mDestroyed = false;
-		mLoadAttempts = 0;
+	void getImageToShow() {
+		setDebugText("Initializing fragment and loading image");
 
 		showLoadingCircle();
 
@@ -102,16 +107,13 @@ public class ImageSwipeFragment extends Fragment implements
 		if (mImage != null) {
 			loadImage();
 		} else {
-			// final Date start = new Date();
+			setDebugText("Getting image info");
 			mActivity.getImage(fragPosition, false,
 					new OnGetChannelImageResultListener() {
 
 						@Override
 						public void onGetChannelImageResult(ChannelImage image) {
 							mImage = image;
-							// Util.log("Getting " + image.getImgurId() +
-							// " took "
-							// + (new Date().getTime() - start.getTime()));
 							loadImage();
 						}
 					});
@@ -166,9 +168,6 @@ public class ImageSwipeFragment extends Fragment implements
 		}
 	}
 
-	private Date loadStart;
-	private boolean downloading;
-
 	private void loadImage() {
 		// if the view was already destroyed then the user has moved on so don't
 		// bother trying to load
@@ -176,12 +175,19 @@ public class ImageSwipeFragment extends Fragment implements
 			return;
 		}
 
+		mIsImageLoading = true;
+
 		// we can't load an image if we don't have one...
-		else if (mImage == null) {
+		if (mImage == null) {
+			setDebugText("Trying to load null image.");
+			Util.log("Trying to load null image");
+			// TODO: Show error image
 			showLoadingCircle();
-			// TODO: Maybe show an error image?
 			return;
-		} else if (mImage.getImage().isDeleted()) {
+		}
+		// get a new image if the existing one is deleted
+		else if (mImage.getImage().isDeleted()) {
+			setDebugText("Image deleted");
 			handleDeletedImage();
 		} else {
 			/*
@@ -190,10 +196,92 @@ public class ImageSwipeFragment extends Fragment implements
 			if (PicdoraApp.DEBUG) {
 				showDebugInfo(mImage.getImage());
 			}
-			loadStart = new Date();
-			downloading = false;
-			// Util.log("Load " + mImage.getImgurId());
 			PicdoraImageLoader.instance().loadImage(mImage.getImage(), this);
+		}
+	}
+
+	@Override
+	public void onSuccess(Image image, Drawable drawable) {
+		mIsImageLoading = false;
+
+		if (!image.equals(mImage.getImage())) {
+			// This isn't the image we are expecting... something terrible has
+			// happened
+			Util.log("Received mismatched image");
+		}
+
+		/*
+		 * If the image was able to be decoded as a gif then it will be a gif
+		 * drawable, otherwise it'll be a normal bitmap drawable. We want to
+		 * make sure the db gif value for the image mirrors this.
+		 */
+		ImageUtil.setGifStatus(image, (drawable instanceof GifDrawable));
+
+		if (!mDestroyed) {
+			mPhotoView.setImageDrawable(drawable);
+			mPhotoView.setVisibility(View.VISIBLE);
+			mProgress.setVisibility(View.GONE);
+			mImageLoaded = true;
+			checkForImageView();
+
+			// create a copy of the original image rect so we can tell when
+			// we're zoomed
+			mOriginalImageRect = new RectF(mPhotoView.getDisplayRect());
+			/*
+			 * When the user zooms we can update our glow bounds to follow the
+			 * image as it changes.
+			 */
+			mPhotoView.setOnMatrixChangeListener(new OnMatrixChangedListener() {
+
+				@Override
+				public void onMatrixChanged(RectF rect) {
+					/*
+					 * If our image had 0 size when first set then set the
+					 * bounds now. This seems to happen for gifs, maybe because
+					 * they aren't immediately drawn.
+					 */
+					if (mOriginalImageRect.height() == 0) {
+						mOriginalImageRect = new RectF(rect);
+					}
+					// set the new bounds for the glow if it is glowing
+					if (glow.isGlowing()) {
+						glow.setGlowBounds(rect);
+					}
+				}
+			});
+		}
+	}
+
+	@Override
+	public void onError(LoadError error) {
+		mLoadAttempts++;
+		mImageLoaded = false;
+		mIsImageLoading = false;
+
+		switch (error) {
+		case DOWNLOAD_CANCELED:
+		case DOWNLOAD_FAILURE:
+		case FAILED_DECODE:
+		case OUT_OF_MEMORY:
+			// TODO: request memory cleanup. Maybe only retry if we are
+			// currently visible.
+		case DOWNLOAD_TIMEOUT:
+		case UNKOWN:
+			if (mVisible && mLoadAttempts < MAX_LOAD_ATTEMPTS) {
+				loadImage();
+			} else {
+				// TODO: Load error image
+				setDebugText("Image load fail: " + error.toString());
+				showLoadingCircle();
+			}
+			break;
+		case IMAGE_DELETED:
+			handleDeletedImage();
+			break;
+		default:
+			// TODO: Show error image
+			showLoadingCircle();
+			break;
 		}
 	}
 
@@ -218,6 +306,20 @@ public class ImageSwipeFragment extends Fragment implements
 				image.getRedditScore(), image.getImgurId()));
 	}
 
+	/**
+	 * Set text to show at the top of the screen. Will only show if debug mode
+	 * is enabled.
+	 * 
+	 * @param string
+	 *            Text to show.
+	 */
+	private void setDebugText(String string) {
+		if (PicdoraApp.DEBUG) {
+			debugText.setVisibility(View.VISIBLE);
+			debugText.setText(string);
+		}
+	}
+
 	@Override
 	public void onDestroyView() {
 		super.onDestroyView();
@@ -229,7 +331,7 @@ public class ImageSwipeFragment extends Fragment implements
 		}
 
 		mPhotoView.setImageDrawable(null);
-
+		mImageLoaded = false;
 		mPhotoView = null;
 	}
 
@@ -243,15 +345,32 @@ public class ImageSwipeFragment extends Fragment implements
 				mActivity.setCurrentFragment(this);
 			}
 
-			// make sure we are loading this image as a priority
-			loadImage();
+			// If we have the image details and it is not loaded or actively
+			// being loaded then start the process since the fragment is
+			// visible.
+			if (mImage != null && !mImageLoaded && !mIsImageLoading) {
+				loadImage();
+			} else {
+				checkForImageView();
+			}
+		}
+	}
+
+	/**
+	 * Check if the image is being viewed and mark it if so. Only mark if image
+	 * is loaded and fragment is visible and we haven't marked a view for it yet since the channel started playing (ie avoid duplicate markings).
+	 * 
+	 */
+	private void checkForImageView() {
+		if (mImage != null && mImageLoaded && mVisible
+				&& mImage.getLastSeen() < mActivity.getChannelStartTime()) {
+			mImage.markView();
+			mImage.saveAsync();
 		}
 	}
 
 	@Override
 	public void onProgress(int percentComplete) {
-		downloading = true;
-
 		if (mDestroyed) {
 			return;
 		}
@@ -269,89 +388,11 @@ public class ImageSwipeFragment extends Fragment implements
 		}
 	}
 
-	@Override
-	public void onSuccess(Image image, Drawable drawable) {
-		if (!image.equals(mImage)) {
-			// TODO: This isn't the image we are expecting... we shouldn't show
-			// it at least.
-		}
-
-		/*
-		 * If the image was able to be decoded as a gif then it will be a gif
-		 * drawable, otherwise it'll be a normal bitmap drawable. We want to
-		 * make sure the db gif value for the image mirrors this.
-		 */
-		ImageUtil.setGifStatus(image, (drawable instanceof GifDrawable));
-
-
-		if (!mDestroyed) {
-			mPhotoView.setImageDrawable(drawable);
-			mPhotoView.setVisibility(View.VISIBLE);
-			mProgress.setVisibility(View.GONE);
-			// create a copy of the original image rect so we can tell when
-			// we're zoomed
-			mOriginalImageRect = new RectF(mPhotoView.getDisplayRect());
-			/*
-			 * When the user zooms we can update our glow bounds to follow the
-			 * image as it changes.
-			 */
-			mPhotoView.setOnMatrixChangeListener(new OnMatrixChangedListener() {
-
-				@Override
-				public void onMatrixChanged(RectF rect) {
-					/*
-					 * If our image had 0 size when first set then set the
-					 * bounds now. This seems to happen for gifs, maybe because
-					 * they aren't immediately drawn.
-					 */
-					if (mOriginalImageRect.height() == 0) {
-						mOriginalImageRect = new RectF(rect);
-					}
-					// set the new bounds for the glow
-					glow.setGlowBounds(UiUtil.rect(rect));
-				}
-			});
-		}
-	}
-
-	@Override
-	public void onError(LoadError error) {
-		mLoadAttempts++;
-
-		switch (error) {
-		case DOWNLOAD_CANCELED:
-			// if we're visible than we need to load the image
-			if (isVisible()) {
-				loadImage();
-			}
-			break;
-		case DOWNLOAD_FAILURE:
-		case FAILED_DECODE:
-		case OUT_OF_MEMORY:
-			// TODO: request memory cleanup
-		case DOWNLOAD_TIMEOUT:
-		case UNKOWN:
-			if (mLoadAttempts < MAX_LOAD_ATTEMPTS) {
-				loadImage();
-			} else {
-				// TODO: Load error image
-				showLoadingCircle();
-			}
-			break;
-		case IMAGE_DELETED:
-			handleDeletedImage();
-			break;
-		default:
-			// TODO: Show error image
-			showLoadingCircle();
-			break;
-		}
-	}
-
 	/**
 	 * When our image turns out to be deleted we can request another, and if
 	 * that fails we can show a message on screen.
 	 */
+
 	private void handleDeletedImage() {
 		ImageUtil.markImageDeleted(mImage.getImage());
 
@@ -413,9 +454,6 @@ public class ImageSwipeFragment extends Fragment implements
 			return;
 		}
 
-		// create an int rect from the RectF
-		Rect bounds = UiUtil.rect(r);
-
 		int color;
 		switch (status) {
 		case DISLIKED:
@@ -431,7 +469,7 @@ public class ImageSwipeFragment extends Fragment implements
 			color = mColorTransparent;
 		}
 
-		glow.setGlowBounds(bounds).setGlowColor(color).doGlow();
+		glow.setGlowBounds(r).setGlowColor(color).doGlow();
 	}
 
 	public ChannelImage getImage() {

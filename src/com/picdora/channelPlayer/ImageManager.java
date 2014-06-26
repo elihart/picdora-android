@@ -48,10 +48,6 @@ public class ImageManager {
 	// TODO: Don't mark replacements as viewed until they are used (or unmark
 	// them if they are never used?)
 
-	protected ImageManager() {
-		// empty constructor for enhanced class
-	}
-
 	/**
 	 * Initialize the player with the given channel and start loading images to
 	 * show.
@@ -156,8 +152,8 @@ public class ImageManager {
 	 * @param index
 	 *            The index of the image to retrieve
 	 * @param replace
-	 *            True if a we should replace the image at the given index with
-	 *            a new one, for the case where the first image was bad.
+	 *            True if we should replace the image at the given index with a
+	 *            new one, for the case where the first image was bad.
 	 */
 	public synchronized ChannelImage getImage(int index, boolean replace) {
 		// can't replace an image we haven't loaded yet
@@ -170,6 +166,11 @@ public class ImageManager {
 		// if they have requested a replacement then get a new image and replace
 		// the old one
 		if (replace) {
+			/*
+			 * Try to get another image to use as a replacement. If successful
+			 * swap it out with the current image at the index. If getting
+			 * another image fails then keep the current one.
+			 */
 			ChannelImage replacement = nextImage();
 			if (replacement != null) {
 				mImages.set(index, replacement);
@@ -196,8 +197,18 @@ public class ImageManager {
 		return result;
 	}
 
+	/**
+	 * Whether all images available to this channel have been loaded already. If
+	 * true we can stop trying to load more.
+	 */
 	private boolean allImagesUsed = false;
 
+	/**
+	 * Get the next image to show. Can return null if there are no images left
+	 * to use.
+	 * 
+	 * @return
+	 */
 	private ChannelImage nextImage() {
 		// if we don't have any images left in the queue and we still have
 		// unused images in the db then refill the queue
@@ -244,6 +255,7 @@ public class ImageManager {
 			break;
 		}
 
+		// add the nsfw setting
 		if (!mPrefs.showNsfw().get() || !mChannel.isNsfw()) {
 			query += " AND nsfw=0";
 		}
@@ -269,11 +281,6 @@ public class ImageManager {
 			ChannelImage channelImage = new ChannelImage(mChannel, image);
 			if (!mImages.contains(channelImage)
 					&& !imageQueue.contains(channelImage)) {
-				// don't save if we're previewing.
-				if (!ChannelPreview.isPreview(mChannel)) {
-					channelImage.markView();
-					channelImage.save();
-				}
 				images.add(channelImage);
 			}
 		}
