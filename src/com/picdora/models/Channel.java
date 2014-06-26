@@ -54,6 +54,11 @@ public class Channel extends Model implements Selectable {
 	/** The unix time that the channel was created. */
 	@Column("createdAt")
 	protected long mCreatedAt;
+	/**
+	 * Whether or not this channel is only a preview and shouldn't be saved to
+	 * db.
+	 */
+	private boolean mPreview = false;
 
 	protected List<Category> mCategories;
 	/**
@@ -87,7 +92,10 @@ public class Channel extends Model implements Selectable {
 
 	@Override
 	public boolean isValid() {
-		if (Util.isStringBlank(mName)) {
+		// don't save if this is a preview
+		if (mPreview) {
+			return false;
+		} else if (Util.isStringBlank(mName)) {
 			return false;
 		} else {
 			return true;
@@ -112,7 +120,8 @@ public class Channel extends Model implements Selectable {
 		 * only do it if new categories have been set in order to be more
 		 * efficient. There are also some cases where model data may be changed
 		 * and saved without ever loading categories into memory, and trying to
-		 * save them would cause an error, so we avoid that case with this as well.
+		 * save them would cause an error, so we avoid that case with this as
+		 * well.
 		 */
 		if (mCategoriesChanged) {
 			saveCategoriesToDb();
@@ -155,6 +164,10 @@ public class Channel extends Model implements Selectable {
 	 * 
 	 */
 	private void clearChannelCategories() {
+		if(mPreview){
+			throw new IllegalStateException("Can't delete categories of preview.");
+		}
+		
 		SQLiteDatabase db = Sprinkles.getDatabase();
 
 		String query = "DELETE from ChannelCategories WHERE channelId=" + mId;
@@ -168,6 +181,9 @@ public class Channel extends Model implements Selectable {
 	 * 
 	 */
 	private List<Category> getCategoriesFromDb() {
+		if (mPreview) {
+			throw new IllegalStateException("Can't get categories of preview.");
+		}
 		/* Get all the categories saved to this channel. */
 		String query = "select * from Categories where id in "
 				+ "(select categoryId from ChannelCategories where channelId=?)";
@@ -190,6 +206,8 @@ public class Channel extends Model implements Selectable {
 			throw new IllegalStateException("Categories can't be null");
 		} else if (mCategories.isEmpty()) {
 			throw new IllegalStateException("Categories can't be empty");
+		} else if (mPreview) {
+			throw new IllegalStateException("Can't save categories of preview.");
 		}
 
 		/*
@@ -305,6 +323,25 @@ public class Channel extends Model implements Selectable {
 				break;
 			}
 		}
+	}
+
+	/**
+	 * Set whether this channel should only be a preview and not save anything
+	 * to db.
+	 * 
+	 * @param preview
+	 */
+	public void setPreview(boolean preview) {
+		mPreview = preview;
+	}
+
+	/**
+	 * Check whether this channel is a preview.
+	 * 
+	 * @return
+	 */
+	public boolean isPreview() {
+		return mPreview;
 	}
 
 	/** For the Selectable interface and use with the selection fragment. */

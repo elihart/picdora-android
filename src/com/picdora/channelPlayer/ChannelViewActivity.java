@@ -35,12 +35,12 @@ import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.imageloader.PicdoraImageLoader.OnDownloadSpaceAvailableListener;
 import com.picdora.models.Channel;
 import com.picdora.models.ChannelImage;
-import com.picdora.models.ChannelPreview;
 import com.picdora.ui.PicdoraNotifier;
 import com.picdora.ui.SatelliteMenu.SatelliteMenu;
 
 /**
- * Main activity for playing a channel.
+ * Main activity for playing a channel. If the channel is set to preview mode
+ * then views and likes won't be registered/shown.
  */
 @Fullscreen
 @EActivity(R.layout.activity_channel_view)
@@ -148,8 +148,10 @@ public class ChannelViewActivity extends FragmentActivity implements
 	@Override
 	public boolean dispatchTouchEvent(MotionEvent ev) {
 		// Give the touch event to our gesture detector first before passing it
-		// on
-		mLikeGestureHandler.checkTouchForLikeGesture(ev);
+		// on. Only check for like events if we aren't in a preview!
+		if (!isPreview()) {
+			mLikeGestureHandler.checkTouchForLikeGesture(ev);
+		}
 		return super.dispatchTouchEvent(ev);
 	}
 
@@ -353,7 +355,7 @@ public class ChannelViewActivity extends FragmentActivity implements
 
 	@Override
 	public void onDownloadSpaceAvailable() {
-
+		// TODO: Don't preload if the user wants to conserve data usage
 		int next = pager.getCurrentItem() + 1;
 		for (int i = next; i < next + NUM_IMAGES_TO_PRELOAD; i++) {
 			mChannelPlayer.getImageAsync(i, false,
@@ -421,12 +423,19 @@ public class ChannelViewActivity extends FragmentActivity implements
 		 * don't want to record duplicate views for a single channel session in
 		 * the case that they scroll by it more than once.
 		 */
-		if (!(mChannel instanceof ChannelPreview)
-				&& image.getLastSeen() < mStartTime) {
+		if (!isPreview() && image.getLastSeen() < mStartTime) {
 			Util.log("Record view: " + image.getImage().getIconId());
 			image.markView();
 			image.saveAsync();
 		}
+	}
 
+	/**
+	 * Whether the channel we are showing is a preview.
+	 * 
+	 * @return
+	 */
+	public boolean isPreview() {
+		return mChannel.isPreview();
 	}
 }

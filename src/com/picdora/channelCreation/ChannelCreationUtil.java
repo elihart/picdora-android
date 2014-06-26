@@ -13,8 +13,8 @@ import android.widget.TextView;
 
 import com.picdora.ChannelUtil;
 import com.picdora.R;
+import com.picdora.Util;
 import com.picdora.models.Channel;
-import com.picdora.models.ChannelPreview;
 import com.picdora.ui.PicdoraDialog;
 
 /**
@@ -86,25 +86,23 @@ public class ChannelCreationUtil {
 		}
 
 		/* Create the channel/preview and launch it */
-		Channel channel = null;
+		Channel channel = new Channel(info.channelName, info.gifSetting,
+				info.categories);
 		if (info.preview) {
-			channel = new ChannelPreview(info.categories, info.gifSetting);
+			channel.setPreview(true);
 		} else {
-			channel = new Channel(info.channelName, info.gifSetting,
-					info.categories);
 			/*
-			 * If it's not valid then break the loading. We've done validations
-			 * on everything up until this point though so we should be good to
-			 * go.
+			 * Try to save the channel. If saving fails then something went very
+			 * wrong and just break out of everything.
 			 */
-			if (!channel.isValid()) {
+			if (!channel.save()) {
 				setLoadingStatus(false);
+				Util.log("Error saving channel");
 				return;
 			}
-			channel.save();
 		}
 
-		launchChannel(channel, info.preview);
+		launchChannel(channel);
 	}
 
 	@UiThread(propagation = Propagation.REUSE)
@@ -180,7 +178,7 @@ public class ChannelCreationUtil {
 	}
 
 	@UiThread(propagation = Propagation.REUSE)
-	protected void launchChannel(Channel channel, boolean preview) {
+	protected void launchChannel(Channel channel) {
 		// if the loading was canceled then don't keep going, otherwise clear
 		// the loading screen
 		if (!mIsLoadingChannel) {
@@ -190,7 +188,7 @@ public class ChannelCreationUtil {
 		}
 
 		/* Finish the activity if it's not a preview. */
-		if (!preview) {
+		if (!channel.isPreview()) {
 			mActivity.finish();
 		}
 

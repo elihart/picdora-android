@@ -19,7 +19,7 @@
 
     <style name="picdora_dialog_style" parent="@android:style/Theme.Translucent.NoTitleBar">
         <item name="android:windowAnimationStyle">@style/dialog_animation</item>
-        <item name="android:background">@color/translucent_black</item>
+        <item name="android:background">@color/black</item>
     </style>
 
     <style name="dialog_animation">
