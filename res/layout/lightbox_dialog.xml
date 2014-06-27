@@ -38,7 +38,7 @@ limitations under the License.
          android:layout_height="wrap_content"
          android:gravity="center_vertical|center_horizontal"
          android:paddingLeft="12dip"
-         android:textSize="20dip"
+         android:textSize="20sp"
          android:background="@color/transparent"/>
     </LinearLayout>
 </LinearLayout>

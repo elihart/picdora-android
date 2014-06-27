@@ -191,4 +191,19 @@ public class ChannelImage extends Model {
 		return true;
 	}
 
+	/**
+	 * Set the image belonging to this ChannelImage. It should match the imageId
+	 * we expect. This saves us from having to load the image data from the db.
+	 * 
+	 * @param image
+	 */
+	public void setImage(Image image) {
+		if (mImageId != image.getId()) {
+			throw new IllegalArgumentException(
+					"Image id doesn't match expected.");
+		} else {
+			mImage = image;
+		}
+	}
+
 }

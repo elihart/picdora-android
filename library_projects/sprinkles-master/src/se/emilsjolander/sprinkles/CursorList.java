@@ -21,7 +21,7 @@ public class CursorList<T extends QueryResult> implements Iterable<T>, Closeable
     private Class<T> type;
     private boolean closed;
 
-    CursorList(Cursor cursor, Class<T> type) {
+    public CursorList(Cursor cursor, Class<T> type) {
         this.cursor = cursor;
         this.type = type;
     }

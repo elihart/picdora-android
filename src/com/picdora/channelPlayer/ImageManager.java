@@ -12,10 +12,16 @@ import org.androidannotations.annotations.sharedpreferences.Pref;
 
 import se.emilsjolander.sprinkles.CursorList;
 import se.emilsjolander.sprinkles.Query;
+import se.emilsjolander.sprinkles.Sprinkles;
+import android.database.Cursor;
+import android.database.DatabaseUtils;
+import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
 import com.picdora.CategoryUtils;
 import com.picdora.PicdoraPreferences_;
+import com.picdora.Timer;
+import com.picdora.Util;
 import com.picdora.models.Channel;
 import com.picdora.models.ChannelImage;
 import com.picdora.models.Image;
@@ -52,7 +58,7 @@ public class ImageManager {
 	 * images without doing too many loads.
 	 * 
 	 */
-	private static final int TARGET_QUEUE_SIZE = 30;
+	private static final int TARGET_QUEUE_SIZE = 5;
 	/**
 	 * How low the queue count can go before we try to refill it to the target
 	 * size.
@@ -240,6 +246,8 @@ public class ImageManager {
 	 */
 	private synchronized int loadImageBatch(int count,
 			Collection<ChannelImage> images) {
+		Timer timer = new Timer();
+		timer.start();
 
 		// build the query. Start by only selecting images from categories that
 		// this channel includes
@@ -247,8 +255,43 @@ public class ImageManager {
 				+ CategoryUtils.getCategoryIdsString(mChannel.getCategories())
 				+ ")";
 
-		String query = "SELECT * FROM Images WHERE id IN "
-				+ imageIdsFromCategories;
+		/*
+		 * The columns we want to get, combining the image data with the view
+		 * data. For the images we can ignore deleted and reported as we only
+		 * get images where that is false. We also don't need the creation or
+		 * update times. For the views we want all columns, but expect null
+		 * values for images that haven't been viewed yet. In that case we
+		 * should initialize the view info to match the channel and image, have
+		 * no views, and neutral liked status.
+		 */
+		String columns = String.format("id, imgurId, redditScore, nsfw, gif, "
+				+ "ifnull(channelId, %d) as channelId, "
+				+ "ifnull(imageId, Images.id) as imageId, "
+				+ "ifnull(count, 0) as count, "
+				+ "ifnull(lastSeen, 0) as lastSeen, "
+				+ "ifnull(liked, %d) as liked", mChannel.getId(),
+				ChannelImage.LIKE_STATUS.NEUTRAL.getId());
+
+		// Get image and view data. Using outer join images without views will
+		// have null view data.
+		String query = "SELECT "
+				+ columns
+				+ " FROM Images LEFT OUTER JOIN Views ON Images.id=Views.imageId";
+
+		// limit images to the categories in the channel
+		query += " WHERE Images.id IN " + imageIdsFromCategories;
+
+		// limit views to ones from this channel
+		/*
+		 * TODO: Incorporate view information from other channels as well so
+		 * duplicate images aren't seen across channels.
+		 */
+		query += " AND (channelId=" + mChannel.getId()
+				+ " OR channelId IS NULL)";
+		// and not disliked
+		// TODO: Check dislikes from other channels too!
+		query += " AND (liked != " + ChannelImage.LIKE_STATUS.DISLIKED.getId()
+				+ " OR liked IS NULL)";
 
 		// add the gif setting
 		switch (mChannel.getGifSetting()) {
@@ -263,35 +306,51 @@ public class ImageManager {
 		}
 
 		// add the nsfw setting
-		if (!mPrefs.showNsfw().get() || !mChannel.isNsfw()) {
+		if (!mPrefs.showNsfw().get()) {
 			query += " AND nsfw=0";
 		}
 
 		// not reported or deleted
 		query += " AND reported=0 AND deleted=0";
 
-		// TODO: Join with views and don't use disliked images
-
 		// not one of the images we've already loaded
 		query += " AND id NOT IN " + getImageIdsInUse();
 
-		// set ordering and add limit
-		query += " ORDER BY redditScore DESC LIMIT " + Integer.toString(count);
+		// order by view count and reddit score
+		query += " ORDER BY count ASC, redditScore DESC";
+		// add limit
+		query += " LIMIT " + Integer.toString(count);
 
 		/*
-		 * TODO Pull image and view info and create Image and ChannelImage at
-		 * the same time. Need to do this manually without sprinkles.
+		 * Run query and parse result into views and images with sprinkles.
+		 * Since our query specifies values for when a view is null we can
+		 * safely instantiate a new view for each image using the cursorlists.
 		 */
-		CursorList<Image> list = Query.many(Image.class, query, null).get();
-		int resultCount = list.size();
-		for (Image image : list.asList()) {
-			/* TODO: Check for existing channel image before creating one. */
-			images.add(new ChannelImage(mChannel, image));
+		SQLiteDatabase db = Sprinkles.getDatabase();
+		Cursor c = db.rawQuery(query, null);
+		CursorList<Image> imagesCursor = new CursorList<Image>(c, Image.class);
+		CursorList<ChannelImage> viewsCursor = new CursorList<ChannelImage>(c,
+				ChannelImage.class);
+
+		/*
+		 * Get each view and image. The view only has the image id at the moment
+		 * so give it the image object as well. Store the image id to prevent
+		 * getting it again and add it to the result list.
+		 */
+		int resultCount = imagesCursor.size();
+		for (int i = 0; i < resultCount; i++) {
+			ChannelImage view = viewsCursor.get(i);
+			Image image = imagesCursor.get(i);
+			view.setImage(image);
+			images.add(view);
 			mImageIds.add((int) image.getId());
 		}
+		// Util.log(DatabaseUtils.dumpCursorToString(c));
 
-		list.close();
+		imagesCursor.close();
+		viewsCursor.close();
 
+		timer.lap("got image batch");
 		return resultCount;
 	}
 
