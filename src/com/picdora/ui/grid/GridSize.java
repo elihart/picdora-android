@@ -1,37 +1,49 @@
 package com.picdora.ui.grid;
 
 import com.picdora.ImageUtil.ImgurSize;
+import com.picdora.ui.UiUtil;
 
 /**
- * The size of a grid row. This includes the width of the row and the
- * {@link #ImgurSize} image suggested for matching the width.
+ * Sizes to use for an image grid. This includes the width of the column and the
+ * {@link #ImgurSize} image suggested for matching that width..
  * 
  */
 public enum GridSize {
-	TINY("Tiny", ImgurSize.SMALL_SQUARE), SMALL("Small", ImgurSize.BIG_SQUARE), MEDIUM("Medium", 
-			ImgurSize.MEDIUM_THUMBNAIL), LARGE("Large", ImgurSize.LARGE_THUMBNAIL);
+	TINY("Tiny", ImgurSize.SMALL_SQUARE, 50), SMALL("Small",
+			ImgurSize.BIG_SQUARE, 95), MEDIUM("Medium",
+			ImgurSize.MEDIUM_THUMBNAIL, 140), LARGE("Large",
+			ImgurSize.LARGE_THUMBNAIL, 300);
 
-	private ImgurSize size;
+	/*
+	 * TODO: Scale recommended imgur size based column dp, since imgur size is
+	 * pixels/static and dp is dynamic to screen. Also, maybe put more thought
+	 * into what column widths should be.
+	 */
+
+	private ImgurSize imageSize;
 	private String name;
+	/** Column size in dp. */
+	private int columnSize;
 
-	private GridSize(String name, ImgurSize size) {
-		this.size = size;
+	private GridSize(String name, ImgurSize size, int columnSize) {
+		this.imageSize = size;
 		this.name = name;
+		this.columnSize = columnSize;
 	}
 
 	/** The imgur size suggested for an image that will fit this grid size */
 	public ImgurSize getImageSize() {
-		return size;
+		return imageSize;
 	}
 
-	/** The row width of this grid size in pixels */
-	public int getRowWidth(){
-		return size.getSize();
+	/** The column width of the grid in dp. */
+	public int getColumnWidth() {
+		return columnSize;
 	}
-	
+
 	/** Get the name of this size */
-	public String getName(){
+	public String getName() {
 		return name;
 	}
-	
+
 }

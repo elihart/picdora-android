@@ -14,6 +14,7 @@ import android.widget.GridView;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.PauseOnScrollListener;
 import com.picdora.R;
+import com.picdora.ui.UiUtil;
 
 /**
  * Use this class with the {@link #ModelGridAdapter} and the
@@ -263,7 +264,7 @@ public class ModelGridSelector<T> {
 	 */
 	public void setGridSize(GridSize size) {
 		mGridSize = size;
-		mGrid.setColumnWidth(size.getRowWidth());
+		mGrid.setColumnWidth(UiUtil.dpToPixel(size.getColumnWidth()));
 		mAdapter.setImageSize(size.getImageSize());
 	}
 
