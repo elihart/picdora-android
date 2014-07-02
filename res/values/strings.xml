@@ -61,6 +61,9 @@
     <string name="channel_view_star_dialog_title">Add to collection</string>
     <string name="channel_view_star_dialog_message">Add this image to your collection?</string>
     <string name="channel_view_star_dialog_positive_button">Add</string>
+    <string name="channel_view_data_warning_title">Data Warning</string>
+    <string name="channel_view_data_warning_message">We\'ve noticed you\'re using a mobile network - Picdora uses lots of data for its images, so be careful!</string>
+    <string name="channel_view_data_warning_position_button">Thanks, I\'ve got it</string>
 
     <!-- Gallery Fragment -->
     <string name="gallery_size_spinner">Image Size</string>

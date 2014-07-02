@@ -8,6 +8,7 @@ import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.Fullscreen;
 import org.androidannotations.annotations.ViewById;
+import org.androidannotations.annotations.sharedpreferences.Pref;
 
 import android.app.Activity;
 import android.app.Dialog;
@@ -26,6 +27,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.picdora.PicdoraApp;
+import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
 import com.picdora.Util;
 import com.picdora.channelPlayer.ImageManager.ChannelError;
@@ -33,8 +35,10 @@ import com.picdora.channelPlayer.ImageManager.OnGetChannelImageResultListener;
 import com.picdora.channelPlayer.ImageManager.OnLoadListener;
 import com.picdora.imageloader.PicdoraImageLoader;
 import com.picdora.imageloader.PicdoraImageLoader.OnDownloadSpaceAvailableListener;
+import com.picdora.launch.NetworkChecker;
 import com.picdora.models.Channel;
 import com.picdora.models.ChannelImage;
+import com.picdora.ui.PicdoraDialog;
 import com.picdora.ui.PicdoraNotifier;
 import com.picdora.ui.SatelliteMenu.SatelliteMenu;
 
@@ -68,6 +72,10 @@ public class ChannelViewActivity extends FragmentActivity implements
 	protected LikeGestureHandler mLikeGestureHandler;
 	@Bean
 	protected MenuManager mMenuManager;
+	@Bean
+	protected NetworkChecker mNetworkChecker;
+	@Pref
+	protected PicdoraPreferences_ mPrefs;
 
 	@App
 	protected PicdoraApp mApp;
@@ -249,6 +257,27 @@ public class ChannelViewActivity extends FragmentActivity implements
 		pager.setCurrentItem(startingPosition);
 
 		dismissBusyDialog();
+
+		showDataUsageWarning();
+	}
+
+	/**
+	 * Check if we should show a warning dialog about heavy data usage on a
+	 * mobile data connection and show a warning if we haven't before.
+	 * 
+	 */
+	private void showDataUsageWarning() {
+		if (mNetworkChecker.isUsingMobileNetwork()
+				&& !mPrefs.hasShownDataWarning().get()) {
+			new PicdoraDialog.Builder(mContext)
+					.setTitle(R.string.channel_view_data_warning_title)
+					.setMessage(R.string.channel_view_data_warning_message)
+					.setPositiveButton(
+							R.string.channel_view_data_warning_position_button,
+							null).show();
+
+			mPrefs.hasShownDataWarning().put(true);
+		}
 	}
 
 	@Override

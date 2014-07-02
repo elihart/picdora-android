@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import com.crashlytics.android.Crashlytics;
+import com.google.android.gms.analytics.Tracker;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
@@ -41,8 +42,9 @@ public class LaunchActivity extends Activity {
 		if (PicdoraApp.DEBUG) {
 			Crashlytics.setBool("debug", true);
 		}
-		// init GA tracking by doing an initial get of the tracker
-		mApp.getTracker();
+		// init GA tracking
+		Tracker tracker = mApp.getTracker();
+		tracker.set("nsfw", Boolean.toString(mPrefs.showNsfw().get()));
 
 		FontHelper.init(getApplicationContext());
 		UiUtil.init(getApplicationContext());

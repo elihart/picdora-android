@@ -3,6 +3,7 @@ package com.picdora.sync;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EService;
 import org.androidannotations.annotations.sharedpreferences.Pref;
 
@@ -11,6 +12,7 @@ import android.content.Intent;
 import android.os.IBinder;
 
 import com.picdora.PicdoraPreferences_;
+import com.picdora.launch.NetworkChecker;
 
 /**
  * This class keeps our local databases up to date with the server.
@@ -19,6 +21,9 @@ import com.picdora.PicdoraPreferences_;
 @EService
 public class PicdoraSyncService extends Service implements
 		OnSyncTaskCompleteListener {
+	@Bean
+	NetworkChecker mNetworkChecker;
+
 	/** Whether the service is currently doing a sync. */
 	private static boolean mSyncing = false;
 
@@ -36,8 +41,11 @@ public class PicdoraSyncService extends Service implements
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		/* Start the sync if we're not already doing it. */
-		if (!mSyncing) {
+		/*
+		 * Start the sync if we're not already doing it and we have a network
+		 * connection.
+		 */
+		if (!mSyncing && mNetworkChecker.isNetworkConnected()) {
 			mSyncing = true;
 			startSync();
 		}

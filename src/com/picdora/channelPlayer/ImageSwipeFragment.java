@@ -290,7 +290,6 @@ public class ImageSwipeFragment extends Fragment implements
 	 */
 	private String getImageInfoString(ChannelImage channelImage) {
 		Image image = channelImage.getImage();
-		debugText.setVisibility(View.VISIBLE);
 
 		String info = "(%d, %d, '%s'";
 		if (image.isGif()) {
