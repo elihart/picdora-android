@@ -6,6 +6,7 @@ import org.androidannotations.annotations.res.DrawableRes;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.TypedValue;
@@ -48,6 +49,9 @@ public class GridItemView extends RelativeLayout {
 	// image tint when selected
 	@ColorRes(R.color.channel_grid_item_selected_border)
 	protected int mHighlightedBorderColor;
+	/** Placeholder color while image loads. */
+	@ColorRes(R.color.black)
+	protected int mPlaceholderColor;
 
 	/** Width of the highlighted border in DP */
 	private final static int HIGHLIGHT_BORDER_WIDTH_DP = 4;
@@ -57,12 +61,9 @@ public class GridItemView extends RelativeLayout {
 	 */
 	private static int HIGHLIGHT_BORDER_WIDTH_PX = 0;
 
-	/** A blank white drawable to use when an image isn't loaded. */
-	@DrawableRes(R.drawable.rect_white)
-	protected Drawable imagePlaceholder;
-
 	protected static final int TEXT_PADDING_DP = 8;
 	protected static final int TEXT_SIZE_DP = 20;
+	/* TODO: Scale text size based on image size? */
 	protected static final int CORNER_RADIUS = 10;
 
 	private ValueAnimator mPressAnimation;
@@ -89,8 +90,6 @@ public class GridItemView extends RelativeLayout {
 		mImage.setScaleType(ScaleType.CENTER_CROP);
 		mImage.setCornerRadius(CORNER_RADIUS);
 		mImage.setBorderWidth(HIGHLIGHT_BORDER_WIDTH_PX);
-
-		mImage.setImageDrawable(imagePlaceholder);
 
 		addView(mImage);
 
@@ -121,16 +120,17 @@ public class GridItemView extends RelativeLayout {
 	 * Set this grid item to display the given image and text
 	 * 
 	 * @param text
-	 *            The text to display. Can be null if {@link #setShowText(boolean)} is
-	 *            set to false.
+	 *            The text to display. Can be null if
+	 *            {@link #setShowText(boolean)} is set to false.
 	 * @param url
-	 *            The url of the image to display. Null or empty to not show an image.
+	 *            The url of the image to display. Null or empty to not show an
+	 *            image.
 	 * @param highlight
 	 *            Whether the item should be highlighted
 	 */
 	public void bind(String text, String url, boolean highlight) {
 		// use a placeholder until an image loads
-		mImage.setImageDrawable(imagePlaceholder);
+		mImage.setImageDrawable(new ColorDrawable(mPlaceholderColor));
 
 		highlighted = highlight;
 

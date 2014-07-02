@@ -63,11 +63,14 @@ public class LaunchActivity extends Activity {
 	}
 
 	private void initUniversalImageLoader() {
+		// TODO: Maybe a special loading/failure image
+		// DisplayImageOptions options = new DisplayImageOptions.Builder()
+		// .showImageForEmptyUri(R.drawable.rect_black)
+		// .showImageOnLoading(R.drawable.rect_black)
+		// .showImageOnFail(R.drawable.rect_black).cacheInMemory(true)
+		// .cacheOnDisc(true).build();
 		DisplayImageOptions options = new DisplayImageOptions.Builder()
-				.showImageForEmptyUri(R.drawable.rect_white)
-				.showImageOnLoading(R.drawable.rect_white)
-				.showImageOnFail(R.drawable.rect_white).cacheInMemory(true)
-				.cacheOnDisc(true).build();
+				.cacheInMemory(true).cacheOnDisc(true).build();
 
 		ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(
 				getApplicationContext()).defaultDisplayImageOptions(options)
