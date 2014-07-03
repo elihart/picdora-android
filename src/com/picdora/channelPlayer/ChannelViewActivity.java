@@ -18,6 +18,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
+import android.support.v7.app.ActionBar;
 import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.ViewGroup;
@@ -47,7 +48,7 @@ import com.picdora.ui.SatelliteMenu.SatelliteMenu;
  * then views and likes won't be registered/shown.
  */
 @Fullscreen
-@WindowFeature({Window.FEATURE_NO_TITLE})
+@WindowFeature({ Window.FEATURE_NO_TITLE })
 @EActivity(R.layout.activity_channel_view)
 public class ChannelViewActivity extends PicdoraActivity implements
 		OnDownloadSpaceAvailableListener {
@@ -109,8 +110,15 @@ public class ChannelViewActivity extends PicdoraActivity implements
 	void initChannel() {
 		mContext = this;
 		mStartTime = System.currentTimeMillis();
-		getSupportActionBar().hide();
-		
+		/*
+		 * Action bar needs to be manually hidden for api < 11, but it is hidden
+		 * and errors for > 11.
+		 */
+		try {
+			getSupportActionBar().hide();
+		} catch (NullPointerException e) {
+		}
+
 		// show loading screen
 		showBusyDialog("Loading Channel...");
 
@@ -337,13 +345,12 @@ public class ChannelViewActivity extends PicdoraActivity implements
 		// clear them to save memory
 		if (isFinishing()) {
 			mIimageLoader.clearDownloads();
-		} 
+		}
 	}
-	
+
 	@Override
 	protected Object onRetainState() {
-		return new CachedPlayerState(mChannelPlayer,
-				pager.getCurrentItem());
+		return new CachedPlayerState(mChannelPlayer, pager.getCurrentItem());
 	}
 
 	/**
@@ -388,7 +395,7 @@ public class ChannelViewActivity extends PicdoraActivity implements
 					new OnGetChannelImageResultListener() {
 
 						@Override
-						public void onGetChannelImageResult(ChannelImage image) {							
+						public void onGetChannelImageResult(ChannelImage image) {
 							mIimageLoader.preloadImage(image.getImage());
 						}
 					});
