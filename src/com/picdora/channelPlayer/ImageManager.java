@@ -165,7 +165,7 @@ public class ImageManager {
 
 		// If they have requested a replacement then get a new image and replace
 		// the old one, but only if it's one we've already loaded
-		if (replace && index >= mImages.size()) {
+		if (replace && index < mImages.size()) {
 			/*
 			 * Try to get another image to use as a replacement. If successful
 			 * swap it out with the current image at the index. If getting
@@ -186,6 +186,10 @@ public class ImageManager {
 				} else {
 					mImages.add(img);
 				}
+			}
+			
+			if(mImages.isEmpty()){
+				throw new IllegalStateException("Images is empty");
 			}
 
 			// return the index requested if we have enough images, otherwise

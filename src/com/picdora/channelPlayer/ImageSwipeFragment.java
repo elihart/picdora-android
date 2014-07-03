@@ -390,6 +390,7 @@ public class ImageSwipeFragment extends Fragment implements
 	 */
 
 	private void handleDeletedImage() {
+		Util.log("deleted");
 		ImageUtil.markImageDeleted(mImage.getImage());
 
 		if (mDestroyed) {
