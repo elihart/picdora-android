@@ -146,12 +146,14 @@ public class ImageSyncer extends Syncer {
 		 * introduced until sqlite 3.7.11. Older android devices do not have
 		 * this version and we have to revert to individual insertions.
 		 */
-		Cursor cursor = SQLiteDatabase.openOrCreateDatabase(":memory:", null)
-				.rawQuery("select sqlite_version() AS sqlite_version", null);
+		SQLiteDatabase db = SQLiteDatabase.openOrCreateDatabase(":memory:", null);
+		Cursor cursor = db.rawQuery("select sqlite_version() AS sqlite_version", null);
 		String sqliteVersion = "";
 		while (cursor.moveToNext()) {
 			sqliteVersion += cursor.getString(0);
 		}
+		cursor.close();
+		db.close();
 		/*
 		 * Need at least 3.7.11. TODO: Check for higher versions as well.
 		 */

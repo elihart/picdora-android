@@ -1,13 +1,12 @@
 package com.picdora.channelPlayer;
 
-import java.util.Date;
-
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.App;
 import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.Fullscreen;
 import org.androidannotations.annotations.ViewById;
+import org.androidannotations.annotations.WindowFeature;
 import org.androidannotations.annotations.sharedpreferences.Pref;
 
 import android.app.Activity;
@@ -15,7 +14,6 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.PagerAdapter;
@@ -23,9 +21,11 @@ import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.picdora.PicdoraActivity;
 import com.picdora.PicdoraApp;
 import com.picdora.PicdoraPreferences_;
 import com.picdora.R;
@@ -47,8 +47,9 @@ import com.picdora.ui.SatelliteMenu.SatelliteMenu;
  * then views and likes won't be registered/shown.
  */
 @Fullscreen
+@WindowFeature({Window.FEATURE_NO_TITLE})
 @EActivity(R.layout.activity_channel_view)
-public class ChannelViewActivity extends FragmentActivity implements
+public class ChannelViewActivity extends PicdoraActivity implements
 		OnDownloadSpaceAvailableListener {
 	private static final int NUM_IMAGES_TO_PRELOAD = 5;
 
@@ -86,12 +87,6 @@ public class ChannelViewActivity extends FragmentActivity implements
 	private ImageSwipeFragment mCurrFragment;
 
 	/**
-	 * Hold a copy of the player when orientation changes and the activity
-	 * recreates
-	 */
-	private static CachedPlayerState mOnConfigChangeState;
-
-	/**
 	 * The pager adapter, which provides the pages to the view pager widget.
 	 */
 	private PagerAdapter mPagerAdapter;
@@ -113,7 +108,9 @@ public class ChannelViewActivity extends FragmentActivity implements
 	@AfterViews
 	void initChannel() {
 		mContext = this;
-		mStartTime = new Date().getTime();
+		mStartTime = System.currentTimeMillis();
+		getSupportActionBar().hide();
+		
 		// show loading screen
 		showBusyDialog("Loading Channel...");
 
@@ -132,8 +129,8 @@ public class ChannelViewActivity extends FragmentActivity implements
 		mChannel = Util.fromJson(json, Channel.class);
 
 		/* If we have a saved state from before then resume it */
-		if (mOnConfigChangeState != null) {
-			resumeState(mOnConfigChangeState);
+		if (getRetainedState() != null) {
+			resumeState((CachedPlayerState) getRetainedState());
 			return;
 		}
 
@@ -340,14 +337,13 @@ public class ChannelViewActivity extends FragmentActivity implements
 		// clear them to save memory
 		if (isFinishing()) {
 			mIimageLoader.clearDownloads();
-			mChannelPlayer = null;
-			mOnConfigChangeState = null;
-		} else {
-			mOnConfigChangeState = new CachedPlayerState(mChannelPlayer,
-					pager.getCurrentItem());
-		}
-
-		dismissBusyDialog();
+		} 
+	}
+	
+	@Override
+	protected Object onRetainState() {
+		return new CachedPlayerState(mChannelPlayer,
+				pager.getCurrentItem());
 	}
 
 	/**
@@ -387,11 +383,12 @@ public class ChannelViewActivity extends FragmentActivity implements
 		// TODO: Don't preload if the user wants to conserve data usage
 		int next = pager.getCurrentItem() + 1;
 		for (int i = next; i < next + NUM_IMAGES_TO_PRELOAD; i++) {
+			Util.log("preloading " + i);
 			mChannelPlayer.getImageAsync(i, false,
 					new OnGetChannelImageResultListener() {
 
 						@Override
-						public void onGetChannelImageResult(ChannelImage image) {
+						public void onGetChannelImageResult(ChannelImage image) {							
 							mIimageLoader.preloadImage(image.getImage());
 						}
 					});

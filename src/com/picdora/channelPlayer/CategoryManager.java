@@ -175,12 +175,12 @@ public class CategoryManager {
 			throw new IllegalStateException("Categories is empty");
 		}
 
-		Timer timer = new Timer();
-		timer.start();
+//		Timer timer = new Timer();
+//		timer.start();
 
 		// TODO: Optimizations to not recalculate every time.
 		setCategoryWeights();
-		timer.lap("calculate weights");
+//		timer.lap("calculate weights");
 
 		// Compute the total weight of all categories together
 		double totalWeight = 0.0d;

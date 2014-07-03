@@ -313,7 +313,9 @@ public class ImageSwipeFragment extends Fragment implements
 	private void setDebugText(String string) {
 		if (PicdoraApp.DEBUG) {
 			debugText.setVisibility(View.VISIBLE);
-			debugText.setText(string);
+			String msg = fragPosition + " : " + string;
+			debugText.setText(msg);
+			Util.log(msg);
 		}
 	}
 
