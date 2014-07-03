@@ -606,7 +606,7 @@ public class ImageManager {
 		 */
 		public void recalculateCategoryWeights() {
 			/*
-			 * TODO: Better weight calculation with all variables taken into
+			 * TODO: Better weight calculation with all variables (category likes/dislikes) taken into
 			 * account. Also, refactor to modularize. Plus, more testing!
 			 */
 			long currentTime = new Date().getTime();
