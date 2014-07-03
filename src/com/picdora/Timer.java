@@ -6,13 +6,14 @@ package com.picdora;
  */
 public class Timer {
 	private long mStartTime;
+	private static final int NANOS_PER_MILLI = 1000000;
 	
 	/**
 	 * Mark a start time for a timer for use in clocking method run time.
 	 * 
 	 */
 	public void start(){
-		mStartTime = System.currentTimeMillis();
+		mStartTime = System.nanoTime();
 	}
 	
 	/**
@@ -22,8 +23,12 @@ public class Timer {
 	 *            A message to include with the time.
 	 */
 	public void lap(String msg){
-		long curr = System.currentTimeMillis();
-		Util.log(msg + " : " + (curr - mStartTime) + " ms");
+		long curr = System.nanoTime();
+		long elapsed = curr - mStartTime;
+		long millis = elapsed / NANOS_PER_MILLI;
+		long nanos = curr % NANOS_PER_MILLI;
+		
+		Util.log(String.format("%s : %d ms %d ns", msg, millis, nanos));
 		mStartTime = curr;
 	}
 	

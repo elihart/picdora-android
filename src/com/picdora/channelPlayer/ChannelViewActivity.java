@@ -453,7 +453,6 @@ public class ChannelViewActivity extends FragmentActivity implements
 		 * the case that they scroll by it more than once.
 		 */
 		if (!isPreview() && image.getLastSeen() < mStartTime) {
-			Util.log("Record view: " + image.getImage().getIconId());
 			image.markView();
 			image.saveAsync();
 		}
