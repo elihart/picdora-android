@@ -102,12 +102,15 @@ public class Category extends Model implements Selectable {
 	// base equals and hashcode on id
 	@Override
 	public boolean equals(Object obj) {
-		if (obj == null)
+		if (obj == null) {
 			return false;
-		if (obj == this)
+		}
+		if (obj == this) {
 			return true;
-		if (!(obj instanceof Category))
+		}
+		if (!(obj instanceof Category)) {
 			return false;
+		}
 
 		Category cat = (Category) obj;
 		return cat.mId == mId;

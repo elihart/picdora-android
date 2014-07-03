@@ -32,9 +32,20 @@ public class ChannelImage extends Model {
 	private long mImageId;
 	private Image mImage;
 
+	/**
+	 * The number of times the image has been seen in this channel. Ignores
+	 * views in other channels.
+	 * 
+	 */
 	@Column("count")
 	private int mViewCount;
 
+	/**
+	 * The last time this image was seen in this channel as the number of
+	 * milliseconds since Jan. 1, 1970, midnight GMT. Ignores views in other
+	 * channels.
+	 * 
+	 */
 	@Column("lastSeen")
 	private long mLastSeen;
 
@@ -124,6 +135,12 @@ public class ChannelImage extends Model {
 		mLastSeen = new Date().getTime();
 	}
 
+	/**
+	 * Get the last time this image was seen in this channel as the number of
+	 * milliseconds since Jan. 1, 1970, midnight GMT.
+	 * 
+	 * @return
+	 */
 	public long getLastSeen() {
 		return mLastSeen;
 	}

@@ -2,6 +2,8 @@ package com.picdora.channelPlayer;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -19,6 +21,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
 import com.picdora.PicdoraPreferences_;
+import com.picdora.Timer;
+import com.picdora.Util;
 import com.picdora.models.Category;
 import com.picdora.models.Channel;
 import com.picdora.models.ChannelImage;
@@ -40,10 +44,8 @@ public class ImageManager {
 	protected PicdoraPreferences_ mPrefs;
 
 	private Channel mChannel;
+	private CategoryManager mCategoryManager;
 	private volatile List<ChannelImage> mImages;
-	/** The category helpers for each category in the channel. */
-	private List<ChannelCategory> mCategories;
-	private Random mRandomGenerator;
 
 	/** List of all image ids that have been loaded so far. */
 	private volatile List<Integer> mImageIds;
@@ -66,37 +68,31 @@ public class ImageManager {
 		} else {
 			// init fields
 			mChannel = channel;
-			mRandomGenerator = new Random();
 
-			int numCategories = mChannel.getCategories().size();
-			mCategories = new ArrayList<ChannelCategory>(numCategories);
-			/*
-			 * Size to initialize lists to - Number of categories * initial
-			 * images per category
-			 */
-			int initialListSize = numCategories
-					* ChannelCategory.TARGET_QUEUE_SIZE;
-			mImageIds = new ArrayList<Integer>(initialListSize);
-			mImages = new ArrayList<ChannelImage>(initialListSize);
+			mCategoryManager = new CategoryManager(channel);
+			mImageIds = new ArrayList<Integer>();
+			mImages = new ArrayList<ChannelImage>();
 
 			/*
-			 * Create a ChannelCategory for each category in the channel.
+			 * Create a CategoryWrapper for each category in the channel and add
+			 * it to the manager.
 			 */
 			for (Category c : mChannel.getCategories()) {
-				ChannelCategory channelCat = new ChannelCategory(c);
+				CategoryWrapper wrapper = new CategoryWrapper(c);
 				// Only use the category if it has images to show
-				if (channelCat.hasImages()) {
-					mCategories.add(channelCat);
+				if (wrapper.hasImages()) {
+					mCategoryManager.addCategory(wrapper);
 				}
 			}
 
-			// Check that at least one category loaded successfully and we'll
-			// have images to show
-			if (mCategories.isEmpty()) {
-				// If our lists are empty then this channel has no images to
-				// display and we have nothing to show
+			/*
+			 * If no categories were successfully added then we have no images
+			 * to show.
+			 */
+			if (mCategoryManager.getCategories().isEmpty()) {
 				error = ChannelError.NO_IMAGES;
 			}
+
 		}
 
 		// alert the listener on the ui thread of the result
@@ -206,15 +202,21 @@ public class ImageManager {
 	}
 
 	/**
-	 * Calculate the best next image to show and retrieve it from the database.
-	 * Returns null if no more pictures are available.
+	 * Get the next image to show.
 	 * 
 	 * @return
 	 */
-	private ChannelImage getNextImage() {;
-		
-
-		return null;
+	private ChannelImage getNextImage() {
+		/*
+		 * Get a randomized category from the manager and use that category's
+		 * next image.
+		 */
+		CategoryWrapper cat = mCategoryManager.nextCategory();
+		if (cat == null) {
+			return null;
+		} else {
+			return cat.nextImage();
+		}
 	}
 
 	/**
@@ -354,8 +356,12 @@ public class ImageManager {
 		query.append(" AND id NOT IN ");
 		query.append(getImageIdsInUse());
 
-		// order by view count and reddit score
-		query.append(" ORDER BY count ASC, redditScore DESC");
+		/*
+		 * order by view count, then liked vs neutral (Note: This depends on how
+		 * LIKE_STATUS enum sets enum values so careful with that changing),
+		 * then reddit score.
+		 */
+		query.append(" ORDER BY count ASC, liked DESC, redditScore DESC");
 		// add limit
 		query.append(" LIMIT ");
 		query.append(numImagesToGet);
@@ -396,8 +402,9 @@ public class ImageManager {
 	 * Encapsulate image management by category.
 	 * 
 	 */
-	private class ChannelCategory {
+	private class CategoryWrapper {
 		private Category category;
+
 		/** The next set of images to use. */
 		private LinkedList<ChannelImage> imageQueue;
 		/**
@@ -405,6 +412,11 @@ public class ImageManager {
 		 * already. If true we can stop trying to load more.
 		 */
 		private boolean allImagesUsed = false;
+		/**
+		 * The relative weight assigned to this category for use in randomly
+		 * choosing which category to source pictures from.
+		 */
+		private double categoryWeight;
 		/**
 		 * The size that we'll try to keep the image queue at so we have enough
 		 * images without doing too many loads.
@@ -417,7 +429,7 @@ public class ImageManager {
 		 */
 		private static final int QUEUE_REFILL_THRESHOLD = TARGET_QUEUE_SIZE / 2;
 
-		public ChannelCategory(Category category) {
+		public CategoryWrapper(Category category) {
 			this.category = category;
 			// initialize queue and fill it
 			imageQueue = new LinkedList<ChannelImage>();
@@ -433,9 +445,14 @@ public class ImageManager {
 		 * 
 		 */
 		private void refillQueue() {
+			//Timer timer = new Timer();
+			//timer.start();
 			int numImagesToGet = TARGET_QUEUE_SIZE;
 			String query = generateImageQuerySql(category, numImagesToGet);
 			int resultCount = runImageQuery(query, imageQueue);
+			// randomized images
+			Collections.shuffle(imageQueue,
+					new Random(System.currentTimeMillis()));
 			/*
 			 * If the actual number of images retrieved is less than we asked
 			 * for there aren't enough images and we shouldn't try to query
@@ -444,6 +461,7 @@ public class ImageManager {
 			if (resultCount < numImagesToGet) {
 				allImagesUsed = true;
 			}
+			//timer.lap("Queue refilled");
 		}
 
 		/**
@@ -482,5 +500,232 @@ public class ImageManager {
 			return image;
 		}
 
+		/**
+		 * Set the relative weight of this category.
+		 * 
+		 * @param weight
+		 */
+		public void setWeight(double weight) {
+			categoryWeight = weight;
+		}
+
+		/**
+		 * Get the weight assigned to this category.
+		 * 
+		 * @return
+		 */
+		public double getWeight() {
+			return categoryWeight;
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result
+					+ ((category == null) ? 0 : category.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (obj == null) {
+				return false;
+			}
+			if (!(obj instanceof CategoryWrapper)) {
+				return false;
+			}
+
+			CategoryWrapper other = (CategoryWrapper) obj;
+			if (category == null) {
+				if (other.category != null) {
+					return false;
+				}
+			} else if (!category.equals(other.category)) {
+				return false;
+			}
+			return true;
+		}
+
+	}
+
+	/**
+	 * Keep track of all categories in this channel and decide which channel to
+	 * source an image from next. Calculates weights for each category based on
+	 * image info, usage history, and likes and then does a weighted random
+	 * search to decide which category to source from.
+	 * 
+	 */
+	private class CategoryManager {
+		private List<CategoryWrapper> categories;
+		private Channel channel;
+
+		public CategoryManager(Channel channel) {
+			this.channel = channel;
+
+			int numCategories = channel.getCategories().size();
+			categories = new ArrayList<ImageManager.CategoryWrapper>(
+					numCategories);
+		}
+
+		/**
+		 * Get the categories added to the manager.
+		 * 
+		 * @return
+		 */
+		public List<CategoryWrapper> getCategories() {
+			return categories;
+		}
+
+		/**
+		 * Add a category to manage. Does not calculate a weight for the
+		 * category - you should recalculate weights manually after adding
+		 * categories.
+		 * 
+		 * 
+		 * @param category
+		 */
+		public void addCategory(CategoryWrapper category) {
+			/*
+			 * Note, weighting calculation isn't done here. Recalculation must
+			 * be manually called afterward.
+			 */
+			if (categories.contains(category)) {
+				Util.log("Trying to add duplicate category.");
+			} else {
+				categories.add(category);
+			}
+		}
+
+		/**
+		 * Calculate and set weights for all categories added.
+		 * 
+		 */
+		public void recalculateCategoryWeights() {
+			/*
+			 * TODO: Better weight calculation with all variables taken into
+			 * account. Also, refactor to modularize. Plus, more testing!
+			 */
+			long currentTime = new Date().getTime();
+
+			/*
+			 * Calculate the time in millis that we can think of as our view
+			 * reset point. This is a certain number of days in the past, and
+			 * the closer the last view point is to it there's an exponentially
+			 * better chance of being chosen.
+			 */
+			int numDaysTillReshow = 15;
+			int hoursPerDay = 24;
+			int minutesPerHour = 60;
+			int secondsPerMinute = 60;
+			int millisPerSecond = 1000;
+			long millisUntilViewReset = numDaysTillReshow * hoursPerDay
+					* minutesPerHour * secondsPerMinute * millisPerSecond;
+
+			/*
+			 * No weight if the category is out of images, else initialize
+			 * weight to one.
+			 */
+			for (CategoryWrapper c : categories) {
+				if (!c.hasImages()) {
+					c.setWeight(0);
+					break;
+				}
+
+				double weight = 1;
+				ChannelImage image = c.peekNextImage();
+				/* Weight based on how long ago the image was seen. */
+				if (image.getViewCount() > 0) {
+
+					/*
+					 * Our approach to handling already viewed images will be to
+					 * start with a maximum fraction of the original weight that
+					 * the image can have. This max value is reduced by the
+					 * number of times the image has been viewed. Finally, we'll
+					 * use a cubic function to exponentially increase the chance
+					 * the longer ago the image was seen and weight this against
+					 * the max
+					 */
+
+					/* The starting point for the weighting adjustment compared to an unviewed image weighting. */
+					double maxViewWeighting = 0.15d;
+					/*
+					 * Reduced by the number of views. TODO: Use global channel
+					 * view count?.
+					 */
+					maxViewWeighting /= image.getViewCount();
+					/*
+					 * Exponentially reduced the more recent an image was seen
+					 * with the function (x^3 / (x^3 + a)). This has a horizontal
+					 * asymptote at 1 where we can say the image was viewed long
+					 * enough ago to not matter, ie after that the function will
+					 * return ~1. a is chosen so that this asymptote is hit
+					 * roughly at x=1. x will be time normalized around 1 => (how long ago the image was
+					 * viewed / how much time we want until the image view
+					 * doesn't matter much anymore).
+					 */
+					long millisSinceLastSeen = currentTime - image.getLastSeen();
+					/*
+					 * x - ie (how long ago the image was viewed / how much time
+					 * we want until the image view doesn't matter much anymore)
+					 */
+					double fractionOfViewReset = millisSinceLastSeen
+							/ (double) millisUntilViewReset;
+					double fractionCubed = Math.pow(fractionOfViewReset, 3);
+					/*
+					 * The function x^3 / (x^3 + a) with a chosen so that
+					 * roughly f(x)=1 for x>1;.
+					 */
+					double viewModifier = fractionCubed
+							/ (fractionCubed + 0.05);
+					// apply the calculated weighting
+					weight *= maxViewWeighting * viewModifier;
+				}
+
+				c.setWeight(weight);
+			}
+
+		}
+
+		/**
+		 * Use the calculated category weights to randomly choose a category.
+		 * 
+		 * @return
+		 */
+		public CategoryWrapper nextCategory() {
+			if (categories.isEmpty()) {
+				throw new IllegalStateException("Categories is empty");
+			}
+
+			//Timer timer = new Timer();
+			//timer.start();
+
+			// TODO: Optimizations to not recalculate every time.
+			recalculateCategoryWeights();
+			//timer.lap("calculate weights");
+
+			// Compute the total weight of all categories together
+			double totalWeight = 0.0d;
+			for (CategoryWrapper c : categories) {
+				totalWeight += c.getWeight();
+			}
+
+			// Choose a random category. TODO: More efficient selection?
+			double random = Math.random() * totalWeight;
+			for (CategoryWrapper c : categories) {
+				random -= c.getWeight();
+				if (random <= 0.0d) {
+					//timer.lap("choose random category");
+					return c;
+				}
+			}
+
+			/* Algorithm shouldn't get here unless there is a bug. */
+			Util.log("Category selection failure");
+			return null;
+		}
 	}
 }
