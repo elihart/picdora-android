@@ -21,15 +21,20 @@
         <meta-data
             android:name="com.crashlytics.ApiKey"
             android:value="f8e89955ef243b240a3807307b94b382d9652601" />
-        
+
         <service android:name="com.picdora.sync.PicdoraSyncService_" />
-        
-        <meta-data android:name="com.google.android.gms.version"
-           android:value="@integer/google_play_services_version" />
+
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
 
         <activity
             android:name="com.picdora.channelSelection.ChannelSelectionActivity_"
             android:label="@string/title_activity_channel_selection" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
         <activity
             android:name="com.picdora.channelPlayer.ChannelViewActivity_"
@@ -53,10 +58,6 @@
                 android:value="com.picdora.channelSelection.ChannelSelectionActivity_" />
         </activity>
         <activity
-            android:name="com.picdora.channelPlayer.ResumeActivity_"
-            android:label="@string/title_activity_resume" >
-        </activity>
-        <activity
             android:name="com.picdora.settings.SettingsActivity_"
             android:label="@string/title_activity_settings" >
         </activity>
@@ -67,16 +68,6 @@
         <activity
             android:name="com.picdora.likes.LikesActivity_"
             android:label="@string/title_activity_likes" >
-        </activity>
-        <activity
-            android:name="com.picdora.launch.LaunchActivity_"
-            android:configChanges="orientation|keyboardHidden|screenSize"
-            android:label="@string/title_activity_launch" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
     </application>
 

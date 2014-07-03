@@ -12,7 +12,7 @@ import android.content.Intent;
 import android.os.IBinder;
 
 import com.picdora.PicdoraPreferences_;
-import com.picdora.launch.NetworkChecker;
+import com.picdora.api.NetworkChecker;
 
 /**
  * This class keeps our local databases up to date with the server.

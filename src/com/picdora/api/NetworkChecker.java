@@ -1,4 +1,4 @@
-package com.picdora.launch;
+package com.picdora.api;
 
 import org.androidannotations.annotations.EBean;
 import org.androidannotations.annotations.RootContext;

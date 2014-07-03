@@ -64,16 +64,23 @@ public class ImageManager {
 		if (channel == null) {
 			error = ChannelError.BAD_CHANNEL;
 		} else {
-			// init lists and images
+			// init fields
 			mChannel = channel;
-			mImageIds = new LinkedList<Integer>();
-			mCategories = new LinkedList<ImageManager.ChannelCategory>();
 			mRandomGenerator = new Random();
-			mImages = new ArrayList<ChannelImage>(mChannel.getCategories()
-					.size() * ChannelCategory.TARGET_QUEUE_SIZE);
+
+			int numCategories = mChannel.getCategories().size();
+			mCategories = new ArrayList<ChannelCategory>(numCategories);
+			/*
+			 * Size to initialize lists to - Number of categories * initial
+			 * images per category
+			 */
+			int initialListSize = numCategories
+					* ChannelCategory.TARGET_QUEUE_SIZE;
+			mImageIds = new ArrayList<Integer>(initialListSize);
+			mImages = new ArrayList<ChannelImage>(initialListSize);
 
 			/*
-			 * Initialize a ChannelCategory for each category in the channel.
+			 * Create a ChannelCategory for each category in the channel.
 			 */
 			for (Category c : mChannel.getCategories()) {
 				ChannelCategory channelCat = new ChannelCategory(c);
@@ -122,10 +129,6 @@ public class ImageManager {
 		}
 	}
 
-	public Channel getChannel() {
-		return mChannel;
-	}
-
 	public interface OnGetChannelImageResultListener {
 		public void onGetChannelImageResult(ChannelImage image);
 	}
@@ -170,7 +173,6 @@ public class ImageManager {
 	 */
 	public synchronized ChannelImage getImage(int index, boolean replace) {
 
-
 		// If they have requested a replacement then get a new image and replace
 		// the old one, but only if it's one we've already loaded
 		if (replace && index >= mImages.size()) {
@@ -203,12 +205,16 @@ public class ImageManager {
 		}
 	}
 
-	private ChannelImage getNextImage() {
-		ChannelImage result = null;
-		int index = mRandomGenerator.nextInt(mCategories.size());
-        ChannelCategory cat = mCategories.get(index);
+	/**
+	 * Calculate the best next image to show and retrieve it from the database.
+	 * Returns null if no more pictures are available.
+	 * 
+	 * @return
+	 */
+	private ChannelImage getNextImage() {;
 		
-		return cat.nextImage();
+
+		return null;
 	}
 
 	/**
@@ -264,7 +270,9 @@ public class ImageManager {
 	 * based on this channel's settings. This takes into account the image ids
 	 * in {{@link ImageManager#mImageIds} so that duplicate images aren't
 	 * retrieved. This means the query should not be saved for use later and
-	 * must be regenerated every time new images are retrieved.
+	 * must be regenerated every time new images are retrieved. This should also
+	 * not be called concurrently with a db call as there would be a race
+	 * condition with the ids retrieved.
 	 * 
 	 * 
 	 * @param category
@@ -468,7 +476,7 @@ public class ImageManager {
 		public ChannelImage nextImage() {
 			ChannelImage image = imageQueue.poll();
 			// Check if we need to get more images
-			if (!allImagesUsed && imageQueue.size() < TARGET_QUEUE_SIZE) {
+			if (!allImagesUsed && imageQueue.size() < QUEUE_REFILL_THRESHOLD) {
 				refillQueue();
 			}
 			return image;
